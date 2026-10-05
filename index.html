@@ -714,23 +714,56 @@ const DEFAULT_COMPANY = {
 
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
-/* ============ PDF GENERATOR ============ */
-function generateUserPDF(user) {
+/* ============ PDF GENERATOR (with Cyrillic support) ============ */
+let cachedFontBase64 = null;
+
+async function loadCyrillicFont() {
+  if (cachedFontBase64) return cachedFontBase64;
+  const url = 'https://cdn.jsdelivr.net/gh/googlefonts/roboto@main/src/hinted/Roboto-Regular.ttf';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Не може да зареди шрифт');
+  const buf = await res.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  cachedFontBase64 = btoa(binary);
+  return cachedFontBase64;
+}
+
+async function generateUserPDF(user) {
   const { jsPDF } = window.jspdf;
+
+  // Зареждане на шрифт с кирилица
+  let fontBase64;
+  try {
+    fontBase64 = await loadCyrillicFont();
+  } catch (e) {
+    alert('Не може да се зареди шрифт с кирилица. Провери връзката с интернет.');
+    console.error(e);
+    return;
+  }
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
 
+  // Регистриране на шрифта
+  doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+
+  const FONT = 'Roboto';
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Colors (purple theme)
+  // Цветове
   const purple = [124, 58, 237];
   const lightPurple = [168, 85, 247];
   const veryLightPurple = [243, 232, 255];
-  const white = [255, 255, 255];
   const dark = [30, 27, 75];
   const muted = [156, 163, 175];
 
@@ -738,8 +771,7 @@ function generateUserPDF(user) {
   doc.setFillColor(250, 245, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // === Header gradient bar (top) ===
-  // Simulate gradient by drawing several colored rectangles
+  // === Header gradient bar ===
   const headerHeight = 55;
   const steps = 40;
   for (let i = 0; i < steps; i++) {
@@ -751,26 +783,25 @@ function generateUserPDF(user) {
     doc.rect((pageWidth / steps) * i, 0, pageWidth / steps + 0.5, headerHeight, 'F');
   }
 
-  // Clock emoji area – draw a white circle with clock icon
+  // Logo circle
   const logoX = pageWidth / 2;
   const logoY = 26;
   doc.setFillColor(255, 255, 255);
   doc.circle(logoX, logoY, 12, 'F');
-  // Clock hands
   doc.setDrawColor(purple[0], purple[1], purple[2]);
   doc.setLineWidth(1.2);
+  doc.circle(logoX, logoY, 8);
   doc.line(logoX, logoY, logoX, logoY - 7);
   doc.line(logoX, logoY, logoX + 5, logoY + 2);
-  doc.circle(logoX, logoY, 8);
 
   // Title
+  doc.setFont(FONT, 'normal');
   doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
   doc.setFontSize(28);
   doc.text('Clocky', logoX, 48, { align: 'center' });
 
   // Subtitle
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(11);
   doc.text('Система за отпуски и време', logoX, 55, { align: 'center' });
 
@@ -780,28 +811,26 @@ function generateUserPDF(user) {
   const cardW = pageWidth - 40;
   const cardH = 180;
 
-  // Card shadow
   doc.setFillColor(220, 215, 245);
   doc.roundedRect(cardX + 1, cardY + 2, cardW, cardH, 6, 6, 'F');
 
-  // Card
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(cardX, cardY, cardW, cardH, 6, 6, 'F');
 
-  // Card top accent
+  // Top accent
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.roundedRect(cardX, cardY, cardW, 10, 6, 6, 'F');
   doc.rect(cardX, cardY + 5, cardW, 5, 'F');
 
-  // === "Данни за достъп" heading ===
+  // Heading
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(16);
   doc.text('Данни за достъп', cardX + 15, cardY + 32);
 
-  // Greeting line
+  // Greeting
   doc.setTextColor(dark[0], dark[1], dark[2]);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(11);
   doc.text(`Здравейте, ${user.fullName}!`, cardX + 15, cardY + 47);
 
@@ -809,13 +838,13 @@ function generateUserPDF(user) {
   doc.setFontSize(10);
   doc.text('По-долу ще намерите вашите данни за вход в системата.', cardX + 15, cardY + 56);
 
-  // === Info Box: Username ===
+  // === Info Boxes ===
   const infoX = cardX + 15;
   const infoW = cardW - 30;
   let infoY = cardY + 70;
   const infoH = 22;
 
-  // Username box
+  // Username
   doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
   doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
@@ -823,16 +852,16 @@ function generateUserPDF(user) {
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
 
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(9);
   doc.text('ПОТРЕБИТЕЛСКО ИМЕ', infoX + 6, infoY + 8);
 
   doc.setTextColor(dark[0], dark[1], dark[2]);
-  doc.setFont('courier', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(15);
   doc.text(user.username, infoX + 6, infoY + 17);
 
-  // Password box
+  // Password
   infoY += infoH + 6;
   doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
@@ -840,16 +869,16 @@ function generateUserPDF(user) {
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
 
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(9);
   doc.text('ПАРОЛА', infoX + 6, infoY + 8);
 
   doc.setTextColor(dark[0], dark[1], dark[2]);
-  doc.setFont('courier', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(15);
   doc.text(user.password, infoX + 6, infoY + 17);
 
-  // Role box
+  // Role
   infoY += infoH + 6;
   doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
@@ -857,66 +886,59 @@ function generateUserPDF(user) {
   doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
 
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(9);
   doc.text('РОЛЯ', infoX + 6, infoY + 8);
 
   doc.setTextColor(dark[0], dark[1], dark[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(13);
   doc.text(user.role === 'admin' ? 'Администратор' : 'Служител', infoX + 6, infoY + 17);
 
-  // === Website Link Section ===
+  // === Website section ===
   const linkY = cardY + cardH + 15;
 
-  // "Website" heading
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(14);
   doc.text('Уебсайт', cardX, linkY);
 
-  // Link box (dark purple)
   const linkBoxY = linkY + 8;
   const linkBoxH = 28;
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.roundedRect(cardX, linkBoxY, cardW, linkBoxH, 6, 6, 'F');
 
-  // Small accent circle
   doc.setFillColor(255, 255, 255);
   doc.circle(cardX + 14, linkBoxY + linkBoxH / 2, 5, 'F');
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.circle(cardX + 14, linkBoxY + linkBoxH / 2, 3, 'F');
 
-  // Link text
   doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(9);
   doc.text('ВЛЕЗТЕ ТУК', cardX + 24, linkBoxY + 10);
 
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(13);
   doc.text(SITE_URL, cardX + 24, linkBoxY + 21);
 
   // === Footer ===
   const footerY = pageHeight - 18;
 
-  // Divider
   doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
   doc.setLineWidth(0.3);
   doc.line(cardX, footerY - 8, pageWidth - cardX, footerY - 8);
 
   doc.setTextColor(purple[0], purple[1], purple[2]);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(9);
-  doc.text('⏰ Clocky', cardX, footerY);
+  doc.text('Clocky', cardX, footerY);
 
   doc.setTextColor(muted[0], muted[1], muted[2]);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(FONT, 'normal');
   doc.setFontSize(8);
   doc.text(`Генериран на ${new Date().toLocaleDateString('bg-BG')}`, pageWidth - cardX, footerY, { align: 'right' });
 
-  // Password safety note
-  doc.setTextColor(muted[0], muted[1], muted[2]);
   doc.setFontSize(8);
   doc.text('Моля, съхранявайте този документ на сигурно място и не споделяйте паролата си.', cardX, footerY + 5);
 
@@ -2308,10 +2330,10 @@ function UsersManager() {
     if (confirm('Сигурни ли сте?')) await deleteUser(id);
   };
 
-  const downloadPDF = (user) => {
+  const downloadPDF = async (user) => {
     setDownloadingId(user.id);
     try {
-      generateUserPDF(user);
+      await generateUserPDF(user);
     } catch (e) {
       console.error(e);
       alert('Грешка при генериране на PDF: ' + e.message);
