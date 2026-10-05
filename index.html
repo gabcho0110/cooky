@@ -48,6 +48,7 @@
 
   .app-layout { display: flex; min-height: 100vh; }
 
+  /* ===== SIDEBAR (with dropdowns) ===== */
   .sidebar {
     width: 260px;
     background: #fff;
@@ -94,38 +95,91 @@
   .sidebar-user-name { font-size: 14px; font-weight: 600; color: #1e1b4b; }
   .sidebar-user-role { font-size: 12px; color: #7c3aed; opacity: 0.75; }
 
-  .nav-item {
+  .nav-group { margin-bottom: 4px; }
+  .nav-group-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
     padding: 11px 14px;
     border-radius: 10px;
     cursor: pointer;
     font-size: 13.5px;
     font-weight: 600;
     color: #4c1d95;
-    transition: background 0.2s, color 0.2s, transform 0.15s;
+    transition: background 0.2s, color 0.2s;
     user-select: none;
-    margin-bottom: 4px;
   }
-  .nav-item:hover {
-    background: #faf5ff;
-    transform: translateX(2px);
-  }
-  .nav-item.active {
+  .nav-group-header:hover { background: #faf5ff; }
+  .nav-group-header.active {
     background: #f3e8ff;
     color: #7c3aed;
   }
-  .nav-icon { font-size: 16px; }
-  .nav-section-label {
+  .nav-group-header .nav-icon { margin-right: 10px; font-size: 16px; }
+  .nav-group-header .nav-label { flex: 1; }
+  .nav-group-header .chev {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 11px;
-    font-weight: 700;
-    color: #a78bfa;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 14px 14px 6px;
-    opacity: 0.8;
+    opacity: 0.75;
   }
+  .nav-group-header.open .chev { transform: rotate(180deg); }
+
+  .nav-sub-wrap {
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+    max-height: 0;
+    opacity: 0;
+  }
+  .nav-sub-wrap.open {
+    max-height: 300px;
+    opacity: 1;
+  }
+  .nav-sub {
+    padding-left: 8px;
+    padding-top: 2px;
+    padding-bottom: 6px;
+  }
+  .nav-sub-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px 8px 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6b7280;
+    transition: all 0.18s;
+    position: relative;
+    transform: translateX(-4px);
+    opacity: 0;
+  }
+  .nav-sub-wrap.open .nav-sub-item {
+    transform: translateX(0);
+    opacity: 1;
+    animation: slideIn 0.3s forwards;
+  }
+  @keyframes slideIn {
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .nav-sub-item::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #c4b5fd;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .nav-sub-item:hover { background: #faf5ff; color: #7c3aed; }
+  .nav-sub-item:hover::before { background: #a855f7; transform: translateY(-50%) scale(1.4); }
+  .nav-sub-item.active {
+    color: #7c3aed;
+    background: #f3e8ff;
+    font-weight: 600;
+  }
+  .nav-sub-item.active::before { background: #7c3aed; }
 
   .sidebar-logout {
     margin-top: auto;
@@ -154,23 +208,34 @@
     min-height: 100vh;
   }
 
+  /* ===== TOP HEADER (centered company name) ===== */
   .top-header {
     background: #fff;
     border-bottom: 1px solid #ede9fe;
-    padding: 18px 32px;
-    display: flex;
+    padding: 14px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
+    gap: 16px;
     position: sticky;
     top: 0;
     z-index: 50;
     box-shadow: 0 2px 8px rgba(124,58,237,0.04);
   }
-  .top-header-left {
+
+  .top-header-side {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
   }
+  .top-header-side.right {
+    justify-content: flex-end;
+  }
+
+  .top-header-center {
+    text-align: center;
+  }
+
   .top-header-logo {
     width: 42px;
     height: 42px;
@@ -181,25 +246,35 @@
     justify-content: center;
     color: #fff;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 20px;
     box-shadow: 0 4px 12px rgba(124,58,237,0.3);
   }
+
+  .top-header-tagline-side {
+    font-size: 16px;
+    font-weight: 700;
+    color: #7c3aed;
+    letter-spacing: 0.5px;
+  }
+
   .top-header-company {
     font-size: 18px;
     font-weight: 700;
     color: #1e1b4b;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 600px;
+    margin: 0 auto;
   }
   .top-header-tagline {
     font-size: 12px;
     color: #7c3aed;
     opacity: 0.7;
+    margin-top: 2px;
   }
-  .top-header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+
   .top-header-user {
     display: flex;
     align-items: center;
@@ -709,7 +784,6 @@ const monthNames = ['Януари','Февруари','Март','Април','�
 const monthShort = ['ЯНУ','ФЕВ','МАР','АПР','МАЙ','ЮНИ','ЮЛИ','АВГ','СЕП','ОКТ','НОЕ','ДЕК'];
 const dayShort = ['НЕД','ПОН','ВТО','СРЯ','ЧЕТ','ПЕТ','СЪБ'];
 
-// Проверка дали даден timestamp (ISO string) е от днес (по локална дата)
 const isToday = (isoString) => {
   if (!isoString) return false;
   const d = new Date(isoString);
@@ -941,33 +1015,27 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // Top purple bar
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.rect(0, 0, pageWidth, 8, 'F');
 
-  // Company header
   doc.setFont(FONT, 'normal');
   doc.setTextColor(dark[0], dark[1], dark[2]);
   doc.setFontSize(14);
   doc.text(companyName || 'Моята Компания', pageWidth / 2, 25, { align: 'center' });
 
-  // Title
   doc.setFontSize(20);
   doc.setTextColor(purple[0], purple[1], purple[2]);
   doc.text('ЗАЯВКА ЗА ОТПУСК', pageWidth / 2, 40, { align: 'center' });
 
-  // Line under title
   doc.setDrawColor(purple[0], purple[1], purple[2]);
   doc.setLineWidth(0.5);
   doc.line(20, 45, pageWidth - 20, 45);
 
-  // Date
   doc.setFontSize(10);
   doc.setTextColor(muted[0], muted[1], muted[2]);
   const now = new Date();
   doc.text(`Дата на подаване: ${now.toLocaleDateString('bg-BG')}`, pageWidth - 20, 55, { align: 'right' });
 
-  // Employee info
   doc.setFontSize(11);
   doc.setTextColor(dark[0], dark[1], dark[2]);
   doc.text(`От: ${request.userName || 'Служител'}`, 20, 70);
@@ -976,12 +1044,10 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.setFontSize(12);
   doc.text('Уважаеми г-н/г-жа Директор,', 20, 85);
 
-  // Body
   doc.setTextColor(dark[0], dark[1], dark[2]);
   doc.setFontSize(11);
   doc.text(`Моля да ми бъде разрешен ${leaveType?.name || 'отпуск'} за периода:`, 20, 100);
 
-  // Highlight box with dates
   const boxY = 108;
   doc.setFillColor(243, 232, 255);
   doc.roundedRect(20, boxY, pageWidth - 40, 25, 4, 4, 'F');
@@ -999,7 +1065,6 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.setTextColor(purple[0], purple[1], purple[2]);
   doc.text(`Общо: ${request.days} ${request.days === 1 ? 'ден' : 'дни'}`, pageWidth / 2, boxY + 20, { align: 'center' });
 
-  // Reason
   doc.setFontSize(11);
   doc.setTextColor(dark[0], dark[1], dark[2]);
   doc.text('Причина:', 20, boxY + 40);
@@ -1008,14 +1073,12 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   const reasonLines = doc.splitTextToSize(reason, pageWidth - 45);
   doc.text(reasonLines, 20, boxY + 48);
 
-  // Status
   const statusY = boxY + 48 + (reasonLines.length * 6) + 15;
   doc.setFontSize(10);
   doc.setTextColor(muted[0], muted[1], muted[2]);
   const statusLabels = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
   doc.text(`Статус: ${statusLabels[request.status]}`, 20, statusY);
 
-  // Signature area
   const sigY = pageHeight - 50;
   doc.setDrawColor(dark[0], dark[1], dark[2]);
   doc.setLineWidth(0.3);
@@ -1028,7 +1091,6 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.line(pageWidth - 80, sigY, pageWidth - 20, sigY);
   doc.text('Подпис на ръководител', pageWidth - 80, sigY + 5);
 
-  // Footer
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.rect(0, pageHeight - 8, pageWidth, 8, 'F');
   doc.setTextColor(255, 255, 255);
@@ -1202,35 +1264,83 @@ function useFirebaseObject(path, defaultVal = null) {
   return data;
 }
 
-/* ============ SIDEBAR (FLAT) ============ */
+/* ============ SIDEBAR (with dropdowns) ============ */
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = currentUser.role === 'admin';
 
-  const menuItems = useMemo(() => {
-    const items = [
-      { id: 'home', icon: '🏠', label: 'Начало' },
-      { section: 'Отпуски' },
-      { id: 'leaves-calendar', icon: '🗓️', label: 'Календар' },
-      { id: 'leaves-my', icon: '📋', label: 'Моите отпуски' },
-      { id: 'leaves-requests', icon: '📨', label: 'Заявки за отпуск' },
-      { id: 'leaves-reports', icon: '📊', label: 'Справки' },
-      { section: 'Време' },
-      { id: 'time-me', icon: '⏱️', label: 'Моето време' },
-      { id: 'time-reports', icon: '📈', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' },
-      { section: 'Проекти' },
-      { id: 'projects-list', icon: '📁', label: 'Проекти' },
-      { section: 'Компания' },
-      { id: 'company-data', icon: '🏢', label: 'Данни за компанията' }
-    ];
-    if (isAdmin) {
-      items.push({ section: 'Настройки' });
-      items.push({ id: 'settings-users', icon: '👥', label: 'Потребители' });
-      items.push({ id: 'settings-leavetypes', icon: '🏖️', label: 'Видове отпуски' });
-      items.push({ id: 'settings-projects', icon: '📂', label: 'Всички проекти' });
-    }
-    return items;
-  }, [isAdmin]);
+  const menuConfig = useMemo(() => [
+    { id: 'home', icon: '🏠', label: 'Начало', items: null },
+    {
+      id: 'leaves',
+      icon: '🏖️',
+      label: 'Отпуски',
+      items: [
+        { id: 'leaves-calendar', label: 'Календар' },
+        { id: 'leaves-my', label: 'Моите отпуски' },
+        { id: 'leaves-requests', label: 'Заявки за отпуск' },
+        { id: 'leaves-reports', label: 'Справки' }
+      ]
+    },
+    {
+      id: 'time',
+      icon: '⏱️',
+      label: 'Време',
+      items: [
+        { id: 'time-me', label: 'Моето време' },
+        { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
+      ]
+    },
+    {
+      id: 'company',
+      icon: '🏢',
+      label: 'Компания',
+      items: [
+        { id: 'company-data', label: 'Данни за компанията' }
+      ]
+    },
+    ...(isAdmin ? [{
+      id: 'settings',
+      icon: '⚙️',
+      label: 'Настройки',
+      items: [
+        { id: 'settings-users', label: 'Потребители' },
+        { id: 'settings-leavetypes', label: 'Видове отпуски' },
+        { id: 'settings-projects', label: 'Всички проекти' }
+      ]
+    }] : [])
+  ], [isAdmin]);
+
+  const [openGroups, setOpenGroups] = useState(() => {
+    const initial = {};
+    menuConfig.forEach(g => {
+      if (g.items) {
+        const isActive = g.items.some(it => it.id === currentPage);
+        initial[g.id] = isActive;
+      }
+    });
+    return initial;
+  });
+
+  useEffect(() => {
+    menuConfig.forEach(g => {
+      if (g.items && g.items.some(it => it.id === currentPage)) {
+        setOpenGroups(prev => ({ ...prev, [g.id]: true }));
+      }
+    });
+  }, [currentPage, menuConfig]);
+
+  const toggle = (id) => setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleGroupClick = (group) => {
+    if (!group.items) onNavigate(group.id);
+    else toggle(group.id);
+  };
+
+  const isGroupActive = (group) => {
+    if (!group.items) return currentPage === group.id;
+    return group.items.some(it => it.id === currentPage);
+  };
 
   return (
     <aside className="sidebar">
@@ -1245,18 +1355,35 @@ function Sidebar({ currentPage, onNavigate }) {
       </div>
 
       <nav style={{flex: 1}}>
-        {menuItems.map((item, i) => {
-          if (item.section) {
-            return <div key={`s-${i}`} className="nav-section-label">{item.section}</div>;
-          }
+        {menuConfig.map(group => {
+          const isOpen = !!openGroups[group.id];
+          const isActive = isGroupActive(group);
           return (
-            <div
-              key={item.id}
-              className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
-              onClick={() => onNavigate(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
+            <div key={group.id} className="nav-group">
+              <div
+                className={`nav-group-header ${isActive ? 'active' : ''} ${isOpen ? 'open' : ''}`}
+                onClick={() => handleGroupClick(group)}
+              >
+                <span className="nav-icon">{group.icon}</span>
+                <span className="nav-label">{group.label}</span>
+                {group.items && <span className="chev">▼</span>}
+              </div>
+              {group.items && (
+                <div className={`nav-sub-wrap ${isOpen ? 'open' : ''}`}>
+                  <div className="nav-sub">
+                    {group.items.map((item, i) => (
+                      <div
+                        key={item.id}
+                        className={`nav-sub-item ${currentPage === item.id ? 'active' : ''}`}
+                        style={isOpen ? {animationDelay: `${i * 0.04}s`} : {}}
+                        onClick={(e) => { e.stopPropagation(); onNavigate(item.id); }}
+                      >
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -1267,7 +1394,7 @@ function Sidebar({ currentPage, onNavigate }) {
   );
 }
 
-/* ============ TOP HEADER ============ */
+/* ============ TOP HEADER (centered company name) ============ */
 function TopHeader() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -1276,14 +1403,17 @@ function TopHeader() {
 
   return (
     <header className="top-header">
-      <div className="top-header-left">
+      <div className="top-header-side">
         <div className="top-header-logo">🏛️</div>
-        <div>
-          <div className="top-header-company">{companyName}</div>
-          <div className="top-header-tagline">Система за отпуски и време</div>
-        </div>
+        <div className="top-header-tagline-side">Clocky</div>
       </div>
-      <div className="top-header-right">
+
+      <div className="top-header-center">
+        <div className="top-header-company" title={companyName}>{companyName}</div>
+        <div className="top-header-tagline">Система за отпуски и време</div>
+      </div>
+
+      <div className="top-header-side right">
         <div className="top-header-user">
           <div className="top-header-user-avatar">{currentUser.fullName.charAt(0)}</div>
           <div className="top-header-user-info">
@@ -1581,7 +1711,7 @@ function Home({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST MODAL (with required reason) ============ */
+/* ============ LEAVE REQUEST MODAL ============ */
 function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
@@ -1783,7 +1913,6 @@ function LeaveRequestsPage() {
     });
   };
 
-  // Изтриване на заявка (само админ). Ако е одобрена → връщаме дните обратно
   const deleteRequest = async (r) => {
     const t = getType(r.type);
     if (r.status === 'approved' && t.deducts) {
@@ -2081,7 +2210,7 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE (FIXED) ============ */
+/* ============ TIME MODULE ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2149,7 +2278,6 @@ function TimeModule({ scope }) {
     setPendingProject(null);
   };
 
-  // ВАЖНО: използваме isToday() чрез реална дата, не startsWith
   const myTodayEntries = entries.filter(e => e.userId === currentUser.id && isToday(e.checkIn));
   const todayTotal = myTodayEntries.reduce((sum, e) => {
     const start = new Date(e.checkIn).getTime();
@@ -2282,8 +2410,8 @@ function TimeModule({ scope }) {
   );
 }
 
-/* ============ PROJECTS (standalone module) ============ */
-function ProjectsModule({ allowCreate }) {
+/* ============ PROJECTS MODULE ============ */
+function ProjectsModule() {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
   const [form, setForm] = useState({ name: '', description: '', color: '#7c3aed' });
@@ -2316,7 +2444,7 @@ function ProjectsModule({ allowCreate }) {
       <PageHeader
         title="Проекти"
         subtitle={`Всички проекти в системата (${projects.length})`}
-        onAdd={allowCreate ? () => setShowModal(true) : null}
+        onAdd={() => setShowModal(true)}
         addLabel="Нов проект"
       />
 
@@ -2823,11 +2951,10 @@ function App() {
       case 'leaves-reports': return <LeavesReports />;
       case 'time-me': return <TimeModule scope="me" />;
       case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'me'} />;
-      case 'projects-list': return <ProjectsModule allowCreate={true} />;
       case 'company-data': return <CompanyPage />;
       case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
       case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
-      case 'settings-projects': return isAdmin ? <ProjectsModule allowCreate={true} /> : <Home onNavigate={setPage} />;
+      case 'settings-projects': return isAdmin ? <ProjectsModule /> : <Home onNavigate={setPage} />;
       default: return <Home onNavigate={setPage} />;
     }
   };
