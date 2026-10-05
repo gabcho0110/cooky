@@ -152,11 +152,11 @@
     position: relative;
     transform: translateX(-4px);
     opacity: 0;
-    animation: slideIn 0.3s forwards;
   }
   .nav-sub-wrap.open .nav-sub-item {
     transform: translateX(0);
     opacity: 1;
+    animation: slideIn 0.3s forwards;
   }
   @keyframes slideIn {
     to { transform: translateX(0); opacity: 1; }
@@ -684,6 +684,21 @@ const DEFAULT_LEAVE_TYPES = {
   home: { id: 'home', name: 'Домашен', color: '#3b82f6', deducts: false }
 };
 
+const DEFAULT_COMPANY = {
+  name: 'Моята Компания ООД',
+  email: 'info@company.bg',
+  bulstat: '',
+  vat: '',
+  website: '',
+  phone: '',
+  address1: '',
+  address2: '',
+  city: 'София',
+  region: 'София',
+  postalCode: '1000',
+  country: 'Bulgaria'
+};
+
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
 /* ============ CONTEXT ============ */
@@ -735,21 +750,6 @@ function AuthProvider({ children }) {
           createdAt: new Date().toISOString()
         };
         db.ref('users/' + admin.id).set(admin).catch(e => console.error(e));
-        db.ref('leaveTypes').set(DEFAULT_LEAVE_TYPES).catch(e => console.error(e));
-        db.ref('company').set({
-          name: 'Моята Компания ООД',
-          email: 'info@company.bg',
-          bulstat: '',
-          vat: '',
-          website: '',
-          phone: '',
-          address1: '',
-          address2: '',
-          city: 'София',
-          region: 'София',
-          postalCode: '1000',
-          country: 'Bulgaria'
-        }).catch(e => console.error(e));
       }
 
       const storedNow = localStorage.getItem('clocky_user');
@@ -780,6 +780,17 @@ function AuthProvider({ children }) {
       clearTimeout(timeout);
       ref.off('value', handler);
     };
+  }, []);
+
+  // Seed leaveTypes and company if not present
+  useEffect(() => {
+    if (!firebaseReady || !db) return;
+    db.ref('leaveTypes').once('value').then(snap => {
+      if (!snap.exists()) db.ref('leaveTypes').set(DEFAULT_LEAVE_TYPES).catch(e => console.error(e));
+    }).catch(() => {});
+    db.ref('company').once('value').then(snap => {
+      if (!snap.exists()) db.ref('company').set(DEFAULT_COMPANY).catch(e => console.error(e));
+    }).catch(() => {});
   }, []);
 
   const login = (username, password) => {
@@ -840,12 +851,15 @@ function useFirebaseList(path) {
   return data;
 }
 
-function useFirebaseObject(path) {
-  const [data, setData] = useState(null);
+function useFirebaseObject(path, defaultVal = null) {
+  const [data, setData] = useState(defaultVal);
   useEffect(() => {
     if (!db || !path) return;
     const ref = db.ref(path);
-    const handler = (snap) => setData(snap.val());
+    const handler = (snap) => {
+      const val = snap.val();
+      setData(val || defaultVal);
+    };
     ref.on('value', handler);
     return () => ref.off('value', handler);
   }, [path]);
@@ -884,8 +898,7 @@ function Sidebar({ currentPage, onNavigate }) {
       icon: '📁',
       label: 'Проекти',
       items: [
-        { id: 'projects-list', label: 'Всички проекти' },
-        { id: 'projects-new', label: 'Нов проект' }
+        { id: 'projects-list', label: 'Всички проекти' }
       ]
     },
     {
@@ -1070,7 +1083,7 @@ function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
 function Home({ onNavigate }) {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const now = new Date();
   const year = now.getFullYear();
 
@@ -1186,10 +1199,10 @@ function Home({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST FORM (MODAL) ============ */
+/* ============ LEAVE REQUEST MODAL ============ */
 function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const [form, setForm] = useState({
     startDate: '', endDate: '', reason: '', type: 'paid'
   });
@@ -1278,7 +1291,7 @@ function LeaveRequestModal({ onClose }) {
 function MyRequests() {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const [showModal, setShowModal] = useState(false);
 
   const myRequests = requests
@@ -1339,7 +1352,7 @@ function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
   const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const [filter, setFilter] = useState(isAdmin ? 'pending' : 'all');
   const [showModal, setShowModal] = useState(false);
 
@@ -1468,7 +1481,7 @@ function LeaveRequestsPage() {
 function CalendarPage() {
   const { users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -1584,7 +1597,7 @@ function CalendarPage() {
 function LeavesReports() {
   const { users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const year = new Date().getFullYear();
 
   const stats = users.map(u => {
@@ -1834,12 +1847,12 @@ function TimeModule({ scope }) {
 }
 
 /* ============ PROJECTS ============ */
-function ProjectsPage({ mode, onNavigate }) {
+function ProjectsPage() {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
   const [form, setForm] = useState({ name: '', description: '', color: '#7c3aed' });
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(mode === 'new');
+  const [showModal, setShowModal] = useState(false);
 
   const addProject = async (e) => {
     e.preventDefault();
@@ -1856,7 +1869,6 @@ function ProjectsPage({ mode, onNavigate }) {
     await db.ref('projects/' + p.id).set(p);
     setForm({ name: '', description: '', color: '#7c3aed' });
     setShowModal(false);
-    if (onNavigate) onNavigate('projects-list');
   };
 
   const deleteProject = async (id) => {
@@ -1866,8 +1878,8 @@ function ProjectsPage({ mode, onNavigate }) {
   return (
     <div className="animate-in">
       <PageHeader
-        title={mode === 'new' ? 'Нов проект' : 'Проекти'}
-        subtitle={mode === 'new' ? 'Създайте нов проект' : 'Всички проекти в системата'}
+        title="Проекти"
+        subtitle={`Всички проекти в системата (${projects.length})`}
         onAdd={() => setShowModal(true)}
         addLabel="Нов проект"
       />
@@ -1933,12 +1945,16 @@ function ProjectsPage({ mode, onNavigate }) {
 /* ============ COMPANY ============ */
 function CompanyPage() {
   const { currentUser } = useAuth();
-  const company = useFirebaseObject('company');
+  const company = useFirebaseObject('company', DEFAULT_COMPANY);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState(DEFAULT_COMPANY);
+  const [saved, setSaved] = useState(false);
 
+  // Sync form with loaded data
   useEffect(() => {
-    if (company && !form) setForm(company);
+    if (company) {
+      setForm({ ...DEFAULT_COMPANY, ...company });
+    }
   }, [company]);
 
   const isAdmin = currentUser.role === 'admin';
@@ -1946,15 +1962,9 @@ function CompanyPage() {
   const save = async () => {
     await db.ref('company').set(form);
     setEditing(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   };
-
-  if (!form) {
-    return (
-      <div className="animate-in">
-        <PageHeader title="Компания" subtitle="Зареждане..." />
-      </div>
-    );
-  }
 
   const fields = [
     { key: 'name', label: 'Име' },
@@ -1974,9 +1984,11 @@ function CompanyPage() {
   return (
     <div className="animate-in">
       <PageHeader
-        title={`Данни за компанията – ${form.name}`}
+        title={`Данни за компанията – ${form.name || ''}`}
         subtitle="Основна информация"
       />
+
+      {saved && <div className="success">✅ Промените са запазени успешно</div>}
 
       <div className="card">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
@@ -1986,6 +1998,7 @@ function CompanyPage() {
               className="btn btn-secondary btn-sm"
               onClick={() => setEditing(true)}
               style={{width:'38px', height:'38px', padding:0, justifyContent:'center', borderRadius:'50%'}}
+              title="Редактирай"
             >
               ✏️
             </button>
@@ -2012,7 +2025,7 @@ function CompanyPage() {
                 <div style={{
                   padding:'11px 14px', background:'#faf5ff',
                   borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa',
-                  fontSize:'14px', border:'1px solid #ede9fe'
+                  fontSize:'14px', border:'1px solid #ede9fe', minHeight:'42px'
                 }}>
                   {form[f.key] || '-'}
                 </div>
@@ -2024,7 +2037,7 @@ function CompanyPage() {
         {editing && (
           <div className="flex gap-2 mt-2">
             <button className="btn btn-primary" onClick={save}>Запази</button>
-            <button className="btn btn-secondary" onClick={() => { setForm(company); setEditing(false); }}>Отказ</button>
+            <button className="btn btn-secondary" onClick={() => { setForm({...DEFAULT_COMPANY, ...company}); setEditing(false); }}>Отказ</button>
           </div>
         )}
       </div>
@@ -2180,7 +2193,7 @@ function UsersManager() {
 
 /* ============ LEAVE TYPES ============ */
 function LeaveTypesSettings() {
-  const leaveTypes = useFirebaseObject('leaveTypes') || {};
+  const leaveTypes = useFirebaseObject('leaveTypes', {});
   const [form, setForm] = useState({ name: '', color: '#7c3aed', deducts: true });
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -2208,17 +2221,19 @@ function LeaveTypesSettings() {
     if (confirm('Сигурни ли сте?')) await db.ref('leaveTypes/' + id).remove();
   };
 
+  const types = Object.values(leaveTypes || {});
+
   return (
     <div className="animate-in">
       <PageHeader
         title="Видове отпуски"
-        subtitle={`${Object.keys(leaveTypes).length} вида в системата`}
+        subtitle={`${types.length} вида в системата`}
         onAdd={() => setShowModal(true)}
         addLabel="Нов вид"
       />
 
       <div className="card">
-        {Object.keys(leaveTypes).length === 0 ? (
+        {types.length === 0 ? (
           <div className="empty-state">Няма добавени видове</div>
         ) : (
           <table>
@@ -2226,7 +2241,7 @@ function LeaveTypesSettings() {
               <tr><th>Цвят</th><th>Име</th><th>Приспада се</th><th>Действия</th></tr>
             </thead>
             <tbody>
-              {Object.values(leaveTypes).map(t => editingId === t.id ? (
+              {types.map(t => editingId === t.id ? (
                 <tr key={t.id}>
                   <td>
                     <div className="color-presets">
@@ -2341,8 +2356,7 @@ function App() {
       case 'leaves-reports': return <LeavesReports />;
       case 'time-me': return <TimeModule scope="me" />;
       case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'me'} />;
-      case 'projects-list': return <ProjectsPage mode="list" onNavigate={setPage} />;
-      case 'projects-new': return <ProjectsPage mode="new" onNavigate={setPage} />;
+      case 'projects-list': return <ProjectsPage />;
       case 'company-data': return <CompanyPage />;
       case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
       case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
