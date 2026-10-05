@@ -460,7 +460,6 @@
   .badge.rejected { background: #fee2e2; color: #b91c1c; }
   .badge.active { background: #dcfce7; color: #15803d; }
   .badge.paused { background: #fef3c7; color: #b45309; }
-  .badge.holiday { background: #fee2e2; color: #b91c1c; }
 
   .error {
     background: #fef2f2;
@@ -906,25 +905,23 @@ const readFileAsDataURL = (file) => {
   });
 };
 
-// Празници: Map { "YYYY-MM-DD": { id, name, date } }
 const isHoliday = (dateISO, holidays) => {
   if (!dateISO || !holidays) return false;
   return !!holidays[dateISO];
 };
 
-// Изчислява колко работни дни (без почивни + празници) има в даден диапазон
-const calcWorkingDays = (startDate, endDate, holidays, includeWeekends = false) => {
+const calcWorkingDays = (startDate, endDate, holidays) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   let count = 0;
   const cur = new Date(start);
   while (cur <= end) {
     const dateStr = `${cur.getFullYear()}-${pad(cur.getMonth()+1)}-${pad(cur.getDate())}`;
-    const dow = cur.getDay(); // 0 = НД, 6 = СБ
+    const dow = cur.getDay();
     const isWeekend = dow === 0 || dow === 6;
     const holiday = isHoliday(dateStr, holidays);
 
-    if (!holiday && (includeWeekends || !isWeekend)) {
+    if (!holiday && !isWeekend) {
       count++;
     }
     cur.setDate(cur.getDate() + 1);
@@ -954,7 +951,6 @@ const DEFAULT_COMPANY = {
   country: 'Bulgaria'
 };
 
-// Български национални празници (фиксирани дати)
 const DEFAULT_HOLIDAYS = {
   '01-01': { name: 'Нова година' },
   '03-03': { name: 'Освобождение на България' },
@@ -1343,10 +1339,8 @@ function AuthProvider({ children }) {
     db.ref('company').once('value').then(snap => {
       if (!snap.exists()) db.ref('company').set(DEFAULT_COMPANY).catch(e => console.error(e));
     }).catch(() => {});
-    // Seed holidays if empty
     db.ref('holidays').once('value').then(snap => {
       if (!snap.exists()) {
-        // Създаваме записи за текущата година
         const year = new Date().getFullYear();
         const seeded = {};
         Object.entries(DEFAULT_HOLIDAYS).forEach(([md, h]) => {
@@ -1433,7 +1427,6 @@ function useFirebaseObject(path, defaultVal = null) {
   return data;
 }
 
-// Map от dateISO → holiday
 function useHolidaysMap() {
   const list = useFirebaseList('holidays');
   return useMemo(() => {
@@ -2035,8 +2028,8 @@ function LeaveRequestModal({ onClose }) {
       userName: currentUser.fullName,
       startDate: form.startDate,
       endDate: form.endDate,
-      days: workingDays, // Използваме работни дни (без празници и почивни)
-      calendarDays: days, // За справка
+      days: workingDays,
+      calendarDays: days,
       reason: form.reason.trim(),
       type: form.type,
       status: 'pending',
@@ -2646,21 +2639,22 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE ============ */
+/* ============ TIME MODULE (FIXED CHECKOUT) ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
   const [now, setNow] = useState(Date.now());
   const [entries, setEntries] = useState([]);
   const projects = useFirebaseList('projects');
-  const [pendingProject, setPendingProject] = useState(null);
-  const [pendingEntryId, setPendingEntryId] = useState(null);
+
+  // ✅ ПОПРАВКА: запазваме ЦЕЛИЯ entry, не само ID
+  const [pendingCheckout, setPendingCheckout] = useState(null); // { entry: {...}, projectId: '' }
+  const [stoppingEntry, setStoppingEntry] = useState(null);
+  const [stopProjectId, setStopProjectId] = useState('');
 
   const [editingEntry, setEditingEntry] = useState(null);
   const [editForm, setEditForm] = useState({ checkIn: '', checkOut: '', projectId: '' });
   const [editError, setEditError] = useState('');
-  const [stoppingEntry, setStoppingEntry] = useState(null);
-  const [stopProjectId, setStopProjectId] = useState('');
 
   const [detailEntry, setDetailEntry] = useState(null);
 
@@ -2721,32 +2715,37 @@ function TimeModule({ scope }) {
     await db.ref('timeEntries/' + activeEntry.id).update({ pauses });
   };
 
-  const checkOut = () => {
+  // ✅ ПОПРАВКА: отваряме модала с целия entry
+  const openCheckoutModal = () => {
     if (!activeEntry) return;
-    setPendingEntryId(activeEntry.id);
-    setPendingProject(projects[0]?.id || '');
+    setPendingCheckout({
+      entry: activeEntry,
+      projectId: activeEntry.projectId || (projects[0]?.id || '')
+    });
   };
 
   const confirmCheckout = async () => {
-    if (!pendingEntryId) return;
-    const proj = projects.find(p => p.id === pendingProject);
-    const entry = entries.find(e => e.id === pendingEntryId);
-    let pauses = entry?.pauses || [];
+    if (!pendingCheckout) return;
+    const entry = pendingCheckout.entry;
+    const projId = pendingCheckout.projectId;
+    const proj = projects.find(p => p.id === projId);
+
+    // Затваряме активна пауза ако има
+    let pauses = entry.pauses || [];
     pauses = pauses.map(p => p.end ? p : { ...p, end: new Date().toISOString() });
 
-    await db.ref('timeEntries/' + pendingEntryId).update({
+    await db.ref('timeEntries/' + entry.id).update({
       checkOut: new Date().toISOString(),
-      projectId: pendingProject || null,
+      projectId: projId || null,
       projectName: proj?.name || null,
       pauses
     });
-    setPendingEntryId(null);
-    setPendingProject(null);
+
+    setPendingCheckout(null);
   };
 
   const cancelCheckout = () => {
-    setPendingEntryId(null);
-    setPendingProject(null);
+    setPendingCheckout(null);
   };
 
   const openStopModal = (entry) => {
@@ -2872,7 +2871,7 @@ function TimeModule({ scope }) {
                 ) : (
                   <button className="btn btn-success" onClick={resumePause}>▶ Продължи</button>
                 )}
-                <button className="btn btn-danger" onClick={checkOut}>⏹ Приключване</button>
+                <button className="btn btn-danger" onClick={openCheckoutModal}>⏹ Приключване</button>
               </>
             )}
           </div>
@@ -2891,6 +2890,32 @@ function TimeModule({ scope }) {
             </div>
           )}
         </div>
+
+        {/* Checkout modal за служител */}
+        {pendingCheckout && (
+          <div className="modal-backdrop" onClick={cancelCheckout}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <h3>⏹ Приключване на смяна</h3>
+              <p className="text-muted" style={{marginBottom:'16px'}}>Изберете проект, по който сте работили</p>
+              <div className="form-group">
+                <label>Проект</label>
+                <select
+                  value={pendingCheckout.projectId}
+                  onChange={e => setPendingCheckout({ ...pendingCheckout, projectId: e.target.value })}
+                >
+                  <option value="">-- Без проект --</option>
+                  {projects.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button className="btn btn-primary" onClick={confirmCheckout}>Потвърди</button>
+                <button className="btn btn-secondary" onClick={cancelCheckout}>Отказ</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -3013,28 +3038,6 @@ function TimeModule({ scope }) {
           </table>
         )}
       </div>
-
-      {pendingEntryId && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h3>Приключване на смяна</h3>
-            <p className="text-muted" style={{marginBottom:'16px'}}>Изберете проект, по който сте работили</p>
-            <div className="form-group">
-              <label>Проект</label>
-              <select value={pendingProject} onChange={e => setPendingProject(e.target.value)}>
-                <option value="">-- Без проект --</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button className="btn btn-primary" onClick={confirmCheckout}>Потвърди</button>
-              <button className="btn btn-secondary" onClick={cancelCheckout}>Отказ</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {stoppingEntry && (
         <div className="modal-backdrop" onClick={() => setStoppingEntry(null)}>
@@ -3181,7 +3184,6 @@ function HolidaysSettings() {
     if (!form.name.trim()) return setError('Въведете име на празника');
     if (!form.date) return setError('Изберете дата');
 
-    // Проверка за дублиране
     const exists = holidaysList.find(h => h.date === form.date);
     if (exists) return setError('Вече има празник на тази дата: ' + exists.name);
 
