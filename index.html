@@ -13,8 +13,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f0f12;
-    color: #e5e7eb;
+    background: #faf5ff;
+    color: #1e1b4b;
     min-height: 100vh;
     font-size: 14px;
   }
@@ -26,33 +26,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
     padding: 20px;
   }
   .login-card {
-    background: #1a1a1f;
-    border-radius: 16px;
-    padding: 40px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 44px;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    border: 1px solid #2a2a33;
+    box-shadow: 0 24px 70px rgba(124,58,237,0.35);
   }
   .login-card h1 {
-    font-size: 32px;
+    font-size: 34px;
     margin-bottom: 8px;
-    color: #fff;
+    color: #7c3aed;
     text-align: center;
   }
-  .login-card p.sub { text-align: center; color: #9ca3af; margin-bottom: 28px; font-size: 14px; }
+  .login-card p.sub { text-align: center; color: #7c3aed;
+    opacity: 0.7; margin-bottom: 28px; font-size: 14px; }
 
   /* ===== LAYOUT ===== */
   .app-layout { display: flex; min-height: 100vh; }
 
   .sidebar {
     width: 260px;
-    background: #16161a;
-    border-right: 1px solid #2a2a33;
+    background: #fff;
+    border-right: 1px solid #ede9fe;
     padding: 20px 12px;
     display: flex;
     flex-direction: column;
@@ -65,7 +65,7 @@
     padding: 8px 12px 24px;
     font-size: 22px;
     font-weight: 700;
-    color: #fff;
+    color: #7c3aed;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -75,16 +75,16 @@
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: #1f1f26;
-    border-radius: 12px;
+    background: #faf5ff;
+    border-radius: 14px;
     margin-bottom: 20px;
-    border: 1px solid #2a2a33;
+    border: 1px solid #ede9fe;
   }
   .sidebar-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #f97316, #ea580c);
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -92,52 +92,74 @@
     color: #fff;
     font-size: 16px;
   }
-  .sidebar-user-name { font-size: 14px; font-weight: 600; color: #fff; }
-  .sidebar-user-role { font-size: 12px; color: #9ca3af; }
+  .sidebar-user-name { font-size: 14px; font-weight: 600; color: #1e1b4b; }
+  .sidebar-user-role { font-size: 12px; color: #7c3aed; opacity: 0.75; }
 
   .nav-group { margin-bottom: 4px; }
   .nav-group-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    border-radius: 8px;
+    padding: 11px 12px;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: #d1d5db;
-    transition: background 0.15s;
+    color: #4c1d95;
+    transition: background 0.2s, color 0.2s;
     user-select: none;
   }
-  .nav-group-header:hover { background: #1f1f26; }
-  .nav-group-header.open {
-    background: #2a0f0a;
-    color: #f97316;
+  .nav-group-header:hover { background: #faf5ff; }
+  .nav-group-header.active {
+    background: #f3e8ff;
+    color: #7c3aed;
   }
   .nav-group-header .nav-icon { margin-right: 10px; font-size: 16px; }
   .nav-group-header .nav-label { flex: 1; }
   .nav-group-header .chev {
-    transition: transform 0.2s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 11px;
-    opacity: 0.7;
+    opacity: 0.75;
   }
   .nav-group-header.open .chev { transform: rotate(180deg); }
 
+  /* Animated collapse */
+  .nav-sub-wrap {
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+    max-height: 0;
+    opacity: 0;
+  }
+  .nav-sub-wrap.open {
+    max-height: 300px;
+    opacity: 1;
+  }
   .nav-sub {
     padding-left: 8px;
-    margin-top: 2px;
-    margin-bottom: 6px;
+    padding-top: 2px;
+    padding-bottom: 6px;
   }
   .nav-sub-item {
     display: flex;
     align-items: center;
     padding: 8px 12px 8px 36px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
-    color: #9ca3af;
-    transition: all 0.15s;
+    color: #6b7280;
+    transition: all 0.18s;
     position: relative;
+    transform: translateX(-4px);
+    opacity: 0;
+    animation: slideIn 0.3s forwards;
+  }
+  .nav-sub-wrap.open .nav-sub-item {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  @keyframes slideIn {
+    to { transform: translateX(0); opacity: 1; }
   }
   .nav-sub-item::before {
     content: '';
@@ -148,30 +170,32 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #4b5563;
+    background: #c4b5fd;
+    transition: background 0.2s, transform 0.2s;
   }
-  .nav-sub-item:hover { background: #1f1f26; color: #e5e7eb; }
+  .nav-sub-item:hover { background: #faf5ff; color: #7c3aed; }
+  .nav-sub-item:hover::before { background: #a855f7; transform: translateY(-50%) scale(1.4); }
   .nav-sub-item.active {
-    color: #f97316;
-    background: #1f1f26;
-    font-weight: 500;
+    color: #7c3aed;
+    background: #f3e8ff;
+    font-weight: 600;
   }
-  .nav-sub-item.active::before { background: #f97316; }
+  .nav-sub-item.active::before { background: #7c3aed; }
 
   .sidebar-logout {
     margin-top: auto;
-    padding: 10px 12px;
-    background: #2a1215;
-    color: #ef4444;
-    border: 1px solid #3a1a1f;
-    border-radius: 8px;
+    padding: 11px 12px;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
     font-size: 13px;
     font-family: inherit;
-    transition: background 0.15s;
+    transition: background 0.2s;
   }
-  .sidebar-logout:hover { background: #3a1a1f; }
+  .sidebar-logout:hover { background: #fee2e2; }
 
   .main-content {
     flex: 1;
@@ -180,35 +204,45 @@
     min-height: 100vh;
   }
 
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
   .page-title {
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 6px;
-    color: #fff;
+    color: #1e1b4b;
   }
   .page-subtitle {
-    color: #9ca3af;
+    color: #7c3aed;
+    opacity: 0.7;
     font-size: 14px;
-    margin-bottom: 28px;
   }
 
   /* ===== CARDS ===== */
   .card {
-    background: #1a1a1f;
+    background: #fff;
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid #2a2a33;
+    border: 1px solid #ede9fe;
     margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(124,58,237,0.04);
   }
-  .card h3 { font-size: 18px; margin-bottom: 16px; color: #fff; font-weight: 600; }
+  .card h3 { font-size: 18px; margin-bottom: 16px; color: #1e1b4b; font-weight: 600; }
 
   /* ===== DASHBOARD ===== */
   .dash-card {
-    background: #1a1a1f;
-    border-radius: 16px;
-    padding: 28px;
-    border: 1px solid #2a2a33;
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid #ede9fe;
     margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.06);
   }
   .dash-card-header {
     display: flex;
@@ -216,14 +250,14 @@
     align-items: center;
     margin-bottom: 8px;
   }
-  .dash-card h2 { font-size: 22px; font-weight: 700; color: #fff; }
-  .dash-card .sub { color: #9ca3af; font-size: 13px; margin-bottom: 24px; }
+  .dash-card h2 { font-size: 24px; font-weight: 700; color: #1e1b4b; }
+  .dash-card .sub { color: #7c3aed; opacity: 0.65; font-size: 13px; margin-bottom: 24px; }
 
   .dash-plus {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #f97316, #ea580c);
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
     color: #fff;
     border: none;
     font-size: 24px;
@@ -231,32 +265,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s;
-    box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 18px rgba(124,58,237,0.35);
   }
-  .dash-plus:hover { transform: scale(1.05); }
+  .dash-plus:hover { transform: scale(1.08) rotate(90deg); box-shadow: 0 8px 24px rgba(124,58,237,0.5); }
 
   .dash-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
   }
-  .dash-stat-label { color: #9ca3af; font-size: 13px; margin-bottom: 8px; }
+  .dash-stat-label { color: #7c3aed; opacity: 0.7; font-size: 13px; margin-bottom: 8px; }
   .dash-stat-value {
     font-size: 44px;
     font-weight: 700;
-    color: #f97316;
+    color: #7c3aed;
     line-height: 1;
     display: flex;
     align-items: baseline;
     gap: 8px;
   }
-  .dash-stat-value .unit { font-size: 16px; color: #9ca3af; font-weight: 400; }
-  .dash-stat-hint { color: #6b7280; font-size: 12px; margin-top: 8px; }
+  .dash-stat-value .unit { font-size: 16px; color: #a78bfa; font-weight: 400; }
+  .dash-stat-hint { color: #9ca3af; font-size: 12px; margin-top: 8px; }
 
   .dash-divider {
     height: 1px;
-    background: #2a2a33;
+    background: #ede9fe;
     margin: 24px 0;
   }
 
@@ -268,51 +302,51 @@
   .next-date-box {
     text-align: center;
     padding: 8px 16px;
-    border-right: 1px solid #2a2a33;
+    border-right: 1px solid #ede9fe;
   }
-  .next-date-month { color: #f97316; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-  .next-date-num { color: #fff; font-size: 32px; font-weight: 700; line-height: 1; }
-  .next-date-day { color: #6b7280; font-size: 12px; }
+  .next-date-month { color: #7c3aed; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .next-date-num { color: #1e1b4b; font-size: 32px; font-weight: 700; line-height: 1; }
+  .next-date-day { color: #9ca3af; font-size: 12px; }
 
   .absence-badge {
     display: inline-block;
     padding: 6px 12px;
-    background: #3a1a1f;
-    color: #f97316;
+    background: #f3e8ff;
+    color: #7c3aed;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
     margin-top: 8px;
   }
 
-  .link { color: #f97316; cursor: pointer; text-decoration: none; font-weight: 500; }
+  .link { color: #7c3aed; cursor: pointer; text-decoration: none; font-weight: 600; }
   .link:hover { text-decoration: underline; }
 
   .empty-state {
     text-align: center;
     padding: 40px;
-    color: #6b7280;
+    color: #a78bfa;
     font-size: 14px;
   }
 
   /* ===== FORMS ===== */
   .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #9ca3af; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4c1d95; }
   .form-group input, .form-group select, .form-group textarea {
     width: 100%;
-    padding: 10px 14px;
-    background: #0f0f12;
-    border: 1px solid #2a2a33;
-    border-radius: 8px;
+    padding: 11px 14px;
+    background: #fff;
+    border: 1.5px solid #e9d5ff;
+    border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
-    color: #e5e7eb;
-    transition: border 0.2s;
+    color: #1e1b4b;
+    transition: all 0.2s;
   }
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     outline: none;
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    border-color: #a855f7;
+    box-shadow: 0 0 0 4px rgba(168,85,247,0.12);
   }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
@@ -320,33 +354,33 @@
   .btn {
     padding: 10px 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
     gap: 6px;
   }
-  .btn-primary { background: #f97316; color: #fff; }
-  .btn-primary:hover { background: #ea580c; }
-  .btn-success { background: #16a34a; color: #fff; }
-  .btn-success:hover { background: #15803d; }
-  .btn-danger { background: #dc2626; color: #fff; }
-  .btn-danger:hover { background: #b91c1c; }
-  .btn-secondary { background: #2a2a33; color: #d1d5db; }
-  .btn-secondary:hover { background: #3a3a45; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: #7c3aed; color: #fff; box-shadow: 0 4px 12px rgba(124,58,237,0.25); }
+  .btn-primary:hover { background: #6d28d9; box-shadow: 0 6px 16px rgba(124,58,237,0.35); transform: translateY(-1px); }
+  .btn-success { background: #10b981; color: #fff; }
+  .btn-success:hover { background: #059669; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-secondary { background: #f3e8ff; color: #7c3aed; }
+  .btn-secondary:hover { background: #e9d5ff; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
   .btn-sm { padding: 6px 12px; font-size: 12px; }
   .btn-block { width: 100%; justify-content: center; }
 
   /* ===== TABLES ===== */
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2a2a33; }
-  th { background: #0f0f12; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-  tr:hover td { background: #1f1f26; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f3e8ff; }
+  th { background: #faf5ff; font-weight: 600; color: #7c3aed; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:hover td { background: #faf5ff; }
 
   /* ===== BADGES ===== */
   .badge {
@@ -356,35 +390,35 @@
     font-size: 12px;
     font-weight: 600;
   }
-  .badge.pending { background: #422006; color: #fbbf24; }
-  .badge.approved { background: #14532d; color: #86efac; }
-  .badge.rejected { background: #7f1d1d; color: #fca5a5; }
+  .badge.pending { background: #fef3c7; color: #b45309; }
+  .badge.approved { background: #dcfce7; color: #15803d; }
+  .badge.rejected { background: #fee2e2; color: #b91c1c; }
 
   /* ===== MESSAGES ===== */
   .error {
-    background: #2a1215;
-    border: 1px solid #7f1d1d;
-    color: #fca5a5;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 16px;
   }
   .success {
-    background: #14532d;
-    border: 1px solid #166534;
-    color: #86efac;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 16px;
   }
   .info {
-    background: #1e3a8a;
-    border: 1px solid #1e40af;
-    color: #93c5fd;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 16px;
   }
@@ -394,15 +428,16 @@
     font-size: 64px;
     font-weight: 700;
     text-align: center;
-    color: #f97316;
+    color: #7c3aed;
     font-variant-numeric: tabular-nums;
     margin: 24px 0;
     letter-spacing: 2px;
   }
-  .clock-display.working { color: #22c55e; }
+  .clock-display.working { color: #10b981; }
   .clock-status {
     text-align: center;
-    color: #9ca3af;
+    color: #7c3aed;
+    opacity: 0.75;
     margin-bottom: 24px;
     font-size: 14px;
   }
@@ -416,16 +451,17 @@
     margin-bottom: 24px;
   }
   .stat-card {
-    background: #1a1a1f;
+    background: #fff;
     padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #2a2a33;
+    border-radius: 14px;
+    border: 1px solid #ede9fe;
+    box-shadow: 0 1px 3px rgba(124,58,237,0.04);
   }
-  .stat-card .label { font-size: 12px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-  .stat-card .value { font-size: 28px; font-weight: 700; color: #fff; margin-top: 6px; }
-  .stat-card.primary .value { color: #f97316; }
-  .stat-card.success .value { color: #22c55e; }
-  .stat-card.warning .value { color: #fbbf24; }
+  .stat-card .label { font-size: 12px; color: #7c3aed; opacity: 0.7; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #1e1b4b; margin-top: 6px; }
+  .stat-card.primary .value { color: #7c3aed; }
+  .stat-card.success .value { color: #10b981; }
+  .stat-card.warning .value { color: #f59e0b; }
 
   /* ===== CALENDAR ===== */
   .calendar-header {
@@ -436,7 +472,7 @@
     flex-wrap: wrap;
     gap: 12px;
   }
-  .calendar-header h3 { margin: 0; color: #fff; }
+  .calendar-header h3 { margin: 0; color: #1e1b4b; }
   .calendar-nav { display: flex; gap: 8px; }
   .calendar-grid {
     display: grid;
@@ -447,61 +483,77 @@
     text-align: center;
     font-weight: 600;
     font-size: 12px;
-    color: #6b7280;
+    color: #7c3aed;
     padding: 8px 0;
     text-transform: uppercase;
+    opacity: 0.75;
   }
   .calendar-day {
     aspect-ratio: 1;
-    border: 1px solid #2a2a33;
-    border-radius: 8px;
+    border: 1px solid #ede9fe;
+    border-radius: 10px;
     padding: 6px;
     font-size: 12px;
     position: relative;
-    background: #1a1a1f;
+    background: #fff;
     min-height: 80px;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .calendar-day.empty { background: #0f0f12; border-color: transparent; }
-  .calendar-day.today { border-color: #f97316; border-width: 2px; }
+  .calendar-day:not(.empty):hover {
+    border-color: #a855f7;
+    box-shadow: 0 2px 8px rgba(168,85,247,0.15);
+  }
+  .calendar-day.empty { background: #faf5ff; border-color: transparent; }
+  .calendar-day.today { border-color: #7c3aed; border-width: 2px; background: #faf5ff; }
   .calendar-day .day-num { font-weight: 600; color: #9ca3af; }
-  .calendar-day.today .day-num { color: #f97316; }
+  .calendar-day.today .day-num { color: #7c3aed; }
   .day-event {
     font-size: 10px;
     padding: 2px 5px;
-    border-radius: 4px;
+    border-radius: 5px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
     color: #fff;
     font-weight: 500;
+    transition: transform 0.15s;
   }
+  .day-event:hover { transform: scale(1.05); }
 
   /* ===== MODAL ===== */
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(76,29,149,0.4);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 20px;
+    animation: fadeIn 0.2s;
   }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .modal {
-    background: #1a1a1f;
-    border: 1px solid #2a2a33;
-    border-radius: 16px;
+    background: #fff;
+    border-radius: 18px;
     padding: 28px;
     max-width: 520px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 24px 70px rgba(124,58,237,0.35);
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .modal h3 { color: #fff; margin-bottom: 20px; }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal h3 { color: #1e1b4b; margin-bottom: 20px; }
 
   /* ===== COLOR PICKER ===== */
   .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
@@ -511,10 +563,10 @@
     border-radius: 8px;
     cursor: pointer;
     border: 2px solid transparent;
-    transition: transform 0.15s;
+    transition: transform 0.15s, border-color 0.15s;
   }
   .color-dot:hover { transform: scale(1.1); }
-  .color-dot.selected { border-color: #fff; }
+  .color-dot.selected { border-color: #7c3aed; box-shadow: 0 0 0 3px #e9d5ff; }
 
   /* ===== PROJECTS ===== */
   .project-list { display: grid; gap: 12px; }
@@ -523,29 +575,39 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    background: #0f0f12;
-    border-radius: 10px;
-    border: 1px solid #2a2a33;
+    background: #faf5ff;
+    border-radius: 12px;
+    border: 1px solid #ede9fe;
+    transition: all 0.2s;
   }
-  .project-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-  .project-name { font-weight: 600; color: #fff; flex: 1; }
-  .project-desc { font-size: 12px; color: #6b7280; }
+  .project-item:hover { border-color: #c4b5fd; box-shadow: 0 2px 12px rgba(168,85,247,0.1); }
+  .project-color { width: 12px; height: 12px; border-radius: 50%; }
+  .project-name { font-weight: 600; color: #1e1b4b; flex: 1; }
+  .project-desc { font-size: 12px; color: #9ca3af; }
 
   /* ===== SPINNER ===== */
   .spinner {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(249,115,22,0.2);
-    border-top-color: #f97316;
+    border: 3px solid rgba(124,58,237,0.2);
+    border-top-color: #7c3aed;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+  .card, .dash-card, .stat-card, .project-item {
+    animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
 
   .text-muted { color: #9ca3af; font-size: 13px; }
   .mt-2 { margin-top: 16px; }
@@ -553,12 +615,12 @@
   .gap-2 { gap: 8px; }
 
   code {
-    background: #0f0f12;
+    background: #f3e8ff;
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
     font-size: 12px;
-    color: #f97316;
+    color: #7c3aed;
   }
 </style>
 </head>
@@ -616,13 +678,13 @@ const monthShort = ['ЯНУ','ФЕВ','МАР','АПР','МАЙ','ЮНИ','ЮЛ�
 const dayShort = ['НЕД','ПОН','ВТО','СРЯ','ЧЕТ','ПЕТ','СЪБ'];
 
 const DEFAULT_LEAVE_TYPES = {
-  paid: { id: 'paid', name: 'Платен отпуск', color: '#22c55e', deducts: true },
+  paid: { id: 'paid', name: 'Платен отпуск', color: '#10b981', deducts: true },
   unpaid: { id: 'unpaid', name: 'Неплатен отпуск', color: '#ef4444', deducts: false },
   sick: { id: 'sick', name: 'Болничен', color: '#eab308', deducts: false },
   home: { id: 'home', name: 'Домашен', color: '#3b82f6', deducts: false }
 };
 
-const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#64748b','#14b8a6'];
+const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
 /* ============ CONTEXT ============ */
 const AuthContext = createContext(null);
@@ -673,11 +735,7 @@ function AuthProvider({ children }) {
           createdAt: new Date().toISOString()
         };
         db.ref('users/' + admin.id).set(admin).catch(e => console.error(e));
-
-        // Seed default leave types
         db.ref('leaveTypes').set(DEFAULT_LEAVE_TYPES).catch(e => console.error(e));
-
-        // Seed company data
         db.ref('company').set({
           name: 'Моята Компания ООД',
           email: 'info@company.bg',
@@ -800,31 +858,16 @@ function Sidebar({ currentPage, onNavigate }) {
   const isAdmin = currentUser.role === 'admin';
 
   const menuConfig = useMemo(() => [
-    {
-      id: 'dashboard',
-      icon: '📊',
-      label: 'Табло',
-      items: null // single item
-    },
+    { id: 'home', icon: '🏠', label: 'Начало', items: null },
     {
       id: 'leaves',
       icon: '🏖️',
       label: 'Отпуски',
       items: [
-        { id: 'leaves-dashboard', label: 'Табло' },
+        { id: 'leaves-calendar', label: 'Табло' },
         { id: 'leaves-my', label: 'Моите отпуски' },
         { id: 'leaves-requests', label: 'Заявки за отпуск' },
-        { id: 'leaves-calendar', label: 'Календар' },
         { id: 'leaves-reports', label: 'Справки' }
-      ]
-    },
-    {
-      id: 'absences',
-      icon: '📋',
-      label: 'Отсъствия',
-      items: [
-        { id: 'absences-all', label: 'Всички отсъствия' },
-        { id: 'absences-mine', label: 'Моите отсъствия' }
       ]
     },
     {
@@ -876,7 +919,6 @@ function Sidebar({ currentPage, onNavigate }) {
   });
 
   useEffect(() => {
-    // Auto-open group containing currentPage
     menuConfig.forEach(g => {
       if (g.items && g.items.some(it => it.id === currentPage)) {
         setOpenGroups(prev => ({ ...prev, [g.id]: true }));
@@ -887,11 +929,8 @@ function Sidebar({ currentPage, onNavigate }) {
   const toggle = (id) => setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
 
   const handleGroupClick = (group) => {
-    if (!group.items) {
-      onNavigate(group.id);
-    } else {
-      toggle(group.id);
-    }
+    if (!group.items) onNavigate(group.id);
+    else toggle(group.id);
   };
 
   const isGroupActive = (group) => {
@@ -912,31 +951,38 @@ function Sidebar({ currentPage, onNavigate }) {
       </div>
 
       <nav style={{flex: 1}}>
-        {menuConfig.map(group => (
-          <div key={group.id} className="nav-group">
-            <div
-              className={`nav-group-header ${isGroupActive(group) ? 'open' : ''}`}
-              onClick={() => handleGroupClick(group)}
-            >
-              <span className="nav-icon">{group.icon}</span>
-              <span className="nav-label">{group.label}</span>
-              {group.items && <span className="chev">▼</span>}
-            </div>
-            {group.items && openGroups[group.id] && (
-              <div className="nav-sub">
-                {group.items.map(item => (
-                  <div
-                    key={item.id}
-                    className={`nav-sub-item ${currentPage === item.id ? 'active' : ''}`}
-                    onClick={() => onNavigate(item.id)}
-                  >
-                    {item.label}
-                  </div>
-                ))}
+        {menuConfig.map(group => {
+          const isOpen = !!openGroups[group.id];
+          const isActive = isGroupActive(group);
+          return (
+            <div key={group.id} className="nav-group">
+              <div
+                className={`nav-group-header ${isActive ? 'active' : ''} ${isOpen ? 'open' : ''}`}
+                onClick={() => handleGroupClick(group)}
+              >
+                <span className="nav-icon">{group.icon}</span>
+                <span className="nav-label">{group.label}</span>
+                {group.items && <span className="chev">▼</span>}
               </div>
-            )}
-          </div>
-        ))}
+              {group.items && (
+                <div className={`nav-sub-wrap ${isOpen ? 'open' : ''}`}>
+                  <div className="nav-sub">
+                    {group.items.map((item, i) => (
+                      <div
+                        key={item.id}
+                        className={`nav-sub-item ${currentPage === item.id ? 'active' : ''}`}
+                        style={isOpen ? {animationDelay: `${i * 0.04}s`} : {}}
+                        onClick={() => onNavigate(item.id)}
+                      >
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
@@ -1003,8 +1049,25 @@ function Login() {
   );
 }
 
-/* ============ DASHBOARD ============ */
-function Dashboard({ onNavigate }) {
+/* ============ PAGE HEADER ============ */
+function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
+  return (
+    <div className="page-header">
+      <div>
+        <h2 className="page-title">{title}</h2>
+        {subtitle && <p className="page-subtitle">{subtitle}</p>}
+      </div>
+      {onAdd && (
+        <button className="btn btn-primary" onClick={onAdd}>
+          ➕ {addLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ============ HOME ============ */
+function Home({ onNavigate }) {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
@@ -1014,17 +1077,14 @@ function Dashboard({ onNavigate }) {
   const myRequests = requests.filter(r => r.userId === currentUser.id);
   const approvedThisYear = myRequests.filter(r => {
     if (r.status !== 'approved') return false;
-    const startYear = new Date(r.startDate).getFullYear();
-    return startYear === year;
+    return new Date(r.startDate).getFullYear() === year;
   });
 
-  // Изчисляване на използвани дни от заявки (по-точно от usedLeaveDays)
   const usedDays = currentUser.usedLeaveDays || 0;
   const totalDays = currentUser.totalLeaveDays || 0;
   const remaining = totalDays - usedDays;
   const remainingPct = totalDays > 0 ? Math.round((remaining / totalDays) * 100) : 0;
 
-  // Следващо отсъствие
   const today = todayISO();
   const upcoming = myRequests
     .filter(r => r.status === 'approved' && r.endDate >= today)
@@ -1032,11 +1092,12 @@ function Dashboard({ onNavigate }) {
 
   const daysUntil = upcoming ? Math.ceil((new Date(upcoming.startDate) - new Date(today)) / (1000*60*60*24)) : 0;
 
-  const getLeaveTypeColor = (typeId) => (leaveTypes[typeId]?.color) || '#f97316';
   const getLeaveTypeName = (typeId) => (leaveTypes[typeId]?.name) || 'Отпуск';
 
   return (
-    <div>
+    <div className="animate-in">
+      <PageHeader title="Начало" subtitle={`Обобщение за ${year} г.`} />
+
       <div className="dash-card">
         <div className="dash-card-header">
           <h2>Отпуски</h2>
@@ -1074,12 +1135,12 @@ function Dashboard({ onNavigate }) {
               <div className="next-date-day">{dayShort[new Date(upcoming.startDate).getDay()]}</div>
             </div>
             <div>
-              <div style={{fontWeight:600, color:'#fff', marginBottom:'4px'}}>
+              <div style={{fontWeight:600, color:'#1e1b4b', marginBottom:'4px'}}>
                 {getLeaveTypeName(upcoming.type || 'paid')}
               </div>
-              <div style={{fontSize:'13px', color:'#9ca3af', display:'flex', alignItems:'center', gap:'8px'}}>
+              <div style={{fontSize:'13px', color:'#7c3aed', opacity:0.75, display:'flex', alignItems:'center', gap:'8px'}}>
                 <span>{formatDate(upcoming.startDate)} г.</span>
-                <span style={{width:'4px', height:'4px', borderRadius:'50%', background:'#f97316', display:'inline-block'}}></span>
+                <span style={{width:'4px', height:'4px', borderRadius:'50%', background:'#7c3aed', display:'inline-block'}}></span>
                 <span>{upcoming.days} {upcoming.days === 1 ? 'ден' : 'дни'}</span>
               </div>
               {daysUntil >= 0 && (
@@ -1103,7 +1164,6 @@ function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Quick stats */}
       <div className="stats-grid">
         <div className="stat-card primary">
           <div className="label">Оставащи дни</div>
@@ -1126,15 +1186,14 @@ function Dashboard({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST FORM ============ */
-function LeaveRequestForm({ onSuccess }) {
+/* ============ LEAVE REQUEST FORM (MODAL) ============ */
+function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
   const [form, setForm] = useState({
     startDate: '', endDate: '', reason: '', type: 'paid'
   });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const remaining = (currentUser.totalLeaveDays || 0) - (currentUser.usedLeaveDays || 0);
   const days = form.startDate && form.endDate ? daysBetween(form.startDate, form.endDate) : 0;
@@ -1144,8 +1203,7 @@ function LeaveRequestForm({ onSuccess }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    setError(''); setSuccess('');
-
+    setError('');
     if (!form.startDate || !form.endDate) return setError('Изберете дати');
     if (form.endDate < form.startDate) return setError('Крайната дата трябва да е след началната');
     if (willDeduct && days > remaining) return setError(`Нямате достатъчно дни (остават ${remaining})`);
@@ -1163,72 +1221,55 @@ function LeaveRequestForm({ onSuccess }) {
       createdAt: new Date().toISOString()
     };
     await db.ref('leaveRequests/' + req.id).set(req);
-    setForm({ startDate: '', endDate: '', reason: '', type: 'paid' });
-    setSuccess('✅ Заявката е изпратена за одобрение');
-    if (onSuccess) onSuccess();
+    onClose();
   };
 
   return (
-    <div className="card">
-      <h3>📝 Нова заявка за отпуск</h3>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h3>📝 Нова заявка за отпуск</h3>
+        {error && <div className="error">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label>Вид отпуск</label>
+            <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
+              {Object.values(leaveTypes).map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name} {t.deducts ? '(приспада се)' : '(не се приспада)'}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="stats-grid" style={{marginBottom:'20px'}}>
-        <div className="stat-card success">
-          <div className="label">Оставащи дни</div>
-          <div className="value">{remaining}</div>
-        </div>
-        <div className="stat-card">
-          <div className="label">Използвани</div>
-          <div className="value">{currentUser.usedLeaveDays || 0}</div>
-        </div>
-        <div className="stat-card primary">
-          <div className="label">Общо</div>
-          <div className="value">{currentUser.totalLeaveDays || 0}</div>
-        </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Начална дата</label>
+              <input type="date" value={form.startDate} onChange={e => setForm({...form, startDate: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Крайна дата</label>
+              <input type="date" value={form.endDate} onChange={e => setForm({...form, endDate: e.target.value})} min={form.startDate} required />
+            </div>
+          </div>
+
+          {days > 0 && (
+            <p className="text-muted">
+              Общо дни: <b style={{color:'#7c3aed'}}>{days}</b>
+              {willDeduct && ' • Ще се приспаднат от платения ви отпуск'}
+            </p>
+          )}
+
+          <div className="form-group mt-2">
+            <label>Причина (незадължително)</label>
+            <textarea value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} rows="3" />
+          </div>
+
+          <div className="flex gap-2">
+            <button type="submit" className="btn btn-primary" disabled={!canSubmit}>Изпрати заявка</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Отказ</button>
+          </div>
+        </form>
       </div>
-
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
-
-      <form onSubmit={submit}>
-        <div className="form-group">
-          <label>Вид отпуск</label>
-          <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
-            {Object.values(leaveTypes).map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name} {t.deducts ? '(приспада се)' : '(не се приспада)'}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Начална дата</label>
-            <input type="date" value={form.startDate} onChange={e => setForm({...form, startDate: e.target.value})} required />
-          </div>
-          <div className="form-group">
-            <label>Крайна дата</label>
-            <input type="date" value={form.endDate} onChange={e => setForm({...form, endDate: e.target.value})} min={form.startDate} required />
-          </div>
-        </div>
-
-        {days > 0 && (
-          <p className="text-muted">
-            Общо дни: <b style={{color:'#f97316'}}>{days}</b>
-            {willDeduct && ` • Ще се приспаднат от платения ви отпуск`}
-          </p>
-        )}
-
-        <div className="form-group mt-2">
-          <label>Причина (незадължително)</label>
-          <textarea value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} rows="3" />
-        </div>
-
-        <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
-          Изпрати заявка
-        </button>
-      </form>
     </div>
   );
 }
@@ -1238,23 +1279,25 @@ function MyRequests() {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
+  const [showModal, setShowModal] = useState(false);
 
   const myRequests = requests
     .filter(r => r.userId === currentUser.id)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
-  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#f97316' };
+  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed' };
 
   return (
-    <div>
-      <h2 className="page-title">Моите отпуски</h2>
-      <p className="page-subtitle">Преглед на всички ваши заявки</p>
-
-      <LeaveRequestForm />
+    <div className="animate-in">
+      <PageHeader
+        title="Моите отпуски"
+        subtitle="Преглед на всички ваши заявки"
+        onAdd={() => setShowModal(true)}
+        addLabel="Нова заявка"
+      />
 
       <div className="card">
-        <h3>📋 История на заявките</h3>
         {myRequests.length === 0 ? (
           <div className="empty-state">Нямате заявки</div>
         ) : (
@@ -1285,20 +1328,23 @@ function MyRequests() {
           </table>
         )}
       </div>
+
+      {showModal && <LeaveRequestModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
 
-/* ============ ALL REQUESTS (ADMIN + EMPLOYEE) ============ */
+/* ============ LEAVE REQUESTS PAGE ============ */
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
   const [filter, setFilter] = useState(isAdmin ? 'pending' : 'all');
+  const [showModal, setShowModal] = useState(false);
 
   const getUserName = (id, fallback) => users.find(u => u.id === id)?.fullName || fallback || 'Неизвестен';
-  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#f97316', deducts: true };
+  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed', deducts: true };
 
   const approve = async (r) => {
     await db.ref('leaveRequests/' + r.id).update({
@@ -1329,13 +1375,13 @@ function LeaveRequestsPage() {
   const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
 
   return (
-    <div>
-      <h2 className="page-title">{isAdmin ? 'Заявки за отпуск' : 'Моите заявки'}</h2>
-      <p className="page-subtitle">
-        {isAdmin ? 'Одобрявайте или отхвърляйте заявки от служителите' : 'Преглед и подаване на заявки'}
-      </p>
-
-      {!isAdmin && <LeaveRequestForm />}
+    <div className="animate-in">
+      <PageHeader
+        title={isAdmin ? 'Заявки за отпуск' : 'Моите заявки'}
+        subtitle={isAdmin ? 'Одобрявайте или отхвърляйте заявки' : 'Вашите заявки'}
+        onAdd={() => setShowModal(true)}
+        addLabel="Нова заявка"
+      />
 
       {isAdmin && (
         <>
@@ -1412,17 +1458,20 @@ function LeaveRequestsPage() {
           </table>
         )}
       </div>
+
+      {showModal && <LeaveRequestModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
 
 /* ============ CALENDAR ============ */
 function CalendarPage() {
-  const { users, currentUser } = useAuth();
+  const { users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const year = month.getFullYear();
   const m = month.getMonth();
@@ -1436,7 +1485,7 @@ function CalendarPage() {
 
   const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
   const getUserName = (id, fallback) => users.find(u => u.id === id)?.fullName || fallback || '?';
-  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#f97316' };
+  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed' };
 
   const getEventsForDay = (day) => {
     if (!day) return [];
@@ -1447,9 +1496,13 @@ function CalendarPage() {
   const todayStr = todayISO();
 
   return (
-    <div>
-      <h2 className="page-title">Календар</h2>
-      <p className="page-subtitle">Всички отпуски и отсъствия на компанията</p>
+    <div className="animate-in">
+      <PageHeader
+        title="Табло – Календар"
+        subtitle="Всички отпуски и отсъствия"
+        onAdd={() => setShowModal(true)}
+        addLabel="Нова заявка"
+      />
 
       <div className="card">
         <div className="calendar-header">
@@ -1492,13 +1545,13 @@ function CalendarPage() {
 
         <div className="mt-2" style={{display:'flex', gap:'16px', flexWrap:'wrap', marginTop:'20px'}}>
           {Object.values(leaveTypes).map(t => (
-            <span key={t.id} style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#9ca3af'}}>
+            <span key={t.id} style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#7c3aed', opacity:0.8}}>
               <span style={{width:'12px', height:'12px', borderRadius:'3px', background:t.color}}></span>
               {t.name}
             </span>
           ))}
-          <span style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#9ca3af'}}>
-            <span style={{width:'12px', height:'12px', borderRadius:'3px', background:'#6b7280', opacity:0.5}}></span>
+          <span style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#7c3aed', opacity:0.8}}>
+            <span style={{width:'12px', height:'12px', borderRadius:'3px', background:'#a78bfa', opacity:0.5}}></span>
             Прозрачно = чакаща
           </span>
         </div>
@@ -1521,6 +1574,8 @@ function CalendarPage() {
           </div>
         </div>
       )}
+
+      {showModal && <LeaveRequestModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
@@ -1551,9 +1606,8 @@ function LeavesReports() {
   });
 
   return (
-    <div>
-      <h2 className="page-title">Справки</h2>
-      <p className="page-subtitle">Обобщение на отпуските за {year} г.</p>
+    <div className="animate-in">
+      <PageHeader title="Справки" subtitle={`Обобщение на отпуските за ${year} г.`} />
 
       <div className="card">
         <h3>👥 По служители</h3>
@@ -1568,68 +1622,11 @@ function LeavesReports() {
                 <td>{s.approvedCount}</td>
                 <td>{s.usedDays}</td>
                 <td>{s.user.totalLeaveDays || 0}</td>
-                <td><b style={{color: s.remaining < 5 ? '#ef4444' : '#22c55e'}}>{s.remaining}</b></td>
+                <td><b style={{color: s.remaining < 5 ? '#ef4444' : '#10b981'}}>{s.remaining}</b></td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-}
-
-/* ============ ABSENCES ============ */
-function AbsencesPage({ scope }) {
-  const { users, currentUser } = useAuth();
-  const requests = useFirebaseList('leaveRequests');
-  const leaveTypes = useFirebaseObject('leaveTypes') || DEFAULT_LEAVE_TYPES;
-
-  const filtered = scope === 'mine'
-    ? requests.filter(r => r.userId === currentUser.id && r.status === 'approved')
-    : requests.filter(r => r.status === 'approved');
-
-  const sorted = [...filtered].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-  const getUserName = (id, fallback) => users.find(u => u.id === id)?.fullName || fallback || '?';
-  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#f97316' };
-
-  return (
-    <div>
-      <h2 className="page-title">{scope === 'mine' ? 'Моите отсъствия' : 'Всички отсъствия'}</h2>
-      <p className="page-subtitle">Одобрени отсъствия на служителите</p>
-
-      <div className="card">
-        {sorted.length === 0 ? (
-          <div className="empty-state">Няма отсъствия</div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                {scope === 'all' && <th>Служител</th>}
-                <th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(r => {
-                const t = getType(r.type);
-                return (
-                  <tr key={r.id}>
-                    {scope === 'all' && <td>{getUserName(r.userId, r.userName)}</td>}
-                    <td>
-                      <span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
-                        <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                        {t.name}
-                      </span>
-                    </td>
-                    <td>{formatDate(r.startDate)}</td>
-                    <td>{formatDate(r.endDate)}</td>
-                    <td>{r.days}</td>
-                    <td>{r.reason || '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
       </div>
     </div>
   );
@@ -1713,7 +1710,6 @@ function TimeModule({ scope }) {
 
   const getUserName = (id) => users.find(u => u.id === id)?.fullName || '?';
 
-  // Обобщение по проекти
   const projectSummary = useMemo(() => {
     const map = {};
     entries.filter(e => e.checkOut).forEach(e => {
@@ -1726,13 +1722,13 @@ function TimeModule({ scope }) {
   }, [entries]);
 
   return (
-    <div>
-      <h2 className="page-title">{scope === 'all' ? 'Отчети за работно време' : 'Моето време'}</h2>
-      <p className="page-subtitle">
-        {scope === 'all' ? 'Всички служители' : 'Проследяване на работното време'}
-      </p>
+    <div className="animate-in">
+      <PageHeader
+        title={scope === 'all' ? 'Отчети за работно време' : 'Моето време'}
+        subtitle={scope === 'all' ? 'Всички служители' : 'Проследяване на работното време'}
+      />
 
-      {!isAdmin || scope === 'me' ? (
+      {(!isAdmin || scope === 'me') && (
         <div className="card">
           <h3>🕐 Таймер</h3>
           <div className={`clock-display ${activeEntry ? 'working' : ''}`}>
@@ -1748,12 +1744,12 @@ function TimeModule({ scope }) {
             <button className="btn btn-danger" onClick={checkOut} disabled={!activeEntry}>⏹ Приключване</button>
           </div>
 
-          <div style={{padding:'16px', background:'#0f0f12', borderRadius:'10px', border:'1px solid #2a2a33'}}>
+          <div style={{padding:'16px', background:'#faf5ff', borderRadius:'12px', border:'1px solid #ede9fe'}}>
             <div className="text-muted">Общо днес:</div>
-            <div style={{fontSize:'24px', fontWeight:'700', color:'#22c55e'}}>{fmtTime(todayTotal)}</div>
+            <div style={{fontSize:'24px', fontWeight:'700', color:'#10b981'}}>{fmtTime(todayTotal)}</div>
           </div>
         </div>
-      ) : null}
+      )}
 
       {scope === 'all' && (
         <div className="card">
@@ -1838,16 +1834,16 @@ function TimeModule({ scope }) {
 }
 
 /* ============ PROJECTS ============ */
-function ProjectsPage({ mode }) {
+function ProjectsPage({ mode, onNavigate }) {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
-  const [form, setForm] = useState({ name: '', description: '', color: '#f97316' });
+  const [form, setForm] = useState({ name: '', description: '', color: '#7c3aed' });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showModal, setShowModal] = useState(mode === 'new');
 
   const addProject = async (e) => {
     e.preventDefault();
-    setError(''); setSuccess('');
+    setError('');
     if (!form.name.trim()) return setError('Въведете име');
     const p = {
       id: uid(),
@@ -1858,57 +1854,24 @@ function ProjectsPage({ mode }) {
       createdAt: new Date().toISOString()
     };
     await db.ref('projects/' + p.id).set(p);
-    setForm({ name: '', description: '', color: '#f97316' });
-    setSuccess('✅ Проектът е добавен');
+    setForm({ name: '', description: '', color: '#7c3aed' });
+    setShowModal(false);
+    if (onNavigate) onNavigate('projects-list');
   };
 
   const deleteProject = async (id) => {
-    if (confirm('Сигурни ли сте?')) {
-      await db.ref('projects/' + id).remove();
-    }
+    if (confirm('Сигурни ли сте?')) await db.ref('projects/' + id).remove();
   };
 
-  if (mode === 'new') {
-    return (
-      <div>
-        <h2 className="page-title">Нов проект</h2>
-        <p className="page-subtitle">Създайте нов проект за проследяване на време</p>
-        <div className="card">
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
-          <form onSubmit={addProject}>
-            <div className="form-group">
-              <label>Име на проекта *</label>
-              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Описание</label>
-              <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows="3" />
-            </div>
-            <div className="form-group">
-              <label>Цвят</label>
-              <div className="color-presets">
-                {COLOR_PRESETS.map(c => (
-                  <div
-                    key={c}
-                    className={`color-dot ${form.color === c ? 'selected' : ''}`}
-                    style={{background: c}}
-                    onClick={() => setForm({...form, color: c})}
-                  />
-                ))}
-              </div>
-            </div>
-            <button type="submit" className="btn btn-primary">+ Създай проект</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <h2 className="page-title">Проекти</h2>
-      <p className="page-subtitle">Всички проекти в системата</p>
+    <div className="animate-in">
+      <PageHeader
+        title={mode === 'new' ? 'Нов проект' : 'Проекти'}
+        subtitle={mode === 'new' ? 'Създайте нов проект' : 'Всички проекти в системата'}
+        onAdd={() => setShowModal(true)}
+        addLabel="Нов проект"
+      />
+
       <div className="card">
         {projects.length === 0 ? (
           <div className="empty-state">Няма проекти</div>
@@ -1916,7 +1879,7 @@ function ProjectsPage({ mode }) {
           <div className="project-list">
             {projects.map(p => (
               <div key={p.id} className="project-item">
-                <div className="project-color" style={{background: p.color || '#f97316'}}></div>
+                <div className="project-color" style={{background: p.color || '#7c3aed'}}></div>
                 <div style={{flex:1}}>
                   <div className="project-name">{p.name}</div>
                   {p.description && <div className="project-desc">{p.description}</div>}
@@ -1927,6 +1890,42 @@ function ProjectsPage({ mode }) {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>➕ Нов проект</h3>
+            {error && <div className="error">{error}</div>}
+            <form onSubmit={addProject}>
+              <div className="form-group">
+                <label>Име на проекта *</label>
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required autoFocus />
+              </div>
+              <div className="form-group">
+                <label>Описание</label>
+                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows="3" />
+              </div>
+              <div className="form-group">
+                <label>Цвят</label>
+                <div className="color-presets">
+                  {COLOR_PRESETS.map(c => (
+                    <div
+                      key={c}
+                      className={`color-dot ${form.color === c ? 'selected' : ''}`}
+                      style={{background: c}}
+                      onClick={() => setForm({...form, color: c})}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary">Създай</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Отказ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1951,32 +1950,33 @@ function CompanyPage() {
 
   if (!form) {
     return (
-      <div>
-        <h2 className="page-title">Компания</h2>
-        <p className="page-subtitle">Зареждане...</p>
+      <div className="animate-in">
+        <PageHeader title="Компания" subtitle="Зареждане..." />
       </div>
     );
   }
 
   const fields = [
-    { key: 'name', label: 'Име', col: 1 },
-    { key: 'email', label: 'Имейл', col: 2, type: 'email' },
-    { key: 'bulstat', label: 'БИК / Булстат', col: 1 },
-    { key: 'vat', label: 'ДДС номер', col: 2 },
-    { key: 'website', label: 'Уебсайт', col: 1 },
-    { key: 'phone', label: 'Телефон', col: 2 },
-    { key: 'address1', label: 'Адрес, ред 1', col: 1 },
-    { key: 'address2', label: 'Адрес, ред 2', col: 2 },
-    { key: 'city', label: 'Град', col: 1 },
-    { key: 'region', label: 'Област', col: 2 },
-    { key: 'postalCode', label: 'Пощенски код', col: 1 },
-    { key: 'country', label: 'Държава', col: 2 }
+    { key: 'name', label: 'Име' },
+    { key: 'email', label: 'Имейл', type: 'email' },
+    { key: 'bulstat', label: 'БИК / Булстат' },
+    { key: 'vat', label: 'ДДС номер' },
+    { key: 'website', label: 'Уебсайт' },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'address1', label: 'Адрес, ред 1' },
+    { key: 'address2', label: 'Адрес, ред 2' },
+    { key: 'city', label: 'Град' },
+    { key: 'region', label: 'Област' },
+    { key: 'postalCode', label: 'Пощенски код' },
+    { key: 'country', label: 'Държава' }
   ];
 
   return (
-    <div>
-      <h2 className="page-title">Данни за компанията – {form.name}</h2>
-      <p className="page-subtitle">Основна информация</p>
+    <div className="animate-in">
+      <PageHeader
+        title={`Данни за компанията – ${form.name}`}
+        subtitle="Основна информация"
+      />
 
       <div className="card">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
@@ -1985,7 +1985,7 @@ function CompanyPage() {
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => setEditing(true)}
-              style={{width:'36px', height:'36px', padding:0, justifyContent:'center', borderRadius:'50%'}}
+              style={{width:'38px', height:'38px', padding:0, justifyContent:'center', borderRadius:'50%'}}
             >
               ✏️
             </button>
@@ -1995,24 +1995,24 @@ function CompanyPage() {
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px'}}>
           {fields.map(f => (
             <div key={f.key}>
-              <label style={{fontSize:'13px', color:'#9ca3af', marginBottom:'6px', display:'block'}}>{f.label}</label>
+              <label style={{fontSize:'13px', color:'#7c3aed', marginBottom:'6px', display:'block', fontWeight:600, opacity:0.8}}>{f.label}</label>
               {editing ? (
                 <input
                   type={f.type || 'text'}
                   value={form[f.key] || ''}
                   onChange={e => setForm({...form, [f.key]: e.target.value})}
                   style={{
-                    width:'100%', padding:'10px 14px',
-                    background:'#0f0f12', border:'1px solid #2a2a33',
-                    borderRadius:'8px', color:'#e5e7eb',
+                    width:'100%', padding:'11px 14px',
+                    background:'#fff', border:'1.5px solid #e9d5ff',
+                    borderRadius:'10px', color:'#1e1b4b',
                     fontSize:'14px', fontFamily:'inherit'
                   }}
                 />
               ) : (
                 <div style={{
-                  padding:'10px 14px', background:'#0f0f12',
-                  borderRadius:'8px', color: form[f.key] ? '#e5e7eb' : '#6b7280',
-                  fontSize:'14px'
+                  padding:'11px 14px', background:'#faf5ff',
+                  borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa',
+                  fontSize:'14px', border:'1px solid #ede9fe'
                 }}>
                   {form[f.key] || '-'}
                 </div>
@@ -2040,17 +2040,17 @@ function UsersManager() {
     role: 'employee', totalLeaveDays: 20
   });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
   const submit = async (e) => {
     e.preventDefault();
-    setError(''); setSuccess('');
+    setError('');
     const res = await addUser({ ...form, totalLeaveDays: Number(form.totalLeaveDays) || 20 });
     if (res.error) return setError(res.error);
     setForm({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
-    setSuccess('✅ Потребителят е добавен');
+    setShowModal(false);
   };
 
   const startEdit = (u) => { setEditingId(u.id); setEditData({ ...u }); };
@@ -2073,102 +2073,116 @@ function UsersManager() {
   };
 
   return (
-    <div>
-      <h2 className="page-title">Потребители</h2>
-      <p className="page-subtitle">Управление на потребители и роли</p>
+    <div className="animate-in">
+      <PageHeader
+        title="Потребители"
+        subtitle={`Управление на потребители и роли (${users.length})`}
+        onAdd={() => setShowModal(true)}
+        addLabel="Нов потребител"
+      />
 
       <div className="card">
-        <h3>➕ Нов потребител</h3>
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
-        <form onSubmit={submit}>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Потребителско име *</label>
-              <input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Парола *</label>
-              <input value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Пълно име *</label>
-              <input value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Email *</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Роля</label>
-              <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
-                <option value="employee">Служител</option>
-                <option value="admin">Администратор</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Годишен отпуск (дни)</label>
-              <input type="number" value={form.totalLeaveDays} onChange={e => setForm({...form, totalLeaveDays: e.target.value})} />
-            </div>
-          </div>
-          <button type="submit" className="btn btn-primary">+ Добави</button>
-        </form>
+        {users.length === 0 ? (
+          <div className="empty-state">Няма потребители</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
+            </thead>
+            <tbody>
+              {users.map(u => editingId === u.id ? (
+                <tr key={u.id}>
+                  <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} style={{width:'130px'}} /></td>
+                  <td><input value={editData.username} onChange={e => setEditData({...editData, username: e.target.value})} style={{width:'100px'}} /></td>
+                  <td><input value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} style={{width:'100px'}} /></td>
+                  <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} style={{width:'150px'}} /></td>
+                  <td>
+                    <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
+                      <option value="employee">Служител</option>
+                      <option value="admin">Админ</option>
+                    </select>
+                  </td>
+                  <td><input type="number" style={{width:'60px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
+                  <td>
+                    <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                    <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={u.id}>
+                  <td>{u.fullName}</td>
+                  <td><code>{u.username}</code></td>
+                  <td><code>{u.password}</code></td>
+                  <td>{u.email}</td>
+                  <td><span className="badge pending">{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
+                  <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
+                  <td>
+                    <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
+                    <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      <div className="card">
-        <h3>👥 Всички потребители ({users.length})</h3>
-        <table>
-          <thead>
-            <tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
-          </thead>
-          <tbody>
-            {users.map(u => editingId === u.id ? (
-              <tr key={u.id}>
-                <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} style={{width:'130px'}} /></td>
-                <td><input value={editData.username} onChange={e => setEditData({...editData, username: e.target.value})} style={{width:'100px'}} /></td>
-                <td><input value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} style={{width:'100px'}} /></td>
-                <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} style={{width:'150px'}} /></td>
-                <td>
-                  <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>➕ Нов потребител</h3>
+            {error && <div className="error">{error}</div>}
+            <form onSubmit={submit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Потребителско име *</label>
+                  <input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
+                </div>
+                <div className="form-group">
+                  <label>Парола *</label>
+                  <input value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Пълно име *</label>
+                  <input value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Роля</label>
+                  <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
                     <option value="employee">Служител</option>
-                    <option value="admin">Админ</option>
+                    <option value="admin">Администратор</option>
                   </select>
-                </td>
-                <td><input type="number" style={{width:'60px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
-                <td>
-                  <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                  <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
-                </td>
-              </tr>
-            ) : (
-              <tr key={u.id}>
-                <td>{u.fullName}</td>
-                <td><code>{u.username}</code></td>
-                <td><code>{u.password}</code></td>
-                <td>{u.email}</td>
-                <td><span className="badge pending">{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
-                <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
-                <td>
-                  <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
-                  <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+                <div className="form-group">
+                  <label>Годишен отпуск (дни)</label>
+                  <input type="number" value={form.totalLeaveDays} onChange={e => setForm({...form, totalLeaveDays: e.target.value})} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary">Добави</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Отказ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ============ LEAVE TYPES (SETTINGS) ============ */
+/* ============ LEAVE TYPES ============ */
 function LeaveTypesSettings() {
   const leaveTypes = useFirebaseObject('leaveTypes') || {};
-  const [form, setForm] = useState({ name: '', color: '#f97316', deducts: true });
+  const [form, setForm] = useState({ name: '', color: '#7c3aed', deducts: true });
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
@@ -2177,7 +2191,8 @@ function LeaveTypesSettings() {
     if (!form.name.trim()) return;
     const id = uid();
     await db.ref('leaveTypes/' + id).set({ id, ...form });
-    setForm({ name: '', color: '#f97316', deducts: true });
+    setForm({ name: '', color: '#7c3aed', deducts: true });
+    setShowModal(false);
   };
 
   const startEdit = (t) => { setEditingId(t.id); setEditData({...t}); };
@@ -2194,45 +2209,15 @@ function LeaveTypesSettings() {
   };
 
   return (
-    <div>
-      <h2 className="page-title">Видове отпуски</h2>
-      <p className="page-subtitle">Дефинирайте видове отсъствия, цветове и приспадане</p>
+    <div className="animate-in">
+      <PageHeader
+        title="Видове отпуски"
+        subtitle={`${Object.keys(leaveTypes).length} вида в системата`}
+        onAdd={() => setShowModal(true)}
+        addLabel="Нов вид"
+      />
 
       <div className="card">
-        <h3>➕ Нов вид отпуск</h3>
-        <form onSubmit={addType}>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Име *</label>
-              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="напр. Платен отпуск" required />
-            </div>
-            <div className="form-group">
-              <label>Приспада се от платения отпуск?</label>
-              <select value={form.deducts ? 'yes' : 'no'} onChange={e => setForm({...form, deducts: e.target.value === 'yes'})}>
-                <option value="yes">Да</option>
-                <option value="no">Не</option>
-              </select>
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Цвят в календара</label>
-            <div className="color-presets">
-              {COLOR_PRESETS.map(c => (
-                <div
-                  key={c}
-                  className={`color-dot ${form.color === c ? 'selected' : ''}`}
-                  style={{background: c}}
-                  onClick={() => setForm({...form, color: c})}
-                />
-              ))}
-            </div>
-          </div>
-          <button type="submit" className="btn btn-primary">+ Добави вид</button>
-        </form>
-      </div>
-
-      <div className="card">
-        <h3>📋 Всички видове ({Object.keys(leaveTypes).length})</h3>
         {Object.keys(leaveTypes).length === 0 ? (
           <div className="empty-state">Няма добавени видове</div>
         ) : (
@@ -2270,7 +2255,7 @@ function LeaveTypesSettings() {
               ) : (
                 <tr key={t.id}>
                   <td>
-                    <div style={{width:'24px', height:'24px', borderRadius:'6px', background:t.color}}></div>
+                    <div style={{width:'28px', height:'28px', borderRadius:'8px', background:t.color, boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}></div>
                   </td>
                   <td>{t.name}</td>
                   <td>{t.deducts ? '✅ Да' : '❌ Не'}</td>
@@ -2284,6 +2269,44 @@ function LeaveTypesSettings() {
           </table>
         )}
       </div>
+
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>➕ Нов вид отпуск</h3>
+            <form onSubmit={addType}>
+              <div className="form-group">
+                <label>Име *</label>
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="напр. Платен отпуск" required autoFocus />
+              </div>
+              <div className="form-group">
+                <label>Приспада се от платения отпуск?</label>
+                <select value={form.deducts ? 'yes' : 'no'} onChange={e => setForm({...form, deducts: e.target.value === 'yes'})}>
+                  <option value="yes">Да</option>
+                  <option value="no">Не</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Цвят в календара</label>
+                <div className="color-presets">
+                  {COLOR_PRESETS.map(c => (
+                    <div
+                      key={c}
+                      className={`color-dot ${form.color === c ? 'selected' : ''}`}
+                      style={{background: c}}
+                      onClick={() => setForm({...form, color: c})}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary">Добави</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Отказ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2291,7 +2314,7 @@ function LeaveTypesSettings() {
 /* ============ APP ============ */
 function App() {
   const { currentUser, loading } = useAuth();
-  const [page, setPage] = useState('dashboard');
+  const [page, setPage] = useState('home');
 
   if (loading) {
     return (
@@ -2311,29 +2334,26 @@ function App() {
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard': return <Dashboard onNavigate={setPage} />;
-      case 'leaves-dashboard': return <Dashboard onNavigate={setPage} />;
+      case 'home': return <Home onNavigate={setPage} />;
+      case 'leaves-calendar': return <CalendarPage />;
       case 'leaves-my': return <MyRequests />;
       case 'leaves-requests': return <LeaveRequestsPage />;
-      case 'leaves-calendar': return <CalendarPage />;
       case 'leaves-reports': return <LeavesReports />;
-      case 'absences-all': return <AbsencesPage scope="all" />;
-      case 'absences-mine': return <AbsencesPage scope="mine" />;
       case 'time-me': return <TimeModule scope="me" />;
       case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'me'} />;
-      case 'projects-list': return <ProjectsPage mode="list" />;
-      case 'projects-new': return <ProjectsPage mode="new" />;
+      case 'projects-list': return <ProjectsPage mode="list" onNavigate={setPage} />;
+      case 'projects-new': return <ProjectsPage mode="new" onNavigate={setPage} />;
       case 'company-data': return <CompanyPage />;
-      case 'settings-users': return isAdmin ? <UsersManager /> : <Dashboard onNavigate={setPage} />;
-      case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Dashboard onNavigate={setPage} />;
-      default: return <Dashboard onNavigate={setPage} />;
+      case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
+      case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
+      default: return <Home onNavigate={setPage} />;
     }
   };
 
   return (
     <div className="app-layout">
       <Sidebar currentPage={page} onNavigate={setPage} />
-      <main className="main-content">
+      <main className="main-content" key={page}>
         {renderPage()}
       </main>
     </div>
