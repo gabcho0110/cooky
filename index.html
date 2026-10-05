@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -20,7 +21,6 @@
   }
   #root { min-height: 100vh; }
 
-  /* ===== LOGIN ===== */
   .login-wrap {
     min-height: 100vh;
     display: flex;
@@ -46,7 +46,6 @@
   .login-card p.sub { text-align: center; color: #7c3aed;
     opacity: 0.7; margin-bottom: 28px; font-size: 14px; }
 
-  /* ===== LAYOUT ===== */
   .app-layout { display: flex; min-height: 100vh; }
 
   .sidebar {
@@ -123,7 +122,6 @@
   }
   .nav-group-header.open .chev { transform: rotate(180deg); }
 
-  /* Animated collapse */
   .nav-sub-wrap {
     overflow: hidden;
     transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
@@ -224,7 +222,6 @@
     font-size: 14px;
   }
 
-  /* ===== CARDS ===== */
   .card {
     background: #fff;
     border-radius: 16px;
@@ -235,7 +232,6 @@
   }
   .card h3 { font-size: 18px; margin-bottom: 16px; color: #1e1b4b; font-weight: 600; }
 
-  /* ===== DASHBOARD ===== */
   .dash-card {
     background: #fff;
     border-radius: 20px;
@@ -329,7 +325,6 @@
     font-size: 14px;
   }
 
-  /* ===== FORMS ===== */
   .form-group { margin-bottom: 16px; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4c1d95; }
   .form-group input, .form-group select, .form-group textarea {
@@ -350,7 +345,6 @@
   }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  /* ===== BUTTONS ===== */
   .btn {
     padding: 10px 18px;
     border: none;
@@ -376,13 +370,32 @@
   .btn-sm { padding: 6px 12px; font-size: 12px; }
   .btn-block { width: 100%; justify-content: center; }
 
-  /* ===== TABLES ===== */
+  .btn-pdf {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.25);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .btn-pdf:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124,58,237,0.4);
+  }
+
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f3e8ff; }
   th { background: #faf5ff; font-weight: 600; color: #7c3aed; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
   tr:hover td { background: #faf5ff; }
 
-  /* ===== BADGES ===== */
   .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -394,7 +407,6 @@
   .badge.approved { background: #dcfce7; color: #15803d; }
   .badge.rejected { background: #fee2e2; color: #b91c1c; }
 
-  /* ===== MESSAGES ===== */
   .error {
     background: #fef2f2;
     border: 1px solid #fecaca;
@@ -423,7 +435,6 @@
     margin-bottom: 16px;
   }
 
-  /* ===== CLOCK ===== */
   .clock-display {
     font-size: 64px;
     font-weight: 700;
@@ -443,7 +454,6 @@
   }
   .clock-actions { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
 
-  /* ===== STATS ===== */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -463,7 +473,6 @@
   .stat-card.success .value { color: #10b981; }
   .stat-card.warning .value { color: #f59e0b; }
 
-  /* ===== CALENDAR ===== */
   .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -524,7 +533,6 @@
   }
   .day-event:hover { transform: scale(1.05); }
 
-  /* ===== MODAL ===== */
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -555,7 +563,6 @@
   }
   .modal h3 { color: #1e1b4b; margin-bottom: 20px; }
 
-  /* ===== COLOR PICKER ===== */
   .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .color-dot {
     width: 32px;
@@ -568,7 +575,6 @@
   .color-dot:hover { transform: scale(1.1); }
   .color-dot.selected { border-color: #7c3aed; box-shadow: 0 0 0 3px #e9d5ff; }
 
-  /* ===== PROJECTS ===== */
   .project-list { display: grid; gap: 12px; }
   .project-item {
     display: flex;
@@ -585,7 +591,6 @@
   .project-name { font-weight: 600; color: #1e1b4b; flex: 1; }
   .project-desc { font-size: 12px; color: #9ca3af; }
 
-  /* ===== SPINNER ===== */
   .spinner {
     display: inline-block;
     width: 20px;
@@ -597,7 +602,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ===== ANIMATIONS ===== */
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -622,6 +626,13 @@
     font-size: 12px;
     color: #7c3aed;
   }
+
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 </style>
 </head>
 <body>
@@ -640,6 +651,8 @@ const firebaseConfig = {
   messagingSenderId: "1050615959900",
   appId: "1:1050615959900:web:d9809d3c299afe5a3bf199"
 };
+
+const SITE_URL = "https://cooky-three.vercel.app";
 
 let db = null;
 let firebaseReady = false;
@@ -700,6 +713,217 @@ const DEFAULT_COMPANY = {
 };
 
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
+
+/* ============ PDF GENERATOR ============ */
+function generateUserPDF(user) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Colors (purple theme)
+  const purple = [124, 58, 237];
+  const lightPurple = [168, 85, 247];
+  const veryLightPurple = [243, 232, 255];
+  const white = [255, 255, 255];
+  const dark = [30, 27, 75];
+  const muted = [156, 163, 175];
+
+  // === Background ===
+  doc.setFillColor(250, 245, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // === Header gradient bar (top) ===
+  // Simulate gradient by drawing several colored rectangles
+  const headerHeight = 55;
+  const steps = 40;
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    const r = Math.round(168 + (124 - 168) * t);
+    const g = Math.round(85 + (58 - 85) * t);
+    const b = Math.round(247 + (237 - 247) * t);
+    doc.setFillColor(r, g, b);
+    doc.rect((pageWidth / steps) * i, 0, pageWidth / steps + 0.5, headerHeight, 'F');
+  }
+
+  // Clock emoji area – draw a white circle with clock icon
+  const logoX = pageWidth / 2;
+  const logoY = 26;
+  doc.setFillColor(255, 255, 255);
+  doc.circle(logoX, logoY, 12, 'F');
+  // Clock hands
+  doc.setDrawColor(purple[0], purple[1], purple[2]);
+  doc.setLineWidth(1.2);
+  doc.line(logoX, logoY, logoX, logoY - 7);
+  doc.line(logoX, logoY, logoX + 5, logoY + 2);
+  doc.circle(logoX, logoY, 8);
+
+  // Title
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(28);
+  doc.text('Clocky', logoX, 48, { align: 'center' });
+
+  // Subtitle
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text('Система за отпуски и време', logoX, 55, { align: 'center' });
+
+  // === White Card ===
+  const cardX = 20;
+  const cardY = 75;
+  const cardW = pageWidth - 40;
+  const cardH = 180;
+
+  // Card shadow
+  doc.setFillColor(220, 215, 245);
+  doc.roundedRect(cardX + 1, cardY + 2, cardW, cardH, 6, 6, 'F');
+
+  // Card
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(cardX, cardY, cardW, cardH, 6, 6, 'F');
+
+  // Card top accent
+  doc.setFillColor(purple[0], purple[1], purple[2]);
+  doc.roundedRect(cardX, cardY, cardW, 10, 6, 6, 'F');
+  doc.rect(cardX, cardY + 5, cardW, 5, 'F');
+
+  // === "Данни за достъп" heading ===
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Данни за достъп', cardX + 15, cardY + 32);
+
+  // Greeting line
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text(`Здравейте, ${user.fullName}!`, cardX + 15, cardY + 47);
+
+  doc.setTextColor(muted[0], muted[1], muted[2]);
+  doc.setFontSize(10);
+  doc.text('По-долу ще намерите вашите данни за вход в системата.', cardX + 15, cardY + 56);
+
+  // === Info Box: Username ===
+  const infoX = cardX + 15;
+  const infoW = cardW - 30;
+  let infoY = cardY + 70;
+  const infoH = 22;
+
+  // Username box
+  doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
+  doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
+
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('ПОТРЕБИТЕЛСКО ИМЕ', infoX + 6, infoY + 8);
+
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(15);
+  doc.text(user.username, infoX + 6, infoY + 17);
+
+  // Password box
+  infoY += infoH + 6;
+  doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
+  doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
+
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('ПАРОЛА', infoX + 6, infoY + 8);
+
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(15);
+  doc.text(user.password, infoX + 6, infoY + 17);
+
+  // Role box
+  infoY += infoH + 6;
+  doc.setFillColor(veryLightPurple[0], veryLightPurple[1], veryLightPurple[2]);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'F');
+  doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
+  doc.roundedRect(infoX, infoY, infoW, infoH, 4, 4, 'S');
+
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('РОЛЯ', infoX + 6, infoY + 8);
+
+  doc.setTextColor(dark[0], dark[1], dark[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(user.role === 'admin' ? 'Администратор' : 'Служител', infoX + 6, infoY + 17);
+
+  // === Website Link Section ===
+  const linkY = cardY + cardH + 15;
+
+  // "Website" heading
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Уебсайт', cardX, linkY);
+
+  // Link box (dark purple)
+  const linkBoxY = linkY + 8;
+  const linkBoxH = 28;
+  doc.setFillColor(purple[0], purple[1], purple[2]);
+  doc.roundedRect(cardX, linkBoxY, cardW, linkBoxH, 6, 6, 'F');
+
+  // Small accent circle
+  doc.setFillColor(255, 255, 255);
+  doc.circle(cardX + 14, linkBoxY + linkBoxH / 2, 5, 'F');
+  doc.setFillColor(purple[0], purple[1], purple[2]);
+  doc.circle(cardX + 14, linkBoxY + linkBoxH / 2, 3, 'F');
+
+  // Link text
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('ВЛЕЗТЕ ТУК', cardX + 24, linkBoxY + 10);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(SITE_URL, cardX + 24, linkBoxY + 21);
+
+  // === Footer ===
+  const footerY = pageHeight - 18;
+
+  // Divider
+  doc.setDrawColor(lightPurple[0], lightPurple[1], lightPurple[2]);
+  doc.setLineWidth(0.3);
+  doc.line(cardX, footerY - 8, pageWidth - cardX, footerY - 8);
+
+  doc.setTextColor(purple[0], purple[1], purple[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('⏰ Clocky', cardX, footerY);
+
+  doc.setTextColor(muted[0], muted[1], muted[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(`Генериран на ${new Date().toLocaleDateString('bg-BG')}`, pageWidth - cardX, footerY, { align: 'right' });
+
+  // Password safety note
+  doc.setTextColor(muted[0], muted[1], muted[2]);
+  doc.setFontSize(8);
+  doc.text('Моля, съхранявайте този документ на сигурно място и не споделяйте паролата си.', cardX, footerY + 5);
+
+  // Save
+  const filename = `Clocky_${user.username}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(filename);
+}
 
 /* ============ CONTEXT ============ */
 const AuthContext = createContext(null);
@@ -782,7 +1006,6 @@ function AuthProvider({ children }) {
     };
   }, []);
 
-  // Seed leaveTypes and company if not present
   useEffect(() => {
     if (!firebaseReady || !db) return;
     db.ref('leaveTypes').once('value').then(snap => {
@@ -1950,7 +2173,6 @@ function CompanyPage() {
   const [form, setForm] = useState(DEFAULT_COMPANY);
   const [saved, setSaved] = useState(false);
 
-  // Sync form with loaded data
   useEffect(() => {
     if (company) {
       setForm({ ...DEFAULT_COMPANY, ...company });
@@ -2056,6 +2278,7 @@ function UsersManager() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -2085,6 +2308,17 @@ function UsersManager() {
     if (confirm('Сигурни ли сте?')) await deleteUser(id);
   };
 
+  const downloadPDF = (user) => {
+    setDownloadingId(user.id);
+    try {
+      generateUserPDF(user);
+    } catch (e) {
+      console.error(e);
+      alert('Грешка при генериране на PDF: ' + e.message);
+    }
+    setTimeout(() => setDownloadingId(null), 800);
+  };
+
   return (
     <div className="animate-in">
       <PageHeader
@@ -2100,7 +2334,15 @@ function UsersManager() {
         ) : (
           <table>
             <thead>
-              <tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
+              <tr>
+                <th>Име</th>
+                <th>Потребител</th>
+                <th>Парола</th>
+                <th>Email</th>
+                <th>Роля</th>
+                <th>Отпуск</th>
+                <th>Действия</th>
+              </tr>
             </thead>
             <tbody>
               {users.map(u => editingId === u.id ? (
@@ -2117,8 +2359,10 @@ function UsersManager() {
                   </td>
                   <td><input type="number" style={{width:'60px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
                   <td>
-                    <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                    <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
+                    <div className="action-buttons">
+                      <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)}>Отказ</button>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -2130,8 +2374,18 @@ function UsersManager() {
                   <td><span className="badge pending">{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
                   <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
                   <td>
-                    <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
-                    <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
+                    <div className="action-buttons">
+                      <button
+                        className="btn-pdf"
+                        onClick={() => downloadPDF(u)}
+                        disabled={downloadingId === u.id}
+                        title="Изтегли PDF с данни за вход"
+                      >
+                        {downloadingId === u.id ? '⏳' : '📄'} PDF
+                      </button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)} title="Редактирай">✏️</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => remove(u.id)} title="Изтрий">🗑️</button>
+                    </div>
                   </td>
                 </tr>
               ))}
