@@ -19,7 +19,6 @@
   }
   #root { min-height: 100vh; }
 
-  /* LOGIN */
   .login-wrap {
     min-height: 100vh;
     display: flex;
@@ -44,7 +43,6 @@
   }
   .login-card p.sub { text-align: center; color: #64748b; margin-bottom: 28px; font-size: 14px; }
 
-  /* GENERAL */
   .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
   .topbar {
     background: #fff;
@@ -72,7 +70,6 @@
   .badge.approved { background: #dcfce7; color: #16a34a; }
   .badge.rejected { background: #fee2e2; color: #dc2626; }
 
-  /* TABS */
   .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
   .tab {
     padding: 12px 20px;
@@ -85,11 +82,11 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     transition: all 0.2s;
+    font-family: inherit;
   }
   .tab:hover { color: #6366f1; }
   .tab.active { color: #6366f1; border-bottom-color: #6366f1; }
 
-  /* CARD */
   .card {
     background: #fff;
     border-radius: 12px;
@@ -99,7 +96,6 @@
   }
   .card h3 { font-size: 18px; margin-bottom: 16px; color: #1e293b; }
 
-  /* FORM */
   .form-group { margin-bottom: 16px; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
   .form-group input, .form-group select, .form-group textarea {
@@ -118,7 +114,6 @@
   }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  /* BUTTON */
   .btn {
     padding: 10px 18px;
     border: none;
@@ -141,13 +136,11 @@
   .btn-block { width: 100%; }
   .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-  /* TABLE */
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
   th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
   tr:hover td { background: #f8fafc; }
 
-  /* ERROR */
   .error {
     background: #fef2f2;
     border: 1px solid #fecaca;
@@ -157,8 +150,25 @@
     font-size: 14px;
     margin-bottom: 16px;
   }
+  .success {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .info {
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
 
-  /* CLOCK */
   .clock-display {
     font-size: 56px;
     font-weight: 700;
@@ -176,12 +186,13 @@
   }
   .clock-actions { display: flex; gap: 12px; justify-content: center; }
 
-  /* CALENDAR */
   .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
   }
   .calendar-header h3 { margin: 0; }
   .calendar-nav { display: flex; gap: 8px; }
@@ -228,7 +239,6 @@
   .day-event.approved { background: #dcfce7; color: #166534; }
   .day-event.rejected { background: #fee2e2; color: #991b1b; }
 
-  /* STATS */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -247,10 +257,8 @@
   .stat-card.success .value { color: #16a34a; }
   .stat-card.warning .value { color: #d97706; }
 
-  /* EMPTY */
   .empty { text-align: center; padding: 40px; color: #94a3b8; font-size: 14px; }
 
-  /* MODAL */
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -275,15 +283,25 @@
   .gap-2 { gap: 8px; }
   .mt-2 { margin-top: 16px; }
   .text-muted { color: #64748b; font-size: 13px; }
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(99,102,241,0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useMemo, createContext, useContext } = React;
+const { useState, useEffect, createContext, useContext, useRef } = React;
 
-/* ============ FIREBASE ============ */
+/* ============ FIREBASE INIT ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyDmdAdWxhtMf6AJ-i3215loRuAp5wmAjKY",
   authDomain: "clocky-4efd9.firebaseapp.com",
@@ -294,26 +312,31 @@ const firebaseConfig = {
   appId: "1:1050615959900:web:d9809d3c299afe5a3bf199"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let db = null;
+let firebaseReady = false;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  firebaseReady = true;
+  console.log("✅ Firebase initialized");
+} catch (e) {
+  console.error("❌ Firebase init failed:", e);
+}
 
 /* ============ HELPERS ============ */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
 const formatDate = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleDateString('bg-BG');
 };
-
 const todayISO = () => new Date().toISOString().split('T')[0];
-
 const daysBetween = (start, end) => {
   const s = new Date(start);
   const e = new Date(end);
   return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
 };
-
 const pad = (n) => String(n).padStart(2, '0');
 const fmtTime = (ms) => {
   const totalSec = Math.floor(ms / 1000);
@@ -331,21 +354,39 @@ function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState(null);
+  const seededRef = useRef(false);
 
   useEffect(() => {
+    // Safety timeout - don't block UI forever
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      if (!firebaseReady) {
+        setDbError("Не може да се свърже с базата данни. Провери интернет връзката.");
+      }
+    }, 5000);
+
     const stored = localStorage.getItem('clocky_user');
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)); } catch {}
     }
 
+    if (!firebaseReady || !db) {
+      setLoading(false);
+      return () => clearTimeout(timeout);
+    }
+
     const ref = db.ref('users');
     const handler = (snap) => {
+      clearTimeout(timeout);
       const data = snap.val() || {};
       const list = Object.values(data);
       setUsers(list);
+      setLoading(false);
 
-      // Auto-seed admin if no users
-      if (list.length === 0) {
+      // Auto-seed admin if empty (once)
+      if (list.length === 0 && !seededRef.current) {
+        seededRef.current = true;
         const admin = {
           id: uid(),
           username: 'admin',
@@ -357,30 +398,49 @@ function AuthProvider({ children }) {
           usedLeaveDays: 0,
           createdAt: new Date().toISOString()
         };
-        db.ref('users/' + admin.id).set(admin);
+        db.ref('users/' + admin.id).set(admin).catch(e => console.error(e));
       }
 
-      // Refresh currentUser from DB
-      const stored = localStorage.getItem('clocky_user');
-      if (stored) {
+      // Refresh currentUser with fresh data
+      const storedNow = localStorage.getItem('clocky_user');
+      if (storedNow) {
         try {
-          const u = JSON.parse(stored);
+          const u = JSON.parse(storedNow);
           const fresh = list.find(x => x.id === u.id);
           if (fresh) {
             setCurrentUser(fresh);
             localStorage.setItem('clocky_user', JSON.stringify(fresh));
+          } else {
+            // User was deleted
+            setCurrentUser(null);
+            localStorage.removeItem('clocky_user');
           }
         } catch {}
       }
+    };
+
+    const errorHandler = (err) => {
+      clearTimeout(timeout);
+      console.error("DB error:", err);
+      setDbError("Грешка при връзка с базата: " + err.message);
       setLoading(false);
     };
-    ref.on('value', handler);
-    return () => ref.off('value', handler);
+
+    ref.on('value', handler, errorHandler);
+
+    return () => {
+      clearTimeout(timeout);
+      ref.off('value', handler);
+    };
   }, []);
 
   const login = (username, password) => {
-    const u = users.find(x => x.username === username && x.password === password);
+    if (!firebaseReady) return { error: 'Няма връзка с базата данни' };
+    if (users.length === 0) return { error: 'Базата се зарежда. Моля, изчакайте...' };
+
+    const u = users.find(x => x.username === username.trim() && x.password === password);
     if (!u) return { error: 'Грешно потребителско име или парола' };
+
     setCurrentUser(u);
     localStorage.setItem('clocky_user', JSON.stringify(u));
     return { success: true, user: u };
@@ -401,23 +461,35 @@ function AuthProvider({ children }) {
       usedLeaveDays: 0,
       createdAt: new Date().toISOString()
     };
-    await db.ref('users/' + newUser.id).set(newUser);
-    return { success: true };
+    try {
+      await db.ref('users/' + newUser.id).set(newUser);
+      return { success: true };
+    } catch (e) {
+      return { error: 'Грешка при запазване: ' + e.message };
+    }
   };
 
   const updateUser = async (id, data) => {
-    await db.ref('users/' + id).update(data);
-    return { success: true };
+    try {
+      await db.ref('users/' + id).update(data);
+      return { success: true };
+    } catch (e) {
+      return { error: e.message };
+    }
   };
 
   const deleteUser = async (id) => {
-    await db.ref('users/' + id).remove();
-    return { success: true };
+    try {
+      await db.ref('users/' + id).remove();
+      return { success: true };
+    } catch (e) {
+      return { error: e.message };
+    }
   };
 
   return (
     <AuthContext.Provider value={{
-      currentUser, users, loading,
+      currentUser, users, loading, dbError,
       login, logout, addUser, updateUser, deleteUser
     }}>
       {children}
@@ -427,43 +499,91 @@ function AuthProvider({ children }) {
 
 /* ============ LOGIN ============ */
 function Login() {
-  const { login, loading, users } = useAuth();
+  const { login, loading, users, dbError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPass, setShowPass] = useState(false);
 
   const submit = (e) => {
     e.preventDefault();
     setError('');
-    const res = login(username.trim(), password);
+    if (!username.trim() || !password) {
+      setError('Моля, попълнете всички полета');
+      return;
+    }
+    const res = login(username, password);
     if (res.error) setError(res.error);
   };
-
-  if (loading) {
-    return <div className="login-wrap"><div className="login-card"><p>Зареждане...</p></div></div>;
-  }
 
   return (
     <div className="login-wrap">
       <div className="login-card">
         <h1>⏰ Clocky</h1>
         <p className="sub">Система за отпуски и време</p>
-        {error && <div className="error">{error}</div>}
-        <form onSubmit={submit}>
-          <div className="form-group">
-            <label>Потребителско име</label>
-            <input value={username} onChange={e => setUsername(e.target.value)} placeholder="admin" required autoFocus />
+
+        {dbError && <div className="error">{dbError}</div>}
+
+        {loading ? (
+          <div style={{textAlign:'center', padding:'20px'}}>
+            <div className="spinner"></div>
+            <p className="text-muted mt-2">Свързване с базата данни...</p>
           </div>
-          <div className="form-group">
-            <label>Парола</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••" required />
-          </div>
-          <button type="submit" className="btn btn-primary btn-block">Вход</button>
-        </form>
-        {users.length > 0 && (
-          <p className="text-muted mt-2" style={{textAlign:'center'}}>
-            Първи вход: <b>admin</b> / <b>admin123</b>
-          </p>
+        ) : (
+          <>
+            {error && <div className="error">{error}</div>}
+
+            <form onSubmit={submit}>
+              <div className="form-group">
+                <label>Потребителско име</label>
+                <input
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="Въведете потребителско име"
+                  autoComplete="username"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Парола</label>
+                <div style={{position:'relative'}}>
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Въведете парола"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    style={{
+                      position:'absolute', right:'10px', top:'50%',
+                      transform:'translateY(-50%)',
+                      background:'none', border:'none', cursor:'pointer',
+                      fontSize:'16px'
+                    }}
+                  >
+                    {showPass ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary btn-block">
+                🔐 Вход
+              </button>
+            </form>
+
+            {users.length === 0 && !loading && (
+              <div className="info mt-2" style={{textAlign:'center'}}>
+                Системата се инициализира... Моля, опитайте отново след секунда.
+              </div>
+            )}
+            {users.length > 0 && (
+              <p className="text-muted mt-2" style={{textAlign:'center', marginTop:'16px'}}>
+                Първи вход: <b>admin</b> / <b>admin123</b>
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -497,6 +617,7 @@ function ClockModule() {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
+    if (!db) return;
     const ref = db.ref('timeEntries');
     const handler = (snap) => {
       const data = snap.val() || {};
@@ -514,10 +635,7 @@ function ClockModule() {
   }, []);
 
   const activeEntry = entries.find(e => !e.checkOut);
-
-  const elapsed = activeEntry
-    ? now - new Date(activeEntry.checkIn).getTime()
-    : 0;
+  const elapsed = activeEntry ? now - new Date(activeEntry.checkIn).getTime() : 0;
 
   const checkIn = async () => {
     if (activeEntry) return;
@@ -607,7 +725,7 @@ function Calendar({ requests, users }) {
   const year = month.getFullYear();
   const m = month.getMonth();
   const firstDay = new Date(year, m, 1);
-  const startWeekday = (firstDay.getDay() + 6) % 7; // Monday first
+  const startWeekday = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(year, m + 1, 0).getDate();
 
   const days = [];
@@ -622,9 +740,7 @@ function Calendar({ requests, users }) {
   const getEventsForDay = (day) => {
     if (!day) return [];
     const dateStr = `${year}-${pad(m + 1)}-${pad(day)}`;
-    return requests.filter(r => {
-      return dateStr >= r.startDate && dateStr <= r.endDate;
-    });
+    return requests.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
   };
 
   const todayStr = todayISO();
@@ -634,9 +750,9 @@ function Calendar({ requests, users }) {
       <div className="calendar-header">
         <h3>{monthNames[m]} {year}</h3>
         <div className="calendar-nav">
-          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m - 1, 1))}>← Предишен</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m - 1, 1))}>←</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date())}>Днес</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m + 1, 1))}>Следващ →</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m + 1, 1))}>→</button>
         </div>
       </div>
       <div className="calendar-grid">
@@ -723,7 +839,7 @@ function LeaveRequestForm() {
     };
     await db.ref('leaveRequests/' + req.id).set(req);
     setStartDate(''); setEndDate(''); setReason('');
-    setSuccess('Заявката е изпратена за одобрение');
+    setSuccess('✅ Заявката е изпратена за одобрение');
   };
 
   return (
@@ -744,7 +860,7 @@ function LeaveRequestForm() {
         </div>
       </div>
       {error && <div className="error">{error}</div>}
-      {success && <div style={{background:'#dcfce7', color:'#166534', padding:'10px 14px', borderRadius:'8px', marginBottom:'16px', fontSize:'14px'}}>{success}</div>}
+      {success && <div className="success">{success}</div>}
       <form onSubmit={submit}>
         <div className="form-row">
           <div className="form-group">
@@ -818,6 +934,7 @@ function MyRequests() {
 function EmployeeDashboard() {
   const [tab, setTab] = useState('calendar');
   const [requests, setRequests] = useState([]);
+  const { users } = useAuth();
 
   useEffect(() => {
     const ref = db.ref('leaveRequests');
@@ -837,7 +954,7 @@ function EmployeeDashboard() {
         <button className={`tab ${tab === 'request' ? 'active' : ''}`} onClick={() => setTab('request')}>📝 Нова заявка</button>
         <button className={`tab ${tab === 'my' ? 'active' : ''}`} onClick={() => setTab('my')}>📋 Моите заявки</button>
       </div>
-      {tab === 'calendar' && <Calendar requests={requests} users={useAuth().users} />}
+      {tab === 'calendar' && <Calendar requests={requests} users={users} />}
       {tab === 'clock' && <ClockModule />}
       {tab === 'request' && <LeaveRequestForm />}
       {tab === 'my' && <MyRequests />}
@@ -853,18 +970,21 @@ function UsersManager() {
     role: 'employee', totalLeaveDays: 20
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     const res = await addUser({
       ...form,
       totalLeaveDays: Number(form.totalLeaveDays) || 20
     });
     if (res.error) return setError(res.error);
     setForm({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
+    setSuccess(`✅ Потребител "${form.fullName}" е добавен успешно`);
   };
 
   const startEdit = (u) => {
@@ -878,7 +998,8 @@ function UsersManager() {
       email: editData.email,
       role: editData.role,
       totalLeaveDays: Number(editData.totalLeaveDays),
-      password: editData.password
+      password: editData.password,
+      username: editData.username
     });
     setEditingId(null);
   };
@@ -894,31 +1015,57 @@ function UsersManager() {
     <div className="container">
       <div className="card">
         <h3>➕ Добави нов потребител</h3>
+        <p className="text-muted" style={{marginBottom:'16px'}}>
+          Създайте потребителско име и парола, с които служителят ще влиза в системата.
+        </p>
         {error && <div className="error">{error}</div>}
+        {success && <div className="success">{success}</div>}
         <form onSubmit={submit}>
           <div className="form-row">
             <div className="form-group">
-              <label>Потребителско име</label>
-              <input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
+              <label>Потребителско име *</label>
+              <input
+                value={form.username}
+                onChange={e => setForm({...form, username: e.target.value})}
+                placeholder="напр. ivan.petrov"
+                required
+              />
             </div>
             <div className="form-group">
-              <label>Парола</label>
-              <input type="text" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+              <label>Парола *</label>
+              <input
+                type="text"
+                value={form.password}
+                onChange={e => setForm({...form, password: e.target.value})}
+                placeholder="напр. pass123"
+                required
+              />
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Пълно име</label>
-              <input value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
+              <label>Пълно име *</label>
+              <input
+                value={form.fullName}
+                onChange={e => setForm({...form, fullName: e.target.value})}
+                placeholder="Иван Петров"
+                required
+              />
             </div>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+              <label>Email *</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm({...form, email: e.target.value})}
+                placeholder="ivan@company.com"
+                required
+              />
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Роля</label>
+              <label>Роля *</label>
               <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
                 <option value="employee">Служител</option>
                 <option value="admin">Администратор</option>
@@ -926,52 +1073,63 @@ function UsersManager() {
             </div>
             <div className="form-group">
               <label>Годишен отпуск (дни)</label>
-              <input type="number" value={form.totalLeaveDays} onChange={e => setForm({...form, totalLeaveDays: e.target.value})} />
+              <input
+                type="number"
+                value={form.totalLeaveDays}
+                onChange={e => setForm({...form, totalLeaveDays: e.target.value})}
+                min="0"
+              />
             </div>
           </div>
-          <button type="submit" className="btn btn-primary">Добави</button>
+          <button type="submit" className="btn btn-primary">+ Добави потребител</button>
         </form>
       </div>
 
       <div className="card">
         <h3>👥 Всички потребители ({users.length})</h3>
-        <table>
-          <thead>
-            <tr><th>Име</th><th>Потребител</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
-          </thead>
-          <tbody>
-            {users.map(u => editingId === u.id ? (
-              <tr key={u.id}>
-                <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} /></td>
-                <td>{u.username}</td>
-                <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} /></td>
-                <td>
-                  <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
-                    <option value="employee">Служител</option>
-                    <option value="admin">Админ</option>
-                  </select>
-                </td>
-                <td><input type="number" style={{width:'70px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
-                <td>
-                  <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                  <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
-                </td>
-              </tr>
-            ) : (
-              <tr key={u.id}>
-                <td>{u.fullName}</td>
-                <td>{u.username}</td>
-                <td>{u.email}</td>
-                <td><span className={`badge ${u.role}`}>{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
-                <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
-                <td>
-                  <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
-                  <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {users.length === 0 ? (
+          <div className="empty">Няма потребители</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
+            </thead>
+            <tbody>
+              {users.map(u => editingId === u.id ? (
+                <tr key={u.id}>
+                  <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} style={{width:'120px', padding:'4px'}} /></td>
+                  <td><input value={editData.username} onChange={e => setEditData({...editData, username: e.target.value})} style={{width:'100px', padding:'4px'}} /></td>
+                  <td><input value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} style={{width:'100px', padding:'4px'}} /></td>
+                  <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} style={{width:'140px', padding:'4px'}} /></td>
+                  <td>
+                    <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})} style={{padding:'4px'}}>
+                      <option value="employee">Служител</option>
+                      <option value="admin">Админ</option>
+                    </select>
+                  </td>
+                  <td><input type="number" style={{width:'60px', padding:'4px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
+                  <td>
+                    <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                    <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={u.id}>
+                  <td>{u.fullName}</td>
+                  <td><code>{u.username}</code></td>
+                  <td><code>{u.password}</code></td>
+                  <td>{u.email}</td>
+                  <td><span className={`badge ${u.role}`}>{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
+                  <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
+                  <td>
+                    <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
+                    <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
@@ -1015,7 +1173,6 @@ function AdminRequests() {
   };
 
   const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
-
   const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
 
   return (
@@ -1113,7 +1270,15 @@ function App() {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return <div className="login-wrap"><div className="login-card"><p>Зареждане...</p></div></div>;
+    return (
+      <div className="login-wrap">
+        <div className="login-card" style={{textAlign:'center'}}>
+          <h1>⏰ Clocky</h1>
+          <div className="spinner" style={{marginTop:'24px'}}></div>
+          <p className="text-muted mt-2">Зареждане...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!currentUser) return <Login />;
