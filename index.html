@@ -652,7 +652,7 @@ const firebaseConfig = {
   appId: "1:1050615959900:web:d9809d3c299afe5a3bf199"
 };
 
-const SITE_URL = "https://cooky-three.vercel.app";
+const SITE_URL = "https://clocky.pigohridski.eu";
 
 let db = null;
 let firebaseReady = false;
@@ -1238,7 +1238,7 @@ function Sidebar({ currentPage, onNavigate }) {
 
 /* ============ LOGIN ============ */
 function Login() {
-  const { login, loading, users, dbError } = useAuth();
+  const { login, loading, dbError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -1283,11 +1283,6 @@ function Login() {
               </div>
               <button type="submit" className="btn btn-primary btn-block">🔐 Вход</button>
             </form>
-            {users.length > 0 && (
-              <p className="text-muted" style={{textAlign:'center', marginTop:'16px'}}>
-                Първи вход: <b>admin</b> / <b>admin123</b>
-              </p>
-            )}
           </>
         )}
       </div>
