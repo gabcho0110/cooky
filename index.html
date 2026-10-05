@@ -776,15 +776,6 @@ const toDatetimeLocal = (isoString) => {
 };
 
 /* ============ ВАЖНО: изчисление на продължителност с паузи ============ */
-/**
- * Изчислява общата продължителност на запис, като изключва времето в пауза.
- * Структура на записа:
- * {
- *   checkIn: ISO string,
- *   checkOut: ISO string | null,
- *   pauses: [{ start: ISO, end: ISO | null }, ...]  // опционално
- * }
- */
 const calcDuration = (entry, now = Date.now()) => {
   if (!entry || !entry.checkIn) return 0;
   const start = new Date(entry.checkIn).getTime();
@@ -802,19 +793,16 @@ const calcDuration = (entry, now = Date.now()) => {
   return Math.max(0, total);
 };
 
-/** Дали записът е в момента на пауза */
 const isPaused = (entry) => {
   if (!entry || !entry.pauses) return false;
   return entry.pauses.some(p => !p.end);
 };
 
-/** Връща активната пауза (ако има) */
 const getActivePause = (entry) => {
   if (!entry || !entry.pauses) return null;
   return entry.pauses.find(p => !p.end) || null;
 };
 
-/** Форматира пауза за показване */
 const fmtPause = (pause) => {
   const start = new Date(pause.start);
   const end = pause.end ? new Date(pause.end) : null;
@@ -1301,47 +1289,59 @@ function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = currentUser.role === 'admin';
 
-  const menuConfig = useMemo(() => [
-    { id: 'home', icon: '🏠', label: 'Начало', items: null },
-    {
-      id: 'leaves',
-      icon: '🏖️',
-      label: 'Отпуски',
-      items: [
-        { id: 'leaves-calendar', label: 'Календар' },
-        { id: 'leaves-my', label: 'Моите отпуски' },
-        { id: 'leaves-requests', label: 'Заявки за отпуск' },
-        { id: 'leaves-reports', label: 'Справки' }
-      ]
-    },
-    {
-      id: 'time',
-      icon: '⏱️',
-      label: 'Време',
-      items: [
-        { id: 'time-me', label: 'Моето време' },
-        { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
-      ]
-    },
-    {
-      id: 'company',
-      icon: '🏢',
-      label: 'Компания',
-      items: [
-        { id: 'company-data', label: 'Данни за компанията' }
-      ]
-    },
-    ...(isAdmin ? [{
-      id: 'settings',
-      icon: '⚙️',
-      label: 'Настройки',
-      items: [
-        { id: 'settings-users', label: 'Потребители' },
-        { id: 'settings-leavetypes', label: 'Видове отпуски' },
-        { id: 'settings-projects', label: 'Всички проекти' }
-      ]
-    }] : [])
-  ], [isAdmin]);
+  const menuConfig = useMemo(() => {
+    const leavesItems = [
+      { id: 'leaves-calendar', label: 'Календар' },
+      { id: 'leaves-my', label: 'Моите отпуски' }
+    ];
+    // Служителите НЕ виждат "Заявки за отпуск"
+    if (isAdmin) {
+      leavesItems.push({ id: 'leaves-requests', label: 'Заявки за отпуск' });
+    }
+    leavesItems.push({ id: 'leaves-reports', label: 'Справки' });
+
+    const items = [
+      { id: 'home', icon: '🏠', label: 'Начало', items: null },
+      {
+        id: 'leaves',
+        icon: '🏖️',
+        label: 'Отпуски',
+        items: leavesItems
+      },
+      {
+        id: 'time',
+        icon: '⏱️',
+        label: 'Време',
+        items: [
+          { id: 'time-me', label: 'Моето време' },
+          { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
+        ]
+      },
+      {
+        id: 'company',
+        icon: '🏢',
+        label: 'Компания',
+        items: [
+          { id: 'company-data', label: 'Данни за компанията' }
+        ]
+      }
+    ];
+
+    if (isAdmin) {
+      items.push({
+        id: 'settings',
+        icon: '⚙️',
+        label: 'Настройки',
+        items: [
+          { id: 'settings-users', label: 'Потребители' },
+          { id: 'settings-leavetypes', label: 'Видове отпуски' },
+          { id: 'settings-projects', label: 'Всички проекти' }
+        ]
+      });
+    }
+
+    return items;
+  }, [isAdmin]);
 
   const [openGroups, setOpenGroups] = useState(() => {
     const initial = {};
@@ -1910,16 +1910,28 @@ function MyRequests() {
   );
 }
 
-/* ============ LEAVE REQUESTS PAGE ============ */
+/* ============ LEAVE REQUESTS PAGE (ADMIN ONLY) ============ */
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
-  const [filter, setFilter] = useState(isAdmin ? 'pending' : 'all');
+  const [filter, setFilter] = useState('pending');
   const [showModal, setShowModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // Защита: само админи имат достъп
+  if (!isAdmin) {
+    return (
+      <div className="animate-in">
+        <PageHeader title="Няма достъп" subtitle="Тази страница е само за администратори" />
+        <div className="card">
+          <div className="empty-state">🔒 Нямате права да виждате тази страница</div>
+        </div>
+      </div>
+    );
+  }
 
   const getUserName = (id, fallback) => users.find(u => u.id === id)?.fullName || fallback || 'Неизвестен';
   const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed', deducts: true };
@@ -1958,50 +1970,43 @@ function LeaveRequestsPage() {
     setSelectedRequest(null);
   };
 
-  const visible = isAdmin
-    ? (filter === 'all' ? requests : requests.filter(r => r.status === filter))
-    : requests.filter(r => r.userId === currentUser.id);
-
+  const visible = filter === 'all' ? requests : requests.filter(r => r.status === filter);
   const sorted = [...visible].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
 
   return (
     <div className="animate-in">
       <PageHeader
-        title={isAdmin ? 'Заявки за отпуск' : 'Моите заявки'}
-        subtitle={isAdmin ? 'Одобрявайте или отхвърляйте заявки' : 'Вашите заявки'}
+        title="Заявки за отпуск"
+        subtitle="Одобрявайте или отхвърляйте заявки"
         onAdd={() => setShowModal(true)}
         addLabel="Нова заявка"
       />
 
-      {isAdmin && (
-        <>
-          <div className="stats-grid">
-            <div className="stat-card warning">
-              <div className="label">Чакащи</div>
-              <div className="value">{requests.filter(r => r.status === 'pending').length}</div>
-            </div>
-            <div className="stat-card success">
-              <div className="label">Одобрени</div>
-              <div className="value">{requests.filter(r => r.status === 'approved').length}</div>
-            </div>
-            <div className="stat-card">
-              <div className="label">Отхвърлени</div>
-              <div className="value">{requests.filter(r => r.status === 'rejected').length}</div>
-            </div>
-          </div>
+      <div className="stats-grid">
+        <div className="stat-card warning">
+          <div className="label">Чакащи</div>
+          <div className="value">{requests.filter(r => r.status === 'pending').length}</div>
+        </div>
+        <div className="stat-card success">
+          <div className="label">Одобрени</div>
+          <div className="value">{requests.filter(r => r.status === 'approved').length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Отхвърлени</div>
+          <div className="value">{requests.filter(r => r.status === 'rejected').length}</div>
+        </div>
+      </div>
 
-          <div className="flex gap-2" style={{marginBottom:'16px', flexWrap:'wrap'}}>
-            {['pending','approved','rejected','all'].map(f => (
-              <button key={f}
-                className={`btn btn-sm ${filter===f?'btn-primary':'btn-secondary'}`}
-                onClick={()=>setFilter(f)}>
-                {f === 'pending' ? 'Чакащи' : f === 'approved' ? 'Одобрени' : f === 'rejected' ? 'Отхвърлени' : 'Всички'}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="flex gap-2" style={{marginBottom:'16px', flexWrap:'wrap'}}>
+        {['pending','approved','rejected','all'].map(f => (
+          <button key={f}
+            className={`btn btn-sm ${filter===f?'btn-primary':'btn-secondary'}`}
+            onClick={()=>setFilter(f)}>
+            {f === 'pending' ? 'Чакащи' : f === 'approved' ? 'Одобрени' : f === 'rejected' ? 'Отхвърлени' : 'Всички'}
+          </button>
+        ))}
+      </div>
 
       <div className="card">
         {sorted.length === 0 ? (
@@ -2010,9 +2015,9 @@ function LeaveRequestsPage() {
           <table>
             <thead>
               <tr>
-                {isAdmin && <th>Служител</th>}
+                <th>Служител</th>
                 <th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Статус</th>
-                {isAdmin && <th>Действия</th>}
+                <th>Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -2020,7 +2025,7 @@ function LeaveRequestsPage() {
                 const t = getType(r.type);
                 return (
                   <tr key={r.id} className="clickable" onClick={() => setSelectedRequest(r)}>
-                    {isAdmin && <td>{getUserName(r.userId, r.userName)}</td>}
+                    <td>{getUserName(r.userId, r.userName)}</td>
                     <td>
                       <span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
                         <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
@@ -2032,25 +2037,23 @@ function LeaveRequestsPage() {
                     <td>{r.days}</td>
                     <td>{r.reason || '-'}</td>
                     <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
-                    {isAdmin && (
-                      <td onClick={e => e.stopPropagation()}>
-                        {r.status === 'pending' && (
-                          <>
-                            <button className="btn btn-success btn-sm" onClick={() => approve(r)} title="Одобри">✓</button>
-                            <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => reject(r)} title="Отхвърли">✕</button>
-                          </>
-                        )}
-                        {r.status === 'approved' && (
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => deleteRequest(r)}
-                            title="Изтрий одобрен отпуск"
-                          >
-                            🗑️
-                          </button>
-                        )}
-                      </td>
-                    )}
+                    <td onClick={e => e.stopPropagation()}>
+                      {r.status === 'pending' && (
+                        <>
+                          <button className="btn btn-success btn-sm" onClick={() => approve(r)} title="Одобри">✓</button>
+                          <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => reject(r)} title="Отхвърли">✕</button>
+                        </>
+                      )}
+                      {r.status === 'approved' && (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => deleteRequest(r)}
+                          title="Изтрий одобрен отпуск"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -2242,7 +2245,7 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE (with PAUSE) ============ */
+/* ============ TIME MODULE (with PAUSE, split view) ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2301,7 +2304,6 @@ function TimeModule({ scope }) {
     await db.ref('timeEntries/' + entry.id).set(entry);
   };
 
-  // ⏸ Пауза
   const startPause = async () => {
     if (!activeEntry || onPause) return;
     const pauses = activeEntry.pauses || [];
@@ -2311,7 +2313,6 @@ function TimeModule({ scope }) {
     });
   };
 
-  // ▶ Продължи
   const resumePause = async () => {
     if (!activeEntry || !onPause) return;
     const pauses = (activeEntry.pauses || []).map(p => {
@@ -2414,13 +2415,11 @@ function TimeModule({ scope }) {
     closeEditModal();
   };
 
-  // ===== АДМИН: Изтриване =====
   const deleteEntry = async (entry) => {
     if (!confirm('Сигурни ли сте, че искате да изтриете този запис?')) return;
     await db.ref('timeEntries/' + entry.id).remove();
   };
 
-  // Изчисляване на дневен сбор (без паузи)
   const myTodayEntries = entries.filter(e => e.userId === currentUser.id && isToday(e.checkIn));
   const todayTotal = myTodayEntries.reduce((sum, e) => sum + calcDuration(e, now), 0);
 
@@ -2440,16 +2439,16 @@ function TimeModule({ scope }) {
 
   const isAdminView = scope === 'all' && isAdmin;
 
-  return (
-    <div className="animate-in">
-      <PageHeader
-        title={scope === 'all' ? 'Отчети за работно време' : 'Моето време'}
-        subtitle={scope === 'all'
-          ? (isAdmin ? 'Всички служители • можете да редактирате, спирате и изтривате смени' : 'Всички служители')
-          : 'Проследяване на работното време'}
-      />
+  // ===== "МОЕТО ВРЕМЕ" (scope === 'me') =====
+  // Показва САМО таймера - без история
+  if (scope === 'me') {
+    return (
+      <div className="animate-in">
+        <PageHeader
+          title="Моето време"
+          subtitle="Чекиране и проследяване на работното време"
+        />
 
-      {(!isAdmin || scope === 'me') && (
         <div className="card">
           <h3>🕐 Таймер</h3>
           <div className={`clock-display ${onPause ? 'paused' : activeEntry ? 'working' : ''}`}>
@@ -2499,9 +2498,22 @@ function TimeModule({ scope }) {
             </div>
           )}
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {scope === 'all' && (
+  // ===== "ОТЧЕТИ" (scope === 'all' за админ, или 'reports' за служител) =====
+  // Показва цялата история на чекиранията
+  return (
+    <div className="animate-in">
+      <PageHeader
+        title={isAdmin ? 'Отчети за работно време' : 'Моите отчети'}
+        subtitle={isAdmin
+          ? 'Всички служители • можете да редактирате, спирате и изтривате смени'
+          : 'Пълна история на вашите чекирания'}
+      />
+
+      {isAdmin && (
         <div className="card">
           <h3>📊 Обобщение по проекти</h3>
           {projectSummary.length === 0 ? (
@@ -2526,20 +2538,20 @@ function TimeModule({ scope }) {
       )}
 
       <div className="card">
-        <h3>📋 {scope === 'all' ? 'Всички записи' : 'История'}</h3>
+        <h3>📋 {isAdmin ? 'Всички записи' : 'История на чекиранията'}</h3>
         {entries.length === 0 ? (
           <div className="empty-state">Няма записи</div>
         ) : (
           <table>
             <thead>
               <tr>
-                {scope === 'all' && <th>Служител</th>}
+                {isAdmin && <th>Служител</th>}
                 <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Паузи</th><th>Продължителност</th>
-                {isAdminView && <th>Действия</th>}
+                {isAdmin && <th>Действия</th>}
               </tr>
             </thead>
             <tbody>
-              {entries.slice(0, 100).map(e => {
+              {entries.slice(0, 200).map(e => {
                 const start = new Date(e.checkIn);
                 const end = e.checkOut ? new Date(e.checkOut) : null;
                 const dur = calcDuration(e, now);
@@ -2549,7 +2561,7 @@ function TimeModule({ scope }) {
 
                 return (
                   <tr key={e.id}>
-                    {scope === 'all' && <td>{getUserName(e.userId) || e.userName}</td>}
+                    {isAdmin && <td>{getUserName(e.userId) || e.userName}</td>}
                     <td>{start.toLocaleDateString('bg-BG')}</td>
                     <td>{start.toLocaleTimeString('bg-BG')}</td>
                     <td>
@@ -2572,7 +2584,7 @@ function TimeModule({ scope }) {
                         : '-'}
                     </td>
                     <td>{fmtTime(dur)}</td>
-                    {isAdminView && (
+                    {isAdmin && (
                       <td>
                         <div className="admin-actions">
                           {active && !paused && (
@@ -2609,7 +2621,6 @@ function TimeModule({ scope }) {
         )}
       </div>
 
-      {/* Потребителски checkout modal */}
       {pendingEntryId && (
         <div className="modal-backdrop">
           <div className="modal">
@@ -2632,7 +2643,6 @@ function TimeModule({ scope }) {
         </div>
       )}
 
-      {/* Админ: Модал за спиране */}
       {stoppingEntry && (
         <div className="modal-backdrop" onClick={() => setStoppingEntry(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -2660,7 +2670,6 @@ function TimeModule({ scope }) {
         </div>
       )}
 
-      {/* Админ: Модал за редакция */}
       {editingEntry && (
         <div className="modal-backdrop" onClick={closeEditModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -2705,7 +2714,6 @@ function TimeModule({ scope }) {
         </div>
       )}
 
-      {/* Детайли на запис с паузи */}
       {detailEntry && (
         <div className="modal-backdrop" onClick={() => setDetailEntry(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -3295,10 +3303,10 @@ function App() {
       case 'home': return <Home onNavigate={setPage} />;
       case 'leaves-calendar': return <CalendarPage />;
       case 'leaves-my': return <MyRequests />;
-      case 'leaves-requests': return <LeaveRequestsPage />;
+      case 'leaves-requests': return isAdmin ? <LeaveRequestsPage /> : <Home onNavigate={setPage} />;
       case 'leaves-reports': return <LeavesReports />;
       case 'time-me': return <TimeModule scope="me" />;
-      case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'me'} />;
+      case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'reports'} />;
       case 'company-data': return <CompanyPage />;
       case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
       case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
