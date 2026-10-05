@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clocky - Система за отпуски</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    min-height: 100vh;
+  }
+  #root { min-height: 100vh; }
+
+  /* LOGIN */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    padding: 20px;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .login-card h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: #6366f1;
+    text-align: center;
+  }
+  .login-card p.sub { text-align: center; color: #64748b; margin-bottom: 28px; font-size: 14px; }
+
+  /* GENERAL */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar h2 { font-size: 20px; color: #6366f1; }
+  .topbar .user-info { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.admin { background: #fee2e2; color: #dc2626; }
+  .badge.employee { background: #dbeafe; color: #2563eb; }
+  .badge.pending { background: #fef3c7; color: #d97706; }
+  .badge.approved { background: #dcfce7; color: #16a34a; }
+  .badge.rejected { background: #fee2e2; color: #dc2626; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
+  .tab {
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: #6366f1; }
+  .tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+
+  /* CARD */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  .card h3 { font-size: 18px; margin-bottom: 16px; color: #1e293b; }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* BUTTON */
+  .btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-primary { background: #6366f1; color: #fff; }
+  .btn-primary:hover { background: #4f46e5; }
+  .btn-success { background: #16a34a; color: #fff; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-secondary { background: #e2e8f0; color: #334155; }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-block { width: 100%; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+  th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:hover td { background: #f8fafc; }
+
+  /* ERROR */
+  .error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* CLOCK */
+  .clock-display {
+    font-size: 56px;
+    font-weight: 700;
+    text-align: center;
+    color: #6366f1;
+    font-variant-numeric: tabular-nums;
+    margin: 16px 0;
+  }
+  .clock-display.working { color: #16a34a; }
+  .clock-status {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .clock-actions { display: flex; gap: 12px; justify-content: center; }
+
+  /* CALENDAR */
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .calendar-header h3 { margin: 0; }
+  .calendar-nav { display: flex; gap: 8px; }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .calendar-day-name {
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    color: #64748b;
+    padding: 8px 0;
+    text-transform: uppercase;
+  }
+  .calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px;
+    font-size: 12px;
+    position: relative;
+    background: #fff;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .calendar-day.empty { background: #f8fafc; border-color: transparent; }
+  .calendar-day.today { border-color: #6366f1; border-width: 2px; }
+  .calendar-day .day-num { font-weight: 600; color: #475569; }
+  .calendar-day.today .day-num { color: #6366f1; }
+  .day-event {
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .day-event.pending { background: #fef3c7; color: #92400e; }
+  .day-event.approved { background: #dcfce7; color: #166534; }
+  .day-event.rejected { background: #fee2e2; color: #991b1b; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #1e293b; margin-top: 4px; }
+  .stat-card.primary .value { color: #6366f1; }
+  .stat-card.success .value { color: #16a34a; }
+  .stat-card.warning .value { color: #d97706; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px; color: #94a3b8; font-size: 14px; }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .flex { display: flex; }
+  .gap-2 { gap: 8px; }
+  .mt-2 { margin-top: 16px; }
+  .text-muted { color: #64748b; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, createContext, useContext } = React;
+
+/* ============ FIREBASE ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDmdAdWxhtMf6AJ-i3215loRuAp5wmAjKY",
+  authDomain: "clocky-4efd9.firebaseapp.com",
+  databaseURL: "https://clocky-4efd9-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "clocky-4efd9",
+  storageBucket: "clocky-4efd9.firebasestorage.app",
+  messagingSenderId: "1050615959900",
+  appId: "1:1050615959900:web:d9809d3c299afe5a3bf199"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ============ HELPERS ============ */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+const formatDate = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('bg-BG');
+};
+
+const todayISO = () => new Date().toISOString().split('T')[0];
+
+const daysBetween = (start, end) => {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
+};
+
+const pad = (n) => String(n).padStart(2, '0');
+const fmtTime = (ms) => {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+};
+
+/* ============ AUTH CONTEXT ============ */
+const AuthContext = createContext(null);
+const useAuth = () => useContext(AuthContext);
+
+function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('clocky_user');
+    if (stored) {
+      try { setCurrentUser(JSON.parse(stored)); } catch {}
+    }
+
+    const ref = db.ref('users');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      const list = Object.values(data);
+      setUsers(list);
+
+      // Auto-seed admin if no users
+      if (list.length === 0) {
+        const admin = {
+          id: uid(),
+          username: 'admin',
+          password: 'admin123',
+          fullName: 'Администратор',
+          email: 'admin@clocky.com',
+          role: 'admin',
+          totalLeaveDays: 25,
+          usedLeaveDays: 0,
+          createdAt: new Date().toISOString()
+        };
+        db.ref('users/' + admin.id).set(admin);
+      }
+
+      // Refresh currentUser from DB
+      const stored = localStorage.getItem('clocky_user');
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          const fresh = list.find(x => x.id === u.id);
+          if (fresh) {
+            setCurrentUser(fresh);
+            localStorage.setItem('clocky_user', JSON.stringify(fresh));
+          }
+        } catch {}
+      }
+      setLoading(false);
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, []);
+
+  const login = (username, password) => {
+    const u = users.find(x => x.username === username && x.password === password);
+    if (!u) return { error: 'Грешно потребителско име или парола' };
+    setCurrentUser(u);
+    localStorage.setItem('clocky_user', JSON.stringify(u));
+    return { success: true, user: u };
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('clocky_user');
+  };
+
+  const addUser = async (data) => {
+    if (users.find(u => u.username === data.username)) {
+      return { error: 'Потребителското име вече съществува' };
+    }
+    const newUser = {
+      id: uid(),
+      ...data,
+      usedLeaveDays: 0,
+      createdAt: new Date().toISOString()
+    };
+    await db.ref('users/' + newUser.id).set(newUser);
+    return { success: true };
+  };
+
+  const updateUser = async (id, data) => {
+    await db.ref('users/' + id).update(data);
+    return { success: true };
+  };
+
+  const deleteUser = async (id) => {
+    await db.ref('users/' + id).remove();
+    return { success: true };
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      currentUser, users, loading,
+      login, logout, addUser, updateUser, deleteUser
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+/* ============ LOGIN ============ */
+function Login() {
+  const { login, loading, users } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = (e) => {
+    e.preventDefault();
+    setError('');
+    const res = login(username.trim(), password);
+    if (res.error) setError(res.error);
+  };
+
+  if (loading) {
+    return <div className="login-wrap"><div className="login-card"><p>Зареждане...</p></div></div>;
+  }
+
+  return (
+    <div className="login-wrap">
+      <div className="login-card">
+        <h1>⏰ Clocky</h1>
+        <p className="sub">Система за отпуски и време</p>
+        {error && <div className="error">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label>Потребителско име</label>
+            <input value={username} onChange={e => setUsername(e.target.value)} placeholder="admin" required autoFocus />
+          </div>
+          <div className="form-group">
+            <label>Парола</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••" required />
+          </div>
+          <button type="submit" className="btn btn-primary btn-block">Вход</button>
+        </form>
+        {users.length > 0 && (
+          <p className="text-muted mt-2" style={{textAlign:'center'}}>
+            Първи вход: <b>admin</b> / <b>admin123</b>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============ LAYOUT ============ */
+function Layout({ children }) {
+  const { currentUser, logout } = useAuth();
+  return (
+    <div>
+      <div className="topbar">
+        <h2>⏰ Clocky</h2>
+        <div className="user-info">
+          <span className={`badge ${currentUser.role}`}>
+            {currentUser.role === 'admin' ? 'Админ' : 'Служител'}
+          </span>
+          <span>{currentUser.fullName}</span>
+          <button className="btn btn-secondary btn-sm" onClick={logout}>Изход</button>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* ============ CLOCK MODULE ============ */
+function ClockModule() {
+  const { currentUser } = useAuth();
+  const [entries, setEntries] = useState([]);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const ref = db.ref('timeEntries');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      const list = Object.values(data).filter(e => e.userId === currentUser.id);
+      list.sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+      setEntries(list);
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, [currentUser.id]);
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const activeEntry = entries.find(e => !e.checkOut);
+
+  const elapsed = activeEntry
+    ? now - new Date(activeEntry.checkIn).getTime()
+    : 0;
+
+  const checkIn = async () => {
+    if (activeEntry) return;
+    const entry = {
+      id: uid(),
+      userId: currentUser.id,
+      checkIn: new Date().toISOString(),
+      checkOut: null
+    };
+    await db.ref('timeEntries/' + entry.id).set(entry);
+  };
+
+  const checkOut = async () => {
+    if (!activeEntry) return;
+    await db.ref('timeEntries/' + activeEntry.id).update({
+      checkOut: new Date().toISOString()
+    });
+  };
+
+  const todayStr = todayISO();
+  const todayEntries = entries.filter(e => e.checkIn.startsWith(todayStr));
+  const todayTotal = todayEntries.reduce((sum, e) => {
+    const start = new Date(e.checkIn).getTime();
+    const end = e.checkOut ? new Date(e.checkOut).getTime() : now;
+    return sum + (end - start);
+  }, 0);
+
+  return (
+    <div className="card">
+      <h3>🕐 Модул време</h3>
+      <div className={`clock-display ${activeEntry ? 'working' : ''}`}>
+        {activeEntry ? fmtTime(elapsed) : '00:00:00'}
+      </div>
+      <p className="clock-status">
+        {activeEntry
+          ? `На работа от ${new Date(activeEntry.checkIn).toLocaleTimeString('bg-BG')}`
+          : 'Не сте чекирани'}
+      </p>
+      <div className="clock-actions">
+        <button className="btn btn-success" onClick={checkIn} disabled={!!activeEntry}>
+          ✅ Чекиране
+        </button>
+        <button className="btn btn-danger" onClick={checkOut} disabled={!activeEntry}>
+          ⏹ Приключване
+        </button>
+      </div>
+
+      <div className="mt-2" style={{padding:'12px', background:'#f8fafc', borderRadius:'8px'}}>
+        <div style={{fontSize:'13px', color:'#64748b'}}>Общо днес:</div>
+        <div style={{fontSize:'20px', fontWeight:'700', color:'#16a34a'}}>{fmtTime(todayTotal)}</div>
+      </div>
+
+      <h3 style={{marginTop:'24px'}}>История</h3>
+      {entries.length === 0 ? (
+        <div className="empty">Няма записи</div>
+      ) : (
+        <table>
+          <thead>
+            <tr><th>Дата</th><th>Начало</th><th>Край</th><th>Продължителност</th></tr>
+          </thead>
+          <tbody>
+            {entries.slice(0, 20).map(e => {
+              const start = new Date(e.checkIn);
+              const end = e.checkOut ? new Date(e.checkOut) : null;
+              const dur = end ? end - start : now - start;
+              return (
+                <tr key={e.id}>
+                  <td>{start.toLocaleDateString('bg-BG')}</td>
+                  <td>{start.toLocaleTimeString('bg-BG')}</td>
+                  <td>{end ? end.toLocaleTimeString('bg-BG') : <span className="badge pending">на работа</span>}</td>
+                  <td>{fmtTime(dur)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+/* ============ CALENDAR ============ */
+function Calendar({ requests, users }) {
+  const [month, setMonth] = useState(new Date());
+  const [selected, setSelected] = useState(null);
+
+  const year = month.getFullYear();
+  const m = month.getMonth();
+  const firstDay = new Date(year, m, 1);
+  const startWeekday = (firstDay.getDay() + 6) % 7; // Monday first
+  const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+  const days = [];
+  for (let i = 0; i < startWeekday; i++) days.push(null);
+  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+
+  const monthNames = ['Януари','Февруари','Март','Април','Май','Юни','Юли','Август','Септември','Октомври','Ноември','Декември'];
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+  const getUserName = (id) => users.find(u => u.id === id)?.fullName || 'Неизвестен';
+
+  const getEventsForDay = (day) => {
+    if (!day) return [];
+    const dateStr = `${year}-${pad(m + 1)}-${pad(day)}`;
+    return requests.filter(r => {
+      return dateStr >= r.startDate && dateStr <= r.endDate;
+    });
+  };
+
+  const todayStr = todayISO();
+
+  return (
+    <div className="card">
+      <div className="calendar-header">
+        <h3>{monthNames[m]} {year}</h3>
+        <div className="calendar-nav">
+          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m - 1, 1))}>← Предишен</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date())}>Днес</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setMonth(new Date(year, m + 1, 1))}>Следващ →</button>
+        </div>
+      </div>
+      <div className="calendar-grid">
+        {dayNames.map(d => <div key={d} className="calendar-day-name">{d}</div>)}
+        {days.map((day, idx) => {
+          const dateStr = day ? `${year}-${pad(m + 1)}-${pad(day)}` : '';
+          const isToday = dateStr === todayStr;
+          const events = getEventsForDay(day);
+          return (
+            <div key={idx} className={`calendar-day ${!day ? 'empty' : ''} ${isToday ? 'today' : ''}`}>
+              {day && <div className="day-num">{day}</div>}
+              {events.slice(0, 3).map(e => (
+                <div
+                  key={e.id}
+                  className={`day-event ${e.status}`}
+                  title={`${getUserName(e.userId)}: ${e.status}`}
+                  onClick={() => setSelected(e)}
+                >
+                  {getUserName(e.userId).split(' ')[0]}
+                </div>
+              ))}
+              {events.length > 3 && <div style={{fontSize:'10px', color:'#64748b'}}>+{events.length - 3}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-2 flex gap-2" style={{flexWrap:'wrap'}}>
+        <span className="badge pending">Чакаща</span>
+        <span className="badge approved">Одобрена</span>
+        <span className="badge rejected">Отхвърлена</span>
+      </div>
+
+      {selected && (
+        <div className="modal-backdrop" onClick={() => setSelected(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Заявка за отпуск</h3>
+            <p className="mt-2"><b>Служител:</b> {getUserName(selected.userId)}</p>
+            <p><b>От:</b> {formatDate(selected.startDate)}</p>
+            <p><b>До:</b> {formatDate(selected.endDate)}</p>
+            <p><b>Дни:</b> {selected.days}</p>
+            <p><b>Причина:</b> {selected.reason || '-'}</p>
+            <p className="mt-2"><b>Статус:</b> <span className={`badge ${selected.status}`}>
+              {selected.status === 'pending' ? 'Чакаща' : selected.status === 'approved' ? 'Одобрена' : 'Отхвърлена'}
+            </span></p>
+            <button className="btn btn-secondary mt-2" onClick={() => setSelected(null)}>Затвори</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============ LEAVE REQUEST FORM ============ */
+function LeaveRequestForm() {
+  const { currentUser } = useAuth();
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const remaining = currentUser.totalLeaveDays - currentUser.usedLeaveDays;
+  const days = startDate && endDate ? daysBetween(startDate, endDate) : 0;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!startDate || !endDate) return setError('Моля, изберете дати');
+    if (endDate < startDate) return setError('Крайната дата трябва да е след началната');
+    if (days > remaining) return setError(`Нямате достатъчно дни (остават ${remaining})`);
+
+    const req = {
+      id: uid(),
+      userId: currentUser.id,
+      startDate,
+      endDate,
+      days,
+      reason,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    await db.ref('leaveRequests/' + req.id).set(req);
+    setStartDate(''); setEndDate(''); setReason('');
+    setSuccess('Заявката е изпратена за одобрение');
+  };
+
+  return (
+    <div className="card">
+      <h3>📝 Нова заявка за отпуск</h3>
+      <div className="stats-grid" style={{marginBottom:'16px'}}>
+        <div className="stat-card success">
+          <div className="label">Оставащи дни</div>
+          <div className="value">{remaining}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Използвани</div>
+          <div className="value">{currentUser.usedLeaveDays}</div>
+        </div>
+        <div className="stat-card primary">
+          <div className="label">Общо</div>
+          <div className="value">{currentUser.totalLeaveDays}</div>
+        </div>
+      </div>
+      {error && <div className="error">{error}</div>}
+      {success && <div style={{background:'#dcfce7', color:'#166534', padding:'10px 14px', borderRadius:'8px', marginBottom:'16px', fontSize:'14px'}}>{success}</div>}
+      <form onSubmit={submit}>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Начална дата</label>
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} min={todayISO()} required />
+          </div>
+          <div className="form-group">
+            <label>Крайна дата</label>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate || todayISO()} required />
+          </div>
+        </div>
+        {days > 0 && <p className="text-muted">Общо дни: <b>{days}</b></p>}
+        <div className="form-group mt-2">
+          <label>Причина (незадължително)</label>
+          <textarea value={reason} onChange={e => setReason(e.target.value)} rows="3" placeholder="Кратко описание..." />
+        </div>
+        <button type="submit" className="btn btn-primary">Изпрати заявка</button>
+      </form>
+    </div>
+  );
+}
+
+/* ============ MY REQUESTS ============ */
+function MyRequests() {
+  const { currentUser } = useAuth();
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    const ref = db.ref('leaveRequests');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      const list = Object.values(data)
+        .filter(r => r.userId === currentUser.id)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setRequests(list);
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, [currentUser.id]);
+
+  const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+
+  return (
+    <div className="card">
+      <h3>📋 Моите заявки</h3>
+      {requests.length === 0 ? (
+        <div className="empty">Нямате заявки</div>
+      ) : (
+        <table>
+          <thead>
+            <tr><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Статус</th></tr>
+          </thead>
+          <tbody>
+            {requests.map(r => (
+              <tr key={r.id}>
+                <td>{formatDate(r.startDate)}</td>
+                <td>{formatDate(r.endDate)}</td>
+                <td>{r.days}</td>
+                <td>{r.reason || '-'}</td>
+                <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+/* ============ EMPLOYEE DASHBOARD ============ */
+function EmployeeDashboard() {
+  const [tab, setTab] = useState('calendar');
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    const ref = db.ref('leaveRequests');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      setRequests(Object.values(data));
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, []);
+
+  return (
+    <div className="container">
+      <div className="tabs">
+        <button className={`tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>📅 Календар</button>
+        <button className={`tab ${tab === 'clock' ? 'active' : ''}`} onClick={() => setTab('clock')}>🕐 Време</button>
+        <button className={`tab ${tab === 'request' ? 'active' : ''}`} onClick={() => setTab('request')}>📝 Нова заявка</button>
+        <button className={`tab ${tab === 'my' ? 'active' : ''}`} onClick={() => setTab('my')}>📋 Моите заявки</button>
+      </div>
+      {tab === 'calendar' && <Calendar requests={requests} users={useAuth().users} />}
+      {tab === 'clock' && <ClockModule />}
+      {tab === 'request' && <LeaveRequestForm />}
+      {tab === 'my' && <MyRequests />}
+    </div>
+  );
+}
+
+/* ============ USERS MANAGER (ADMIN) ============ */
+function UsersManager() {
+  const { users, addUser, updateUser, deleteUser, currentUser } = useAuth();
+  const [form, setForm] = useState({
+    username: '', password: '', fullName: '', email: '',
+    role: 'employee', totalLeaveDays: 20
+  });
+  const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    const res = await addUser({
+      ...form,
+      totalLeaveDays: Number(form.totalLeaveDays) || 20
+    });
+    if (res.error) return setError(res.error);
+    setForm({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
+  };
+
+  const startEdit = (u) => {
+    setEditingId(u.id);
+    setEditData({ ...u });
+  };
+
+  const saveEdit = async () => {
+    await updateUser(editingId, {
+      fullName: editData.fullName,
+      email: editData.email,
+      role: editData.role,
+      totalLeaveDays: Number(editData.totalLeaveDays),
+      password: editData.password
+    });
+    setEditingId(null);
+  };
+
+  const remove = async (id) => {
+    if (id === currentUser.id) return alert('Не можете да изтриете себе си');
+    if (confirm('Сигурни ли сте, че искате да изтриете този потребител?')) {
+      await deleteUser(id);
+    }
+  };
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h3>➕ Добави нов потребител</h3>
+        {error && <div className="error">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Потребителско име</label>
+              <input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Парола</label>
+              <input type="text" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Пълно име</label>
+              <input value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Роля</label>
+              <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                <option value="employee">Служител</option>
+                <option value="admin">Администратор</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Годишен отпуск (дни)</label>
+              <input type="number" value={form.totalLeaveDays} onChange={e => setForm({...form, totalLeaveDays: e.target.value})} />
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary">Добави</button>
+        </form>
+      </div>
+
+      <div className="card">
+        <h3>👥 Всички потребители ({users.length})</h3>
+        <table>
+          <thead>
+            <tr><th>Име</th><th>Потребител</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
+          </thead>
+          <tbody>
+            {users.map(u => editingId === u.id ? (
+              <tr key={u.id}>
+                <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} /></td>
+                <td>{u.username}</td>
+                <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} /></td>
+                <td>
+                  <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
+                    <option value="employee">Служител</option>
+                    <option value="admin">Админ</option>
+                  </select>
+                </td>
+                <td><input type="number" style={{width:'70px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
+                <td>
+                  <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                  <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
+                </td>
+              </tr>
+            ) : (
+              <tr key={u.id}>
+                <td>{u.fullName}</td>
+                <td>{u.username}</td>
+                <td>{u.email}</td>
+                <td><span className={`badge ${u.role}`}>{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
+                <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
+                <td>
+                  <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
+                  <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(u.id)}>🗑️</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ============ ADMIN REQUESTS ============ */
+function AdminRequests() {
+  const { currentUser, users, updateUser } = useAuth();
+  const [requests, setRequests] = useState([]);
+  const [filter, setFilter] = useState('pending');
+
+  useEffect(() => {
+    const ref = db.ref('leaveRequests');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      const list = Object.values(data).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setRequests(list);
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, []);
+
+  const getUserName = (id) => users.find(u => u.id === id)?.fullName || 'Неизвестен';
+
+  const approve = async (r) => {
+    await db.ref('leaveRequests/' + r.id).update({
+      status: 'approved',
+      reviewedBy: currentUser.id,
+      reviewedAt: new Date().toISOString()
+    });
+    const u = users.find(x => x.id === r.userId);
+    if (u) await updateUser(u.id, { usedLeaveDays: (u.usedLeaveDays || 0) + r.days });
+  };
+
+  const reject = async (r) => {
+    await db.ref('leaveRequests/' + r.id).update({
+      status: 'rejected',
+      reviewedBy: currentUser.id,
+      reviewedAt: new Date().toISOString()
+    });
+  };
+
+  const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
+
+  const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+
+  return (
+    <div className="container">
+      <div className="stats-grid">
+        <div className="stat-card warning">
+          <div className="label">Чакащи</div>
+          <div className="value">{requests.filter(r => r.status === 'pending').length}</div>
+        </div>
+        <div className="stat-card success">
+          <div className="label">Одобрени</div>
+          <div className="value">{requests.filter(r => r.status === 'approved').length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Отхвърлени</div>
+          <div className="value">{requests.filter(r => r.status === 'rejected').length}</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex gap-2" style={{marginBottom:'16px', flexWrap:'wrap'}}>
+          <button className={`btn btn-sm ${filter==='pending'?'btn-primary':'btn-secondary'}`} onClick={()=>setFilter('pending')}>Чакащи</button>
+          <button className={`btn btn-sm ${filter==='approved'?'btn-primary':'btn-secondary'}`} onClick={()=>setFilter('approved')}>Одобрени</button>
+          <button className={`btn btn-sm ${filter==='rejected'?'btn-primary':'btn-secondary'}`} onClick={()=>setFilter('rejected')}>Отхвърлени</button>
+          <button className={`btn btn-sm ${filter==='all'?'btn-primary':'btn-secondary'}`} onClick={()=>setFilter('all')}>Всички</button>
+        </div>
+        {filtered.length === 0 ? (
+          <div className="empty">Няма заявки</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>Служител</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Статус</th><th>Действия</th></tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r.id}>
+                  <td>{getUserName(r.userId)}</td>
+                  <td>{formatDate(r.startDate)}</td>
+                  <td>{formatDate(r.endDate)}</td>
+                  <td>{r.days}</td>
+                  <td>{r.reason || '-'}</td>
+                  <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                  <td>
+                    {r.status === 'pending' && (
+                      <>
+                        <button className="btn btn-success btn-sm" onClick={() => approve(r)}>✓ Одобри</button>
+                        <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => reject(r)}>✕ Отхвърли</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============ ADMIN DASHBOARD ============ */
+function AdminDashboard() {
+  const [tab, setTab] = useState('calendar');
+  const [requests, setRequests] = useState([]);
+  const { users } = useAuth();
+
+  useEffect(() => {
+    const ref = db.ref('leaveRequests');
+    const handler = (snap) => {
+      const data = snap.val() || {};
+      setRequests(Object.values(data));
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, []);
+
+  return (
+    <div className="container">
+      <div className="tabs">
+        <button className={`tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>📅 Календар</button>
+        <button className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')}>📋 Заявки</button>
+        <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>👥 Потребители</button>
+        <button className={`tab ${tab === 'clock' ? 'active' : ''}`} onClick={() => setTab('clock')}>🕐 Време</button>
+      </div>
+      {tab === 'calendar' && <Calendar requests={requests} users={users} />}
+      {tab === 'requests' && <AdminRequests />}
+      {tab === 'users' && <UsersManager />}
+      {tab === 'clock' && <ClockModule />}
+    </div>
+  );
+}
+
+/* ============ APP ============ */
+function App() {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <div className="login-wrap"><div className="login-card"><p>Зареждане...</p></div></div>;
+  }
+
+  if (!currentUser) return <Login />;
+
+  return (
+    <Layout>
+      {currentUser.role === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
+    </Layout>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);
+</script>
+</body>
+</html>
