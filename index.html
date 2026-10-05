@@ -48,7 +48,6 @@
 
   .app-layout { display: flex; min-height: 100vh; }
 
-  /* ===== SIDEBAR (with dropdowns) ===== */
   .sidebar {
     width: 260px;
     background: #fff;
@@ -110,10 +109,7 @@
     user-select: none;
   }
   .nav-group-header:hover { background: #faf5ff; }
-  .nav-group-header.active {
-    background: #f3e8ff;
-    color: #7c3aed;
-  }
+  .nav-group-header.active { background: #f3e8ff; color: #7c3aed; }
   .nav-group-header .nav-icon { margin-right: 10px; font-size: 16px; }
   .nav-group-header .nav-label { flex: 1; }
   .nav-group-header .chev {
@@ -130,10 +126,7 @@
     max-height: 0;
     opacity: 0;
   }
-  .nav-sub-wrap.open {
-    max-height: 300px;
-    opacity: 1;
-  }
+  .nav-sub-wrap.open { max-height: 300px; opacity: 1; }
   .nav-sub {
     padding-left: 8px;
     padding-top: 2px;
@@ -157,9 +150,7 @@
     opacity: 1;
     animation: slideIn 0.3s forwards;
   }
-  @keyframes slideIn {
-    to { transform: translateX(0); opacity: 1; }
-  }
+  @keyframes slideIn { to { transform: translateX(0); opacity: 1; } }
   .nav-sub-item::before {
     content: '';
     position: absolute;
@@ -208,7 +199,6 @@
     min-height: 100vh;
   }
 
-  /* ===== TOP HEADER (centered company name) ===== */
   .top-header {
     background: #fff;
     border-bottom: 1px solid #ede9fe;
@@ -222,20 +212,9 @@
     z-index: 50;
     box-shadow: 0 2px 8px rgba(124,58,237,0.04);
   }
-
-  .top-header-side {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .top-header-side.right {
-    justify-content: flex-end;
-  }
-
-  .top-header-center {
-    text-align: center;
-  }
-
+  .top-header-side { display: flex; align-items: center; gap: 12px; }
+  .top-header-side.right { justify-content: flex-end; }
+  .top-header-center { text-align: center; }
   .top-header-logo {
     width: 42px;
     height: 42px;
@@ -249,14 +228,12 @@
     font-size: 20px;
     box-shadow: 0 4px 12px rgba(124,58,237,0.3);
   }
-
   .top-header-tagline-side {
     font-size: 16px;
     font-weight: 700;
     color: #7c3aed;
     letter-spacing: 0.5px;
   }
-
   .top-header-company {
     font-size: 18px;
     font-weight: 700;
@@ -274,7 +251,6 @@
     opacity: 0.7;
     margin-top: 2px;
   }
-
   .top-header-user {
     display: flex;
     align-items: center;
@@ -300,10 +276,7 @@
   .top-header-user-name { font-size: 13px; font-weight: 600; color: #1e1b4b; }
   .top-header-user-role { font-size: 11px; color: #7c3aed; opacity: 0.75; }
 
-  .main-content {
-    flex: 1;
-    padding: 28px 32px;
-  }
+  .main-content { flex: 1; padding: 28px 32px; }
 
   .page-header {
     display: flex;
@@ -319,11 +292,7 @@
     margin-bottom: 6px;
     color: #1e1b4b;
   }
-  .page-subtitle {
-    color: #7c3aed;
-    opacity: 0.7;
-    font-size: 14px;
-  }
+  .page-subtitle { color: #7c3aed; opacity: 0.7; font-size: 14px; }
 
   .card {
     background: #fff;
@@ -369,11 +338,7 @@
   }
   .dash-plus:hover { transform: scale(1.08) rotate(90deg); box-shadow: 0 8px 24px rgba(124,58,237,0.5); }
 
-  .dash-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .dash-stat-label { color: #7c3aed; opacity: 0.7; font-size: 13px; margin-bottom: 8px; }
   .dash-stat-value {
     font-size: 44px;
@@ -386,7 +351,6 @@
   }
   .dash-stat-value .unit { font-size: 16px; color: #a78bfa; font-weight: 400; }
   .dash-stat-hint { color: #9ca3af; font-size: 12px; margin-top: 8px; }
-
   .dash-divider { height: 1px; background: #ede9fe; margin: 24px 0; }
 
   .next-absence-date { display: flex; align-items: center; gap: 16px; }
@@ -450,6 +414,8 @@
   .btn-success:hover { background: #059669; }
   .btn-danger { background: #ef4444; color: #fff; }
   .btn-danger:hover { background: #dc2626; }
+  .btn-warning { background: #f59e0b; color: #fff; }
+  .btn-warning:hover { background: #d97706; }
   .btn-secondary { background: #f3e8ff; color: #7c3aed; }
   .btn-secondary:hover { background: #e9d5ff; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
@@ -472,10 +438,7 @@
     gap: 4px;
     transition: all 0.2s;
   }
-  .btn-pdf:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(124,58,237,0.4);
-  }
+  .btn-pdf:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.4); }
 
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f3e8ff; }
@@ -493,6 +456,7 @@
   .badge.pending { background: #fef3c7; color: #b45309; }
   .badge.approved { background: #dcfce7; color: #15803d; }
   .badge.rejected { background: #fee2e2; color: #b91c1c; }
+  .badge.active { background: #dbeafe; color: #1d4ed8; }
 
   .error {
     background: #fef2f2;
@@ -561,11 +525,7 @@
   }
   .calendar-header h3 { margin: 0; color: #1e1b4b; }
   .calendar-nav { display: flex; gap: 8px; }
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-  }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
   .calendar-day-name {
     text-align: center;
     font-weight: 600;
@@ -718,11 +678,9 @@
 
   .action-buttons { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 
-  .required-mark {
-    color: #ef4444;
-    font-weight: 700;
-    margin-left: 2px;
-  }
+  .required-mark { color: #ef4444; font-weight: 700; margin-left: 2px; }
+
+  .admin-actions { display: flex; gap: 4px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -791,6 +749,20 @@ const isToday = (isoString) => {
   return d.getFullYear() === t.getFullYear() &&
          d.getMonth() === t.getMonth() &&
          d.getDate() === t.getDate();
+};
+
+// Форматира ISO за datetime-local input
+const toDatetimeLocal = (isoString) => {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+};
+
+// Парсва datetime-local стойност към ISO
+const fromDatetimeLocal = (val) => {
+  if (!val) return null;
+  return new Date(val).toISOString();
 };
 
 const DEFAULT_LEAVE_TYPES = {
@@ -1264,7 +1236,7 @@ function useFirebaseObject(path, defaultVal = null) {
   return data;
 }
 
-/* ============ SIDEBAR (with dropdowns) ============ */
+/* ============ SIDEBAR ============ */
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -1394,7 +1366,7 @@ function Sidebar({ currentPage, onNavigate }) {
   );
 }
 
-/* ============ TOP HEADER (centered company name) ============ */
+/* ============ TOP HEADER ============ */
 function TopHeader() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -2210,7 +2182,7 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE ============ */
+/* ============ TIME MODULE (with ADMIN control) ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2219,6 +2191,13 @@ function TimeModule({ scope }) {
   const projects = useFirebaseList('projects');
   const [pendingProject, setPendingProject] = useState(null);
   const [pendingEntryId, setPendingEntryId] = useState(null);
+
+  // Admin edit/stop states
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [editForm, setEditForm] = useState({ checkIn: '', checkOut: '', projectId: '' });
+  const [editError, setEditError] = useState('');
+  const [stoppingEntry, setStoppingEntry] = useState(null);
+  const [stopProjectId, setStopProjectId] = useState('');
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -2278,6 +2257,74 @@ function TimeModule({ scope }) {
     setPendingProject(null);
   };
 
+  // ===== АДМИН: Спиране на активен запис =====
+  const openStopModal = (entry) => {
+    setStoppingEntry(entry);
+    setStopProjectId(entry.projectId || (projects[0]?.id || ''));
+  };
+
+  const confirmStop = async () => {
+    if (!stoppingEntry) return;
+    const proj = projects.find(p => p.id === stopProjectId);
+    await db.ref('timeEntries/' + stoppingEntry.id).update({
+      checkOut: new Date().toISOString(),
+      projectId: stopProjectId || null,
+      projectName: proj?.name || null
+    });
+    setStoppingEntry(null);
+    setStopProjectId('');
+  };
+
+  // ===== АДМИН: Редакция =====
+  const openEditModal = (entry) => {
+    setEditingEntry(entry);
+    setEditForm({
+      checkIn: toDatetimeLocal(entry.checkIn),
+      checkOut: entry.checkOut ? toDatetimeLocal(entry.checkOut) : '',
+      projectId: entry.projectId || ''
+    });
+    setEditError('');
+  };
+
+  const closeEditModal = () => {
+    setEditingEntry(null);
+    setEditForm({ checkIn: '', checkOut: '', projectId: '' });
+    setEditError('');
+  };
+
+  const saveEdit = async () => {
+    if (!editingEntry) return;
+    setEditError('');
+
+    if (!editForm.checkIn) return setEditError('Началният час е задължителен');
+    const checkInDate = new Date(editForm.checkIn);
+    if (isNaN(checkInDate.getTime())) return setEditError('Невалиден начален час');
+
+    let checkOutDate = null;
+    if (editForm.checkOut) {
+      checkOutDate = new Date(editForm.checkOut);
+      if (isNaN(checkOutDate.getTime())) return setEditError('Невалиден краен час');
+      if (checkOutDate < checkInDate) return setEditError('Краят трябва да е след началото');
+    }
+
+    const proj = projects.find(p => p.id === editForm.projectId);
+
+    await db.ref('timeEntries/' + editingEntry.id).update({
+      checkIn: checkInDate.toISOString(),
+      checkOut: checkOutDate ? checkOutDate.toISOString() : null,
+      projectId: editForm.projectId || null,
+      projectName: proj?.name || null
+    });
+
+    closeEditModal();
+  };
+
+  // ===== АДМИН: Изтриване =====
+  const deleteEntry = async (entry) => {
+    if (!confirm('Сигурни ли сте, че искате да изтриете този запис?')) return;
+    await db.ref('timeEntries/' + entry.id).remove();
+  };
+
   const myTodayEntries = entries.filter(e => e.userId === currentUser.id && isToday(e.checkIn));
   const todayTotal = myTodayEntries.reduce((sum, e) => {
     const start = new Date(e.checkIn).getTime();
@@ -2298,11 +2345,15 @@ function TimeModule({ scope }) {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [entries]);
 
+  const isAdminView = scope === 'all' && isAdmin;
+
   return (
     <div className="animate-in">
       <PageHeader
         title={scope === 'all' ? 'Отчети за работно време' : 'Моето време'}
-        subtitle={scope === 'all' ? 'Всички служители' : 'Проследяване на работното време'}
+        subtitle={scope === 'all'
+          ? (isAdmin ? 'Всички служители • можете да редактирате, спирате и изтривате смени' : 'Всички служители')
+          : 'Проследяване на работното време'}
       />
 
       {(!isAdmin || scope === 'me') && (
@@ -2362,21 +2413,52 @@ function TimeModule({ scope }) {
               <tr>
                 {scope === 'all' && <th>Служител</th>}
                 <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Продължителност</th>
+                {isAdminView && <th>Действия</th>}
               </tr>
             </thead>
             <tbody>
-              {entries.slice(0, 50).map(e => {
+              {entries.slice(0, 100).map(e => {
                 const start = new Date(e.checkIn);
                 const end = e.checkOut ? new Date(e.checkOut) : null;
                 const dur = end ? end - start : now - start;
+                const isActive = !e.checkOut;
                 return (
                   <tr key={e.id}>
                     {scope === 'all' && <td>{getUserName(e.userId) || e.userName}</td>}
                     <td>{start.toLocaleDateString('bg-BG')}</td>
                     <td>{start.toLocaleTimeString('bg-BG')}</td>
-                    <td>{end ? end.toLocaleTimeString('bg-BG') : <span className="badge pending">на работа</span>}</td>
+                    <td>{end ? end.toLocaleTimeString('bg-BG') : <span className="badge active">на работа</span>}</td>
                     <td>{e.projectName || '-'}</td>
                     <td>{fmtTime(dur)}</td>
+                    {isAdminView && (
+                      <td>
+                        <div className="admin-actions">
+                          {isActive && (
+                            <button
+                              className="btn btn-warning btn-sm"
+                              onClick={() => openStopModal(e)}
+                              title="Спри смяната на този служител"
+                            >
+                              ⏹ Спри
+                            </button>
+                          )}
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => openEditModal(e)}
+                            title="Редактирай начало/край"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => deleteEntry(e)}
+                            title="Изтрий записа"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -2385,6 +2467,7 @@ function TimeModule({ scope }) {
         )}
       </div>
 
+      {/* Потребителски checkout modal */}
       {pendingEntryId && (
         <div className="modal-backdrop">
           <div className="modal">
@@ -2402,6 +2485,79 @@ function TimeModule({ scope }) {
             <div className="flex gap-2">
               <button className="btn btn-primary" onClick={confirmCheckout}>Потвърди</button>
               <button className="btn btn-secondary" onClick={cancelCheckout}>Отказ</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Админ: Модал за спиране */}
+      {stoppingEntry && (
+        <div className="modal-backdrop" onClick={() => setStoppingEntry(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>⏹ Спиране на смяна</h3>
+            <p className="text-muted" style={{marginBottom:'16px'}}>
+              Служител: <b>{getUserName(stoppingEntry.userId) || stoppingEntry.userName}</b>
+            </p>
+            <p className="text-muted" style={{marginBottom:'16px'}}>
+              Начало: {new Date(stoppingEntry.checkIn).toLocaleString('bg-BG')}
+            </p>
+            <div className="form-group">
+              <label>Проект (по който е работил)</label>
+              <select value={stopProjectId} onChange={e => setStopProjectId(e.target.value)}>
+                <option value="">-- Без проект --</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2" style={{justifyContent:'flex-end'}}>
+              <button className="btn btn-secondary" onClick={() => setStoppingEntry(null)}>Отказ</button>
+              <button className="btn btn-warning" onClick={confirmStop}>⏹ Спри смяната</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Админ: Модал за редакция */}
+      {editingEntry && (
+        <div className="modal-backdrop" onClick={closeEditModal}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>✏️ Редакция на запис</h3>
+            <p className="text-muted" style={{marginBottom:'16px'}}>
+              Служител: <b>{getUserName(editingEntry.userId) || editingEntry.userName}</b>
+            </p>
+            {editError && <div className="error">{editError}</div>}
+            <div className="form-group">
+              <label>Начален час <span className="required-mark">*</span></label>
+              <input
+                type="datetime-local"
+                value={editForm.checkIn}
+                onChange={e => setEditForm({...editForm, checkIn: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label>Краен час (празно = още работи)</label>
+              <input
+                type="datetime-local"
+                value={editForm.checkOut}
+                onChange={e => setEditForm({...editForm, checkOut: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label>Проект</label>
+              <select
+                value={editForm.projectId}
+                onChange={e => setEditForm({...editForm, projectId: e.target.value})}
+              >
+                <option value="">-- Без проект --</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2" style={{justifyContent:'flex-end'}}>
+              <button className="btn btn-secondary" onClick={closeEditModal}>Отказ</button>
+              <button className="btn btn-primary" onClick={saveEdit}>Запази</button>
             </div>
           </div>
         </div>
