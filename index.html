@@ -775,7 +775,6 @@ const toDatetimeLocal = (isoString) => {
   return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
 };
 
-/* ============ ВАЖНО: изчисление на продължителност с паузи ============ */
 const calcDuration = (entry, now = Date.now()) => {
   if (!entry || !entry.checkIn) return 0;
   const start = new Date(entry.checkIn).getTime();
@@ -1294,7 +1293,6 @@ function Sidebar({ currentPage, onNavigate }) {
       { id: 'leaves-calendar', label: 'Календар' },
       { id: 'leaves-my', label: 'Моите отпуски' }
     ];
-    // Служителите НЕ виждат "Заявки за отпуск"
     if (isAdmin) {
       leavesItems.push({ id: 'leaves-requests', label: 'Заявки за отпуск' });
     }
@@ -1921,7 +1919,6 @@ function LeaveRequestsPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // Защита: само админи имат достъп
   if (!isAdmin) {
     return (
       <div className="animate-in">
@@ -2193,14 +2190,18 @@ function CalendarPage() {
   );
 }
 
-/* ============ LEAVES REPORTS ============ */
+/* ============ LEAVES REPORTS (admin all / employee own) ============ */
 function LeavesReports() {
-  const { users } = useAuth();
+  const { currentUser, users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const year = new Date().getFullYear();
+  const isAdmin = currentUser.role === 'admin';
 
-  const stats = users.map(u => {
+  // Служителите виждат само себе си
+  const visibleUsers = isAdmin ? users : users.filter(u => u.id === currentUser.id);
+
+  const stats = visibleUsers.map(u => {
     const userReqs = requests.filter(r =>
       r.userId === u.id &&
       r.status === 'approved' &&
@@ -2218,20 +2219,38 @@ function LeavesReports() {
     };
   });
 
+  // Допълнителна статистика само за служителя: списък със заявките му
+  const myRequests = requests
+    .filter(r => r.userId === currentUser.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const getType = (id) => leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed' };
+  const statusText = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+
   return (
     <div className="animate-in">
-      <PageHeader title="Справки" subtitle={`Обобщение на отпуските за ${year} г.`} />
+      <PageHeader
+        title={isAdmin ? 'Справки' : 'Моите справки'}
+        subtitle={isAdmin
+          ? `Обобщение на отпуските за всички служители за ${year} г.`
+          : `Обобщение на вашите отпуски за ${year} г.`}
+      />
 
       <div className="card">
-        <h3>👥 По служители</h3>
+        <h3>{isAdmin ? '👥 По служители' : '👤 Моят баланс'}</h3>
         <table>
           <thead>
-            <tr><th>Служител</th><th>Одобрени заявки</th><th>Използвани дни</th><th>Общо дни</th><th>Оставащи</th></tr>
+            <tr>
+              {isAdmin && <th>Служител</th>}
+              <th>Одобрени заявки</th>
+              <th>Използвани дни</th>
+              <th>Общо дни</th>
+              <th>Оставащи</th>
+            </tr>
           </thead>
           <tbody>
             {stats.map(s => (
               <tr key={s.user.id}>
-                <td>{s.user.fullName}</td>
+                {isAdmin && <td>{s.user.fullName}</td>}
                 <td>{s.approvedCount}</td>
                 <td>{s.usedDays}</td>
                 <td>{s.user.totalLeaveDays || 0}</td>
@@ -2241,6 +2260,48 @@ function LeavesReports() {
           </tbody>
         </table>
       </div>
+
+      {!isAdmin && (
+        <div className="card">
+          <h3>📋 Всички мои заявки ({year})</h3>
+          {myRequests.filter(r => new Date(r.startDate).getFullYear() === year).length === 0 ? (
+            <div className="empty-state">Няма заявки за {year} г.</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Вид</th>
+                  <th>От</th>
+                  <th>До</th>
+                  <th>Дни</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myRequests
+                  .filter(r => new Date(r.startDate).getFullYear() === year)
+                  .map(r => {
+                    const t = getType(r.type);
+                    return (
+                      <tr key={r.id}>
+                        <td>
+                          <span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
+                            <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                            {t.name}
+                          </span>
+                        </td>
+                        <td>{formatDate(r.startDate)}</td>
+                        <td>{formatDate(r.endDate)}</td>
+                        <td>{r.days}</td>
+                        <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2255,14 +2316,12 @@ function TimeModule({ scope }) {
   const [pendingProject, setPendingProject] = useState(null);
   const [pendingEntryId, setPendingEntryId] = useState(null);
 
-  // Admin edit/stop states
   const [editingEntry, setEditingEntry] = useState(null);
   const [editForm, setEditForm] = useState({ checkIn: '', checkOut: '', projectId: '' });
   const [editError, setEditError] = useState('');
   const [stoppingEntry, setStoppingEntry] = useState(null);
   const [stopProjectId, setStopProjectId] = useState('');
 
-  // Details modal
   const [detailEntry, setDetailEntry] = useState(null);
 
   useEffect(() => {
@@ -2350,7 +2409,6 @@ function TimeModule({ scope }) {
     setPendingProject(null);
   };
 
-  // ===== АДМИН: Спиране на активен запис =====
   const openStopModal = (entry) => {
     setStoppingEntry(entry);
     setStopProjectId(entry.projectId || (projects[0]?.id || ''));
@@ -2371,7 +2429,6 @@ function TimeModule({ scope }) {
     setStopProjectId('');
   };
 
-  // ===== АДМИН: Редакция =====
   const openEditModal = (entry) => {
     setEditingEntry(entry);
     setEditForm({
@@ -2437,10 +2494,7 @@ function TimeModule({ scope }) {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [entries, now]);
 
-  const isAdminView = scope === 'all' && isAdmin;
-
-  // ===== "МОЕТО ВРЕМЕ" (scope === 'me') =====
-  // Показва САМО таймера - без история
+  // ===== "МОЕТО ВРЕМЕ" (scope === 'me') - само таймер =====
   if (scope === 'me') {
     return (
       <div className="animate-in">
@@ -2502,8 +2556,9 @@ function TimeModule({ scope }) {
     );
   }
 
-  // ===== "ОТЧЕТИ" (scope === 'all' за админ, или 'reports' за служител) =====
-  // Показва цялата история на чекиранията
+  // ===== ОТЧЕТИ (scope === 'all' за админ, или 'reports' за служител) =====
+  const isAdminView = scope === 'all' && isAdmin;
+
   return (
     <div className="animate-in">
       <PageHeader
