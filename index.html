@@ -126,7 +126,7 @@
     max-height: 0;
     opacity: 0;
   }
-  .nav-sub-wrap.open { max-height: 300px; opacity: 1; }
+  .nav-sub-wrap.open { max-height: 400px; opacity: 1; }
   .nav-sub {
     padding-left: 8px;
     padding-top: 2px;
@@ -460,6 +460,7 @@
   .badge.rejected { background: #fee2e2; color: #b91c1c; }
   .badge.active { background: #dcfce7; color: #15803d; }
   .badge.paused { background: #fef3c7; color: #b45309; }
+  .badge.holiday { background: #fee2e2; color: #b91c1c; }
 
   .error {
     background: #fef2f2;
@@ -574,8 +575,24 @@
   }
   .calendar-day.empty { background: #faf5ff; border-color: transparent; }
   .calendar-day.today { border-color: #7c3aed; border-width: 2px; background: #faf5ff; }
+  .calendar-day.holiday {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+  .calendar-day.holiday .day-num { color: #b91c1c; }
   .calendar-day .day-num { font-weight: 600; color: #9ca3af; }
   .calendar-day.today .day-num { color: #7c3aed; }
+  .holiday-tag {
+    font-size: 8px;
+    background: #ef4444;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
   .day-event {
     font-size: 10px;
     padding: 2px 5px;
@@ -699,7 +716,6 @@
   .admin-actions { display: flex; gap: 4px; flex-wrap: wrap; }
   .required-mark { color: #ef4444; font-weight: 700; margin-left: 2px; }
 
-  /* Upload box */
   .upload-box {
     border: 2px dashed #c4b5fd;
     border-radius: 12px;
@@ -748,6 +764,16 @@
     cursor: zoom-in;
     display: block;
     margin: 10px 0;
+  }
+
+  .warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
   }
 </style>
 </head>
@@ -863,7 +889,6 @@ const fmtPause = (pause) => {
   return `${startStr} → ${endStr} (${fmtTime(dur)})`;
 };
 
-// Проверка дали типът отпуск е "болничен"
 const isSickLeave = (typeId, leaveTypes) => {
   if (!typeId) return false;
   const t = leaveTypes?.[typeId];
@@ -872,7 +897,6 @@ const isSickLeave = (typeId, leaveTypes) => {
   return typeId === 'sick' || name.includes('болнич');
 };
 
-// Четене на файл като base64 (DataURL)
 const readFileAsDataURL = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -880,6 +904,32 @@ const readFileAsDataURL = (file) => {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+};
+
+// Празници: Map { "YYYY-MM-DD": { id, name, date } }
+const isHoliday = (dateISO, holidays) => {
+  if (!dateISO || !holidays) return false;
+  return !!holidays[dateISO];
+};
+
+// Изчислява колко работни дни (без почивни + празници) има в даден диапазон
+const calcWorkingDays = (startDate, endDate, holidays, includeWeekends = false) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  let count = 0;
+  const cur = new Date(start);
+  while (cur <= end) {
+    const dateStr = `${cur.getFullYear()}-${pad(cur.getMonth()+1)}-${pad(cur.getDate())}`;
+    const dow = cur.getDay(); // 0 = НД, 6 = СБ
+    const isWeekend = dow === 0 || dow === 6;
+    const holiday = isHoliday(dateStr, holidays);
+
+    if (!holiday && (includeWeekends || !isWeekend)) {
+      count++;
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
 };
 
 const DEFAULT_LEAVE_TYPES = {
@@ -902,6 +952,21 @@ const DEFAULT_COMPANY = {
   region: 'София',
   postalCode: '1000',
   country: 'Bulgaria'
+};
+
+// Български национални празници (фиксирани дати)
+const DEFAULT_HOLIDAYS = {
+  '01-01': { name: 'Нова година' },
+  '03-03': { name: 'Освобождение на България' },
+  '05-01': { name: 'Ден на труда' },
+  '05-06': { name: 'Гергьовден' },
+  '05-24': { name: 'Ден на славянската писменост' },
+  '09-06': { name: 'Съединение на България' },
+  '09-22': { name: 'Ден на независимостта' },
+  '11-01': { name: 'Ден на будителите' },
+  '12-24': { name: 'Бъдни вечер' },
+  '12-25': { name: 'Рождество Христово' },
+  '12-26': { name: 'Рождество Христово' }
 };
 
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
@@ -1278,6 +1343,21 @@ function AuthProvider({ children }) {
     db.ref('company').once('value').then(snap => {
       if (!snap.exists()) db.ref('company').set(DEFAULT_COMPANY).catch(e => console.error(e));
     }).catch(() => {});
+    // Seed holidays if empty
+    db.ref('holidays').once('value').then(snap => {
+      if (!snap.exists()) {
+        // Създаваме записи за текущата година
+        const year = new Date().getFullYear();
+        const seeded = {};
+        Object.entries(DEFAULT_HOLIDAYS).forEach(([md, h]) => {
+          const [mm, dd] = md.split('-');
+          const dateISO = `${year}-${mm}-${dd}`;
+          const id = uid();
+          seeded[id] = { id, name: h.name, date: dateISO, createdAt: new Date().toISOString() };
+        });
+        db.ref('holidays').set(seeded).catch(e => console.error(e));
+      }
+    }).catch(() => {});
   }, []);
 
   const login = (username, password) => {
@@ -1353,6 +1433,18 @@ function useFirebaseObject(path, defaultVal = null) {
   return data;
 }
 
+// Map от dateISO → holiday
+function useHolidaysMap() {
+  const list = useFirebaseList('holidays');
+  return useMemo(() => {
+    const map = {};
+    list.forEach(h => {
+      if (h.date) map[h.date] = h;
+    });
+    return map;
+  }, [list]);
+}
+
 /* ============ SIDEBAR ============ */
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
@@ -1403,6 +1495,7 @@ function Sidebar({ currentPage, onNavigate }) {
         items: [
           { id: 'settings-users', label: 'Потребители' },
           { id: 'settings-leavetypes', label: 'Видове отпуски' },
+          { id: 'settings-holidays', label: 'Всички празници' },
           { id: 'settings-projects', label: 'Всички проекти' }
         ]
       });
@@ -1597,7 +1690,7 @@ function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
   );
 }
 
-/* ============ LEAVE DETAIL MODAL (with actions + attachment) ============ */
+/* ============ LEAVE DETAIL MODAL ============ */
 function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, onDelete, onApprove, onReject }) {
   const { users } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -1721,7 +1814,7 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
               </button>
             </>
           )}
-          {isAdmin && request.status === 'approved' && (
+          {isAdmin && request.status !== 'pending' && (
             <button className="btn btn-danger" onClick={handleDelete} disabled={processing}>
               🗑️ Изтрий
             </button>
@@ -1870,14 +1963,15 @@ function Home({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST MODAL (with attachment for sick leave) ============ */
+/* ============ LEAVE REQUEST MODAL ============ */
 function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
+  const holidays = useHolidaysMap();
   const [form, setForm] = useState({
     startDate: '', endDate: '', reason: '', type: 'paid'
   });
-  const [attachment, setAttachment] = useState(null); // { name, dataUrl }
+  const [attachment, setAttachment] = useState(null);
   const [attachmentError, setAttachmentError] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -1885,12 +1979,13 @@ function LeaveRequestModal({ onClose }) {
 
   const remaining = (currentUser.totalLeaveDays || 0) - (currentUser.usedLeaveDays || 0);
   const days = form.startDate && form.endDate ? daysBetween(form.startDate, form.endDate) : 0;
+  const workingDays = form.startDate && form.endDate ? calcWorkingDays(form.startDate, form.endDate, holidays) : 0;
   const selectedType = leaveTypes[form.type];
   const willDeduct = selectedType?.deducts;
   const sick = isSickLeave(form.type, leaveTypes);
 
   const canSubmit =
-    (!willDeduct || days <= remaining) &&
+    (!willDeduct || workingDays <= remaining) &&
     form.reason.trim().length > 0 &&
     (!sick || !!attachment);
 
@@ -1899,13 +1994,10 @@ function LeaveRequestModal({ onClose }) {
     if (!file) return;
     setAttachmentError('');
 
-    // Проверка за размер (макс 1MB)
     if (file.size > 1024 * 1024) {
-      setAttachmentError('Файлът е прекалено голям (макс. 1MB). Моля, намалете размера или компресирайте.');
+      setAttachmentError('Файлът е прекалено голям (макс. 1MB).');
       return;
     }
-
-    // Проверка за тип
     if (!file.type.startsWith('image/')) {
       setAttachmentError('Моля, прикачете само изображение (PNG, JPG)');
       return;
@@ -1932,7 +2024,7 @@ function LeaveRequestModal({ onClose }) {
     if (!form.startDate || !form.endDate) return setError('Изберете дати');
     if (form.endDate < form.startDate) return setError('Крайната дата трябва да е след началната');
     if (!form.reason.trim()) return setError('Причината е задължителна');
-    if (willDeduct && days > remaining) return setError(`Нямате достатъчно дни (остават ${remaining})`);
+    if (willDeduct && workingDays > remaining) return setError(`Нямате достатъчно дни (остават ${remaining})`);
     if (sick && !attachment) return setError('За болничен е задължително да прикачите скрийншот от Школо/НЕИСПУО');
 
     setSubmitting(true);
@@ -1943,7 +2035,8 @@ function LeaveRequestModal({ onClose }) {
       userName: currentUser.fullName,
       startDate: form.startDate,
       endDate: form.endDate,
-      days,
+      days: workingDays, // Използваме работни дни (без празници и почивни)
+      calendarDays: days, // За справка
       reason: form.reason.trim(),
       type: form.type,
       status: 'pending',
@@ -1989,10 +2082,16 @@ function LeaveRequestModal({ onClose }) {
           </div>
 
           {days > 0 && (
-            <p className="text-muted">
-              Общо дни: <b style={{color:'#7c3aed'}}>{days}</b>
-              {willDeduct && ' • Ще се приспаднат от платения ви отпуск'}
-            </p>
+            <div className="warning-box">
+              <div><b>Календарни дни:</b> {days}</div>
+              <div><b>Работни дни (без почивни и празници):</b> {workingDays}</div>
+              {workingDays !== days && (
+                <div style={{marginTop:'6px', fontSize:'12px'}}>
+                  ℹ️ Приспадат се само работните дни. Празниците и уикендите не се броят.
+                </div>
+              )}
+              {willDeduct && <div style={{marginTop:'6px', fontSize:'12px'}}>Ще се приспаднат от платения ви отпуск</div>}
+            </div>
           )}
 
           <div className="form-group mt-2">
@@ -2018,10 +2117,7 @@ function LeaveRequestModal({ onClose }) {
               {attachmentError && <div className="error" style={{marginBottom:'10px'}}>{attachmentError}</div>}
 
               {!attachment ? (
-                <div
-                  className="upload-box"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                <div className="upload-box" onClick={() => fileInputRef.current?.click()}>
                   <div className="upload-icon">📤</div>
                   <div className="upload-text">Кликнете за избор на файл</div>
                   <div className="upload-hint">PNG, JPG • макс. 1MB</div>
@@ -2298,6 +2394,7 @@ function CalendarPage() {
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
+  const holidays = useHolidaysMap();
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -2371,11 +2468,18 @@ function CalendarPage() {
           {days.map((day, idx) => {
             const dateStr = day ? `${year}-${pad(m + 1)}-${pad(day)}` : '';
             const isTodayDay = dateStr === todayStr;
+            const holiday = isHoliday(dateStr, holidays);
+            const holidayInfo = holidays[dateStr];
             const events = getEventsForDay(day);
             return (
-              <div key={idx} className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''}`}>
+              <div key={idx} className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}>
                 {day && <div className="day-num">{day}</div>}
-                {events.slice(0, 3).map(e => {
+                {holidayInfo && (
+                  <div className="holiday-tag" title={holidayInfo.name}>
+                    🎉 {holidayInfo.name}
+                  </div>
+                )}
+                {events.slice(0, 2).map(e => {
                   const t = getType(e.type);
                   const opacity = e.status === 'pending' ? 0.5 : 1;
                   return (
@@ -2390,23 +2494,23 @@ function CalendarPage() {
                     </div>
                   );
                 })}
-                {events.length > 3 && <div style={{fontSize:'10px', color:'#9ca3af'}}>+{events.length - 3}</div>}
+                {events.length > 2 && <div style={{fontSize:'10px', color:'#9ca3af'}}>+{events.length - 2}</div>}
               </div>
             );
           })}
         </div>
 
         <div className="mt-2" style={{display:'flex', gap:'16px', flexWrap:'wrap', marginTop:'20px'}}>
+          <span style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#7c3aed', opacity:0.8}}>
+            <span style={{width:'12px', height:'12px', borderRadius:'3px', background:'#fee2e2', border:'1px solid #fecaca'}}></span>
+            Национален празник
+          </span>
           {Object.values(leaveTypes).map(t => (
             <span key={t.id} style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#7c3aed', opacity:0.8}}>
               <span style={{width:'12px', height:'12px', borderRadius:'3px', background:t.color}}></span>
               {t.name}
             </span>
           ))}
-          <span style={{display:'inline-flex', alignItems:'center', gap:'6px', fontSize:'12px', color:'#7c3aed', opacity:0.8}}>
-            <span style={{width:'12px', height:'12px', borderRadius:'3px', background:'#a78bfa', opacity:0.5}}></span>
-            Прозрачно = чакаща
-          </span>
         </div>
       </div>
 
@@ -3055,6 +3159,221 @@ function TimeModule({ scope }) {
   );
 }
 
+/* ============ HOLIDAYS SETTINGS ============ */
+function HolidaysSettings() {
+  const holidaysList = useFirebaseList('holidays');
+  const [form, setForm] = useState({ name: '', date: '' });
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const sorted = [...holidaysList]
+    .filter(h => !selectedYear || new Date(h.date).getFullYear() === selectedYear)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const years = [...new Set(holidaysList.map(h => new Date(h.date).getFullYear()))].sort();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!form.name.trim()) return setError('Въведете име на празника');
+    if (!form.date) return setError('Изберете дата');
+
+    // Проверка за дублиране
+    const exists = holidaysList.find(h => h.date === form.date);
+    if (exists) return setError('Вече има празник на тази дата: ' + exists.name);
+
+    const id = uid();
+    const h = {
+      id,
+      name: form.name.trim(),
+      date: form.date,
+      createdAt: new Date().toISOString()
+    };
+    await db.ref('holidays/' + id).set(h);
+    setForm({ name: '', date: '' });
+    setShowModal(false);
+    setSelectedYear(new Date(form.date).getFullYear());
+  };
+
+  const startEdit = (h) => {
+    setEditingId(h.id);
+    setEditData({ ...h });
+  };
+
+  const saveEdit = async () => {
+    if (!editData.name?.trim()) return alert('Въведете име');
+    if (!editData.date) return alert('Изберете дата');
+    await db.ref('holidays/' + editingId).update({
+      name: editData.name.trim(),
+      date: editData.date
+    });
+    setEditingId(null);
+  };
+
+  const remove = async (id) => {
+    if (confirm('Сигурни ли сте, че искате да изтриете този празник?')) {
+      await db.ref('holidays/' + id).remove();
+    }
+  };
+
+  const addDefaults = async () => {
+    if (!confirm(`Да добавя ли стандартните български празници за ${selectedYear} г.?`)) return;
+    const existing = holidaysList.filter(h => new Date(h.date).getFullYear() === selectedYear).map(h => h.date);
+    const batch = {};
+    let added = 0;
+    Object.entries(DEFAULT_HOLIDAYS).forEach(([md, h]) => {
+      const [mm, dd] = md.split('-');
+      const dateISO = `${selectedYear}-${mm}-${dd}`;
+      if (existing.includes(dateISO)) return;
+      const id = uid();
+      batch[id] = { id, name: h.name, date: dateISO, createdAt: new Date().toISOString() };
+      added++;
+    });
+    if (added === 0) {
+      alert('Всички стандартни празници вече са добавени за тази година.');
+      return;
+    }
+    await db.ref('holidays').update(batch);
+    alert(`Добавени ${added} празника за ${selectedYear} г.`);
+  };
+
+  return (
+    <div className="animate-in">
+      <PageHeader
+        title="Всички празници"
+        subtitle="Национални празници, които са автоматично почивни дни за всички служители"
+        onAdd={() => setShowModal(true)}
+        addLabel="Нов празник"
+      />
+
+      <div className="warning-box">
+        ℹ️ Празниците автоматично се маркират в календара и <b>не се броят</b> като работни дни при подаване на заявка за отпуск.
+      </div>
+
+      <div className="card">
+        <div style={{display:'flex', gap:'12px', alignItems:'center', flexWrap:'wrap', marginBottom:'16px'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <label style={{fontSize:'13px', fontWeight:600, color:'#4c1d95'}}>Година:</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              style={{padding:'8px 12px', border:'1.5px solid #e9d5ff', borderRadius:'10px', fontSize:'14px', fontFamily:'inherit'}}
+            >
+              {years.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+              {!years.includes(new Date().getFullYear()) && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
+              {!years.includes(new Date().getFullYear() + 1) && <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1}</option>}
+            </select>
+          </div>
+          <button className="btn btn-info btn-sm" onClick={addDefaults}>
+            🎉 Добави стандартни празници за {selectedYear}
+          </button>
+          <span className="text-muted" style={{marginLeft:'auto'}}>
+            Общо: <b>{sorted.length}</b> празника
+          </span>
+        </div>
+
+        {sorted.length === 0 ? (
+          <div className="empty-state">Няма добавени празници за {selectedYear} г.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr><th>Дата</th><th>Ден</th><th>Име</th><th>Действия</th></tr>
+            </thead>
+            <tbody>
+              {sorted.map(h => {
+                const d = new Date(h.date);
+                const dayName = d.toLocaleDateString('bg-BG', { weekday: 'long' });
+                const isEditing = editingId === h.id;
+                return (
+                  <tr key={h.id}>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          value={editData.date}
+                          onChange={e => setEditData({...editData, date: e.target.value})}
+                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px'}}
+                        />
+                      ) : (
+                        <b>{formatDate(h.date)}</b>
+                      )}
+                    </td>
+                    <td style={{textTransform:'capitalize', color:'#7c3aed', opacity:0.8}}>
+                      {dayName}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          value={editData.name}
+                          onChange={e => setEditData({...editData, name: e.target.value})}
+                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px', width:'100%'}}
+                        />
+                      ) : (
+                        h.name
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <>
+                          <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                          <button className="btn btn-secondary btn-sm" style={{marginLeft:'4px'}} onClick={() => setEditingId(null)}>Отказ</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn btn-secondary btn-sm" onClick={() => startEdit(h)}>✏️</button>
+                          <button className="btn btn-danger btn-sm" style={{marginLeft:'4px'}} onClick={() => remove(h.id)}>🗑️</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>➕ Нов празник</h3>
+            {error && <div className="error">{error}</div>}
+            <form onSubmit={submit}>
+              <div className="form-group">
+                <label>Име на празника <span className="required-mark">*</span></label>
+                <input
+                  value={form.name}
+                  onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="напр. Нова година"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Дата <span className="required-mark">*</span></label>
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={e => setForm({...form, date: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary">Добави</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Отказ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ============ PROJECTS MODULE ============ */
 function ProjectsModule() {
   const { currentUser } = useAuth();
@@ -3599,6 +3918,7 @@ function App() {
       case 'company-data': return <CompanyPage />;
       case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
       case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
+      case 'settings-holidays': return isAdmin ? <HolidaysSettings /> : <Home onNavigate={setPage} />;
       case 'settings-projects': return isAdmin ? <ProjectsModule /> : <Home onNavigate={setPage} />;
       default: return <Home onNavigate={setPage} />;
     }
