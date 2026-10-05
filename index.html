@@ -416,6 +416,8 @@
   .btn-danger:hover { background: #dc2626; }
   .btn-warning { background: #f59e0b; color: #fff; }
   .btn-warning:hover { background: #d97706; }
+  .btn-info { background: #06b6d4; color: #fff; }
+  .btn-info:hover { background: #0891b2; }
   .btn-secondary { background: #f3e8ff; color: #7c3aed; }
   .btn-secondary:hover { background: #e9d5ff; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
@@ -456,7 +458,8 @@
   .badge.pending { background: #fef3c7; color: #b45309; }
   .badge.approved { background: #dcfce7; color: #15803d; }
   .badge.rejected { background: #fee2e2; color: #b91c1c; }
-  .badge.active { background: #dbeafe; color: #1d4ed8; }
+  .badge.active { background: #dcfce7; color: #15803d; }
+  .badge.paused { background: #fef3c7; color: #b45309; }
 
   .error {
     background: #fef2f2;
@@ -485,8 +488,10 @@
     font-variant-numeric: tabular-nums;
     margin: 24px 0;
     letter-spacing: 2px;
+    transition: color 0.3s;
   }
   .clock-display.working { color: #10b981; }
+  .clock-display.paused { color: #f59e0b; }
   .clock-status {
     text-align: center;
     color: #7c3aed;
@@ -494,7 +499,21 @@
     margin-bottom: 24px;
     font-size: 14px;
   }
-  .clock-actions { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
+  .clock-actions { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+
+  .pause-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #fef3c7;
+    color: #b45309;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 auto 16px;
+    width: fit-content;
+  }
 
   .stats-grid {
     display: grid;
@@ -677,10 +696,8 @@
   }
 
   .action-buttons { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-
-  .required-mark { color: #ef4444; font-weight: 700; margin-left: 2px; }
-
   .admin-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+  .required-mark { color: #ef4444; font-weight: 700; margin-left: 2px; }
 </style>
 </head>
 <body>
@@ -751,7 +768,6 @@ const isToday = (isoString) => {
          d.getDate() === t.getDate();
 };
 
-// Форматира ISO за datetime-local input
 const toDatetimeLocal = (isoString) => {
   if (!isoString) return '';
   const d = new Date(isoString);
@@ -759,10 +775,54 @@ const toDatetimeLocal = (isoString) => {
   return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
 };
 
-// Парсва datetime-local стойност към ISO
-const fromDatetimeLocal = (val) => {
-  if (!val) return null;
-  return new Date(val).toISOString();
+/* ============ ВАЖНО: изчисление на продължителност с паузи ============ */
+/**
+ * Изчислява общата продължителност на запис, като изключва времето в пауза.
+ * Структура на записа:
+ * {
+ *   checkIn: ISO string,
+ *   checkOut: ISO string | null,
+ *   pauses: [{ start: ISO, end: ISO | null }, ...]  // опционално
+ * }
+ */
+const calcDuration = (entry, now = Date.now()) => {
+  if (!entry || !entry.checkIn) return 0;
+  const start = new Date(entry.checkIn).getTime();
+  const end = entry.checkOut ? new Date(entry.checkOut).getTime() : now;
+  let total = end - start;
+
+  const pauses = entry.pauses || [];
+  pauses.forEach(p => {
+    const pStart = new Date(p.start).getTime();
+    const pEnd = p.end ? new Date(p.end).getTime() : now;
+    const dur = pEnd - pStart;
+    if (dur > 0) total -= dur;
+  });
+
+  return Math.max(0, total);
+};
+
+/** Дали записът е в момента на пауза */
+const isPaused = (entry) => {
+  if (!entry || !entry.pauses) return false;
+  return entry.pauses.some(p => !p.end);
+};
+
+/** Връща активната пауза (ако има) */
+const getActivePause = (entry) => {
+  if (!entry || !entry.pauses) return null;
+  return entry.pauses.find(p => !p.end) || null;
+};
+
+/** Форматира пауза за показване */
+const fmtPause = (pause) => {
+  const start = new Date(pause.start);
+  const end = pause.end ? new Date(pause.end) : null;
+  const startStr = start.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+  if (!end) return `${startStr} → сега`;
+  const endStr = end.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+  const dur = end - start;
+  return `${startStr} → ${endStr} (${fmtTime(dur)})`;
 };
 
 const DEFAULT_LEAVE_TYPES = {
@@ -2182,7 +2242,7 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE (with ADMIN control) ============ */
+/* ============ TIME MODULE (with PAUSE) ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2198,6 +2258,9 @@ function TimeModule({ scope }) {
   const [editError, setEditError] = useState('');
   const [stoppingEntry, setStoppingEntry] = useState(null);
   const [stopProjectId, setStopProjectId] = useState('');
+
+  // Details modal
+  const [detailEntry, setDetailEntry] = useState(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -2219,7 +2282,10 @@ function TimeModule({ scope }) {
   }, [scope, currentUser.id]);
 
   const activeEntry = entries.find(e => !e.checkOut && e.userId === currentUser.id);
-  const elapsed = activeEntry ? now - new Date(activeEntry.checkIn).getTime() : 0;
+  const onPause = activeEntry ? isPaused(activeEntry) : false;
+  const elapsed = activeEntry ? calcDuration(activeEntry, now) : 0;
+  const activePause = activeEntry ? getActivePause(activeEntry) : null;
+  const pauseElapsed = activePause ? now - new Date(activePause.start).getTime() : 0;
 
   const checkIn = async () => {
     if (activeEntry) return;
@@ -2229,9 +2295,30 @@ function TimeModule({ scope }) {
       userName: currentUser.fullName,
       checkIn: new Date().toISOString(),
       checkOut: null,
-      projectId: null
+      projectId: null,
+      pauses: []
     };
     await db.ref('timeEntries/' + entry.id).set(entry);
+  };
+
+  // ⏸ Пауза
+  const startPause = async () => {
+    if (!activeEntry || onPause) return;
+    const pauses = activeEntry.pauses || [];
+    const newPause = { start: new Date().toISOString(), end: null };
+    await db.ref('timeEntries/' + activeEntry.id).update({
+      pauses: [...pauses, newPause]
+    });
+  };
+
+  // ▶ Продължи
+  const resumePause = async () => {
+    if (!activeEntry || !onPause) return;
+    const pauses = (activeEntry.pauses || []).map(p => {
+      if (!p.end) return { ...p, end: new Date().toISOString() };
+      return p;
+    });
+    await db.ref('timeEntries/' + activeEntry.id).update({ pauses });
   };
 
   const checkOut = () => {
@@ -2243,10 +2330,15 @@ function TimeModule({ scope }) {
   const confirmCheckout = async () => {
     if (!pendingEntryId) return;
     const proj = projects.find(p => p.id === pendingProject);
+    const entry = entries.find(e => e.id === pendingEntryId);
+    let pauses = entry?.pauses || [];
+    pauses = pauses.map(p => p.end ? p : { ...p, end: new Date().toISOString() });
+
     await db.ref('timeEntries/' + pendingEntryId).update({
       checkOut: new Date().toISOString(),
       projectId: pendingProject || null,
-      projectName: proj?.name || null
+      projectName: proj?.name || null,
+      pauses
     });
     setPendingEntryId(null);
     setPendingProject(null);
@@ -2266,10 +2358,13 @@ function TimeModule({ scope }) {
   const confirmStop = async () => {
     if (!stoppingEntry) return;
     const proj = projects.find(p => p.id === stopProjectId);
+    let pauses = stoppingEntry.pauses || [];
+    pauses = pauses.map(p => p.end ? p : { ...p, end: new Date().toISOString() });
     await db.ref('timeEntries/' + stoppingEntry.id).update({
       checkOut: new Date().toISOString(),
       projectId: stopProjectId || null,
-      projectName: proj?.name || null
+      projectName: proj?.name || null,
+      pauses
     });
     setStoppingEntry(null);
     setStopProjectId('');
@@ -2325,25 +2420,23 @@ function TimeModule({ scope }) {
     await db.ref('timeEntries/' + entry.id).remove();
   };
 
+  // Изчисляване на дневен сбор (без паузи)
   const myTodayEntries = entries.filter(e => e.userId === currentUser.id && isToday(e.checkIn));
-  const todayTotal = myTodayEntries.reduce((sum, e) => {
-    const start = new Date(e.checkIn).getTime();
-    const end = e.checkOut ? new Date(e.checkOut).getTime() : now;
-    return sum + (end - start);
-  }, 0);
+  const todayTotal = myTodayEntries.reduce((sum, e) => sum + calcDuration(e, now), 0);
 
   const getUserName = (id) => users.find(u => u.id === id)?.fullName || '?';
 
   const projectSummary = useMemo(() => {
     const map = {};
     entries.filter(e => e.checkOut).forEach(e => {
+      const dur = calcDuration(e, now);
       const key = e.projectId || 'none';
       if (!map[key]) map[key] = { name: e.projectName || 'Без проект', total: 0, count: 0 };
-      map[key].total += new Date(e.checkOut) - new Date(e.checkIn);
+      map[key].total += dur;
       map[key].count += 1;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [entries]);
+  }, [entries, now]);
 
   const isAdminView = scope === 'all' && isAdmin;
 
@@ -2359,23 +2452,52 @@ function TimeModule({ scope }) {
       {(!isAdmin || scope === 'me') && (
         <div className="card">
           <h3>🕐 Таймер</h3>
-          <div className={`clock-display ${activeEntry ? 'working' : ''}`}>
+          <div className={`clock-display ${onPause ? 'paused' : activeEntry ? 'working' : ''}`}>
             {activeEntry ? fmtTime(elapsed) : '00:00:00'}
           </div>
+
+          {onPause && (
+            <div className="pause-badge">
+              ⏸ На пауза от {new Date(activePause.start).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' })} ({fmtTime(pauseElapsed)})
+            </div>
+          )}
+
           <p className="clock-status">
             {activeEntry
-              ? `На работа от ${new Date(activeEntry.checkIn).toLocaleTimeString('bg-BG')}`
+              ? (onPause
+                  ? `На работа от ${new Date(activeEntry.checkIn).toLocaleTimeString('bg-BG')} • на пауза`
+                  : `На работа от ${new Date(activeEntry.checkIn).toLocaleTimeString('bg-BG')}`)
               : 'Не сте чекирани'}
           </p>
+
           <div className="clock-actions">
-            <button className="btn btn-success" onClick={checkIn} disabled={!!activeEntry}>✅ Чекиране</button>
-            <button className="btn btn-danger" onClick={checkOut} disabled={!activeEntry}>⏹ Приключване</button>
+            {!activeEntry ? (
+              <button className="btn btn-success" onClick={checkIn}>✅ Чекиране</button>
+            ) : (
+              <>
+                {!onPause ? (
+                  <button className="btn btn-info" onClick={startPause}>⏸ Пауза</button>
+                ) : (
+                  <button className="btn btn-success" onClick={resumePause}>▶ Продължи</button>
+                )}
+                <button className="btn btn-danger" onClick={checkOut}>⏹ Приключване</button>
+              </>
+            )}
           </div>
 
           <div style={{padding:'16px', background:'#faf5ff', borderRadius:'12px', border:'1px solid #ede9fe'}}>
-            <div className="text-muted">Общо днес:</div>
+            <div className="text-muted">Общо днес (без паузи):</div>
             <div style={{fontSize:'24px', fontWeight:'700', color:'#10b981'}}>{fmtTime(todayTotal)}</div>
           </div>
+
+          {activeEntry && (activeEntry.pauses && activeEntry.pauses.length > 0) && (
+            <div className="mt-2" style={{padding:'12px', background:'#fef3c7', borderRadius:'10px', border:'1px solid #fde68a'}}>
+              <div style={{fontSize:'12px', fontWeight:'600', color:'#b45309', marginBottom:'6px'}}>Паузи в текущата смяна:</div>
+              {activeEntry.pauses.map((p, i) => (
+                <div key={i} style={{fontSize:'12px', color:'#92400e'}}>• {fmtPause(p)}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -2412,7 +2534,7 @@ function TimeModule({ scope }) {
             <thead>
               <tr>
                 {scope === 'all' && <th>Служител</th>}
-                <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Продължителност</th>
+                <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Паузи</th><th>Продължителност</th>
                 {isAdminView && <th>Действия</th>}
               </tr>
             </thead>
@@ -2420,24 +2542,44 @@ function TimeModule({ scope }) {
               {entries.slice(0, 100).map(e => {
                 const start = new Date(e.checkIn);
                 const end = e.checkOut ? new Date(e.checkOut) : null;
-                const dur = end ? end - start : now - start;
-                const isActive = !e.checkOut;
+                const dur = calcDuration(e, now);
+                const active = !e.checkOut;
+                const paused = isPaused(e);
+                const pausesCount = (e.pauses || []).length;
+
                 return (
                   <tr key={e.id}>
                     {scope === 'all' && <td>{getUserName(e.userId) || e.userName}</td>}
                     <td>{start.toLocaleDateString('bg-BG')}</td>
                     <td>{start.toLocaleTimeString('bg-BG')}</td>
-                    <td>{end ? end.toLocaleTimeString('bg-BG') : <span className="badge active">на работа</span>}</td>
+                    <td>
+                      {end
+                        ? end.toLocaleTimeString('bg-BG')
+                        : paused
+                          ? <span className="badge paused">на пауза</span>
+                          : <span className="badge active">на работа</span>}
+                    </td>
                     <td>{e.projectName || '-'}</td>
+                    <td>
+                      {pausesCount > 0
+                        ? <span
+                            className="link"
+                            onClick={(ev) => { ev.stopPropagation(); setDetailEntry(e); }}
+                            title="Виж паузите"
+                          >
+                            {pausesCount} {pausesCount === 1 ? 'пауза' : 'паузи'}
+                          </span>
+                        : '-'}
+                    </td>
                     <td>{fmtTime(dur)}</td>
                     {isAdminView && (
                       <td>
                         <div className="admin-actions">
-                          {isActive && (
+                          {active && !paused && (
                             <button
                               className="btn btn-warning btn-sm"
                               onClick={() => openStopModal(e)}
-                              title="Спри смяната на този служител"
+                              title="Спри смяната"
                             >
                               ⏹ Спри
                             </button>
@@ -2445,14 +2587,14 @@ function TimeModule({ scope }) {
                           <button
                             className="btn btn-secondary btn-sm"
                             onClick={() => openEditModal(e)}
-                            title="Редактирай начало/край"
+                            title="Редактирай"
                           >
                             ✏️
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => deleteEntry(e)}
-                            title="Изтрий записа"
+                            title="Изтрий"
                           >
                             🗑️
                           </button>
@@ -2558,6 +2700,56 @@ function TimeModule({ scope }) {
             <div className="flex gap-2" style={{justifyContent:'flex-end'}}>
               <button className="btn btn-secondary" onClick={closeEditModal}>Отказ</button>
               <button className="btn btn-primary" onClick={saveEdit}>Запази</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Детайли на запис с паузи */}
+      {detailEntry && (
+        <div className="modal-backdrop" onClick={() => setDetailEntry(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>📋 Детайли на смяна</h3>
+            <div className="detail-row">
+              <span className="detail-label">Служител</span>
+              <span className="detail-value">{getUserName(detailEntry.userId) || detailEntry.userName}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Начало</span>
+              <span className="detail-value">{new Date(detailEntry.checkIn).toLocaleString('bg-BG')}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Край</span>
+              <span className="detail-value">
+                {detailEntry.checkOut
+                  ? new Date(detailEntry.checkOut).toLocaleString('bg-BG')
+                  : <span className="badge active">на работа</span>}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Общо време</span>
+              <span className="detail-value"><b>{fmtTime(calcDuration(detailEntry, now))}</b></span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Проект</span>
+              <span className="detail-value">{detailEntry.projectName || '-'}</span>
+            </div>
+
+            <h4 style={{marginTop:'20px', marginBottom:'10px', color:'#7c3aed', fontSize:'14px'}}>Паузи:</h4>
+            {(detailEntry.pauses || []).length === 0 ? (
+              <p className="text-muted">Няма паузи</p>
+            ) : (
+              <div style={{background:'#fef3c7', borderRadius:'10px', padding:'12px'}}>
+                {detailEntry.pauses.map((p, i) => (
+                  <div key={i} style={{fontSize:'13px', color:'#92400e', padding:'4px 0'}}>
+                    {i + 1}. {fmtPause(p)}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2" style={{justifyContent:'flex-end', marginTop:'20px'}}>
+              <button className="btn btn-secondary" onClick={() => setDetailEntry(null)}>Затвори</button>
             </div>
           </div>
         </div>
