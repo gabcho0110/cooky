@@ -832,7 +832,6 @@
 <div id="root"></div>
 
 <script>
-// Глобално прихващане на грешки ПРЕДИ React
 window.onerror = function(msg, url, line, col, err) {
   var errDiv = document.getElementById('startup-error');
   if (errDiv) {
@@ -860,7 +859,6 @@ console.log('🚀 Babel script starting');
 
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
 
-/* ============ ERROR BOUNDARY ============ */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -895,7 +893,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-/* ============ FIREBASE ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyDmdAdWxhtMf6AJ-i3215loRuAp5wmAjKY",
   authDomain: "clocky-4efd9.firebaseapp.com",
@@ -919,7 +916,6 @@ try {
   console.error("❌ Firebase init failed:", e);
 }
 
-/* ============ HELPERS ============ */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -969,7 +965,6 @@ const calcDuration = (entry, now = Date.now()) => {
   const start = new Date(entry.checkIn).getTime();
   const end = entry.checkOut ? new Date(entry.checkOut).getTime() : now;
   let total = end - start;
-
   const pauses = entry.pauses || [];
   pauses.forEach(p => {
     const pStart = new Date(p.start).getTime();
@@ -977,7 +972,6 @@ const calcDuration = (entry, now = Date.now()) => {
     const dur = pEnd - pStart;
     if (dur > 0) total -= dur;
   });
-
   return Math.max(0, total);
 };
 
@@ -1076,7 +1070,7 @@ const DEFAULT_HOLIDAYS = {
 };
 
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
-
+</script>
 /* ============ PDF FONT ============ */
 let cachedFontBase64 = null;
 
@@ -1096,7 +1090,6 @@ async function loadCyrillicFont() {
   return cachedFontBase64;
 }
 
-/* ============ PDF USER ============ */
 async function generateUserPDF(user) {
   const { jsPDF } = window.jspdf;
   let fontBase64;
@@ -1240,7 +1233,6 @@ async function generateUserPDF(user) {
   doc.save(filename);
 }
 
-/* ============ PDF LEAVE ============ */
 async function generateLeaveRequestPDF(request, leaveType, companyName) {
   const { jsPDF } = window.jspdf;
   let fontBase64;
@@ -1342,7 +1334,6 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.save(`Zaiavka_${request.userName?.replace(/\s+/g, '_')}_${request.startDate}.pdf`);
 }
 
-/* ============ AUTH CONTEXT ============ */
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -1503,7 +1494,6 @@ function AuthProvider({ children }) {
   );
 }
 
-/* ============ HOOKS ============ */
 function useFirebaseList(path) {
   const [data, setData] = useState([]);
   useEffect(() => {
@@ -1543,7 +1533,6 @@ function useHolidaysMap() {
   }, [list]);
 }
 
-/* ============ SIDEBAR ============ */
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -1665,7 +1654,6 @@ function Sidebar({ currentPage, onNavigate }) {
   );
 }
 
-/* ============ TOP HEADER ============ */
 function TopHeader() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -1697,7 +1685,6 @@ function TopHeader() {
   );
 }
 
-/* ============ LOGIN ============ */
 function Login() {
   const { login, loading, dbError } = useAuth();
   const [username, setUsername] = useState('');
@@ -1751,7 +1738,6 @@ function Login() {
   );
 }
 
-/* ============ PAGE HEADER ============ */
 function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
   return (
     <div className="page-header">
@@ -1767,8 +1753,6 @@ function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
     </div>
   );
 }
-
-/* ============ LEAVE DETAIL MODAL ============ */
 function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, onDelete, onApprove, onReject }) {
   const { users } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -1900,7 +1884,6 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
   );
 }
 
-/* ============ HOME ============ */
 function Home({ onNavigate }) {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2008,7 +1991,6 @@ function Home({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST MODAL ============ */
 function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
@@ -2162,14 +2144,12 @@ function LeaveRequestModal({ onClose }) {
   );
 }
 
-/* ============ MY REQUESTS ============ */
 function MyRequests() {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
   const [showModal, setShowModal] = useState(false);
- const [dayModalDate, setDayModalDate] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const myRequests = requests
@@ -2234,7 +2214,6 @@ function MyRequests() {
   );
 }
 
-/* ============ LEAVE REQUESTS PAGE ============ */
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2379,8 +2358,6 @@ function LeaveRequestsPage() {
     </div>
   );
 }
-
-/* ============ CALENDAR ============ */
 function CalendarPage() {
   const { users, currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2390,6 +2367,7 @@ function CalendarPage() {
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [dayModalDate, setDayModalDate] = useState(null);
 
   const year = month.getFullYear();
   const m = month.getMonth();
@@ -2409,6 +2387,7 @@ function CalendarPage() {
   const deleteRequest = async (r) => {
     await db.ref('leaveRequests/' + r.id).remove();
     setSelected(null);
+    setDayModalDate(null);
   };
 
   const approve = async (r) => {
@@ -2437,9 +2416,29 @@ function CalendarPage() {
 
   const todayStr = todayISO();
 
+  const openDayModal = (day) => {
+    if (!day) return;
+    const dateStr = `${year}-${pad(m + 1)}-${pad(day)}`;
+    setDayModalDate(dateStr);
+  };
+
+  const dayModalEvents = dayModalDate
+    ? requests.filter(r => dayModalDate >= r.startDate && dayModalDate <= r.endDate)
+    : [];
+
+  const dayModalHoliday = dayModalDate ? holidays[dayModalDate] : null;
+
+  const formatDayTitle = (dateStr) => {
+    const d = new Date(dateStr);
+    const dayName = d.toLocaleDateString('bg-BG', { weekday: 'long' });
+    return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} (${dayName})`;
+  };
+
+  const statusLabels = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+
   return (
     <div className="animate-in">
-      <PageHeader title="Табло – Календар" subtitle="Всички отпуски и отсъствия"
+      <PageHeader title="Табло – Календар" subtitle="Кликнете на дата за да видите всички отпуски"
         onAdd={() => setShowModal(true)} addLabel="Нова заявка" />
 
       <div className="card">
@@ -2461,24 +2460,24 @@ function CalendarPage() {
             const events = getEventsForDay(day);
             return (
               <div
-  key={idx}
-  className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}
-  onClick={() => {
-    if (!day) return;
-    const dateStr = `${year}-${pad(m + 1)}-${pad(day)}`;
-    setDayModalDate(dateStr);
-  }}
-  style={{ cursor: day ? 'pointer' : 'default' }}
->
+                key={idx}
+                className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}
+                onClick={() => openDayModal(day)}
+                style={{ cursor: day ? 'pointer' : 'default' }}
+              >
                 {day && <div className="day-num">{day}</div>}
                 {holidayInfo && <div className="holiday-tag" title={holidayInfo.name}>🎉 {holidayInfo.name}</div>}
                 {events.slice(0, 2).map(e => {
                   const t = getType(e.type);
                   const opacity = e.status === 'pending' ? 0.5 : 1;
                   return (
-                    <div key={e.id} className="day-event" style={{background: t.color, opacity}}
+                    <div
+                      key={e.id}
+                      className="day-event"
+                      style={{background: t.color, opacity}}
                       title={`${getUserName(e.userId, e.userName)} • ${t.name}`}
-                      onClick={() => setSelected(e)}>
+                      onClick={(ev) => { ev.stopPropagation(); setSelected(e); }}
+                    >
                       {getUserName(e.userId, e.userName).split(' ')[0]}
                     </div>
                   );
@@ -2503,6 +2502,87 @@ function CalendarPage() {
         </div>
       </div>
 
+      {dayModalDate && (
+        <div className="modal-backdrop" onClick={() => setDayModalDate(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+              <h3 style={{marginBottom:0}}>📅 {formatDayTitle(dayModalDate)}</h3>
+              <button className="btn btn-secondary btn-sm" onClick={() => setDayModalDate(null)}
+                style={{width:'32px', height:'32px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✕</button>
+            </div>
+
+            {dayModalHoliday && (
+              <div style={{padding:'12px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:'10px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px'}}>
+                <span style={{fontSize:'24px'}}>🎉</span>
+                <div>
+                  <div style={{fontWeight:600, color:'#b91c1c'}}>Национален празник</div>
+                  <div style={{fontSize:'13px', color:'#991b1b'}}>{dayModalHoliday.name}</div>
+                </div>
+              </div>
+            )}
+
+            {dayModalEvents.length === 0 ? (
+              <div className="empty-state">Няма отпуски за тази дата</div>
+            ) : (
+              <>
+                <div style={{fontSize:'13px', color:'#7c3aed', marginBottom:'12px', fontWeight:600}}>
+                  {dayModalEvents.length} {dayModalEvents.length === 1 ? 'отпуск' : 'отпуски'} за тази дата:
+                </div>
+                <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+                  {dayModalEvents.map(e => {
+                    const t = getType(e.type);
+                    return (
+                      <div key={e.id}
+                        onClick={() => { setSelected(e); setDayModalDate(null); }}
+                        style={{
+                          padding:'12px 14px',
+                          background:'#faf5ff',
+                          border:'1px solid #ede9fe',
+                          borderLeft:`4px solid ${t.color}`,
+                          borderRadius:'10px',
+                          cursor:'pointer',
+                          transition:'all 0.2s'
+                        }}
+                        onMouseEnter={(ev) => { ev.currentTarget.style.background = '#f3e8ff'; }}
+                        onMouseLeave={(ev) => { ev.currentTarget.style.background = '#faf5ff'; }}
+                      >
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px'}}>
+                          <div style={{fontWeight:600, color:'#1e1b4b', fontSize:'14px'}}>
+                            {getUserName(e.userId, e.userName)}
+                          </div>
+                          <span className={`badge ${e.status}`}>{statusLabels[e.status]}</span>
+                        </div>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#7c3aed', opacity:0.85}}>
+                          <span style={{display:'inline-flex', alignItems:'center', gap:'4px'}}>
+                            <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                            {t.name}
+                          </span>
+                          <span>•</span>
+                          <span>{formatDate(e.startDate)} – {formatDate(e.endDate)}</span>
+                          {e.attachment && <><span>•</span><span>📎</span></>}
+                        </div>
+                        {e.reason && (
+                          <div style={{fontSize:'12px', color:'#9ca3af', marginTop:'4px', fontStyle:'italic'}}>
+                            {e.reason.length > 60 ? e.reason.slice(0, 60) + '…' : e.reason}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            <div style={{marginTop:'20px', display:'flex', justifyContent:'flex-end', gap:'8px'}}>
+              <button className="btn btn-primary" onClick={() => { setShowModal(true); setDayModalDate(null); }}>
+                ➕ Нова заявка
+              </button>
+              <button className="btn btn-secondary" onClick={() => setDayModalDate(null)}>Затвори</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selected && (
         <LeaveDetailModal
           request={selected}
@@ -2515,101 +2595,12 @@ function CalendarPage() {
           onReject={reject}
         />
       )}
-{dayModalDate && (
-  <div className="modal-backdrop" onClick={() => setDayModalDate(null)}>
-    <div className="modal" onClick={e => e.stopPropagation()}>
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-        <h3 style={{marginBottom:0}}>
-          📅 {new Date(dayModalDate).getDate()} {monthNames[new Date(dayModalDate).getMonth()]} {new Date(dayModalDate).getFullYear()}
-        </h3>
-        <button className="btn btn-secondary btn-sm" onClick={() => setDayModalDate(null)}
-          style={{width:'32px', height:'32px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✕</button>
-      </div>
 
-      {holidays[dayModalDate] && (
-        <div style={{padding:'12px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:'10px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px'}}>
-          <span style={{fontSize:'24px'}}>🎉</span>
-          <div>
-            <div style={{fontWeight:600, color:'#b91c1c'}}>Национален празник</div>
-            <div style={{fontSize:'13px', color:'#991b1b'}}>{holidays[dayModalDate].name}</div>
-          </div>
-        </div>
-      )}
-
-      {(() => {
-        const dayEvents = requests.filter(r => dayModalDate >= r.startDate && dayModalDate <= r.endDate);
-        const statusLabels = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
-
-        if (dayEvents.length === 0) {
-          return <div className="empty-state">Няма отпуски за тази дата</div>;
-        }
-
-        return (
-          <>
-            <div style={{fontSize:'13px', color:'#7c3aed', marginBottom:'12px', fontWeight:600}}>
-              {dayEvents.length} {dayEvents.length === 1 ? 'отпуск' : 'отпуски'} за тази дата:
-            </div>
-            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
-              {dayEvents.map(e => {
-                const t = getType(e.type);
-                return (
-                  <div key={e.id}
-                    onClick={() => { setSelected(e); setDayModalDate(null); }}
-                    style={{
-                      padding:'12px 14px',
-                      background:'#faf5ff',
-                      border:'1px solid #ede9fe',
-                      borderLeft:`4px solid ${t.color}`,
-                      borderRadius:'10px',
-                      cursor:'pointer',
-                      transition:'all 0.2s'
-                    }}
-                    onMouseEnter={(ev) => { ev.currentTarget.style.background = '#f3e8ff'; }}
-                    onMouseLeave={(ev) => { ev.currentTarget.style.background = '#faf5ff'; }}
-                  >
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px'}}>
-                      <div style={{fontWeight:600, color:'#1e1b4b', fontSize:'14px'}}>
-                        {getUserName(e.userId, e.userName)}
-                      </div>
-                      <span className={`badge ${e.status}`}>{statusLabels[e.status]}</span>
-                    </div>
-                    <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#7c3aed', opacity:0.85}}>
-                      <span style={{display:'inline-flex', alignItems:'center', gap:'4px'}}>
-                        <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                        {t.name}
-                      </span>
-                      <span>•</span>
-                      <span>{formatDate(e.startDate)} – {formatDate(e.endDate)}</span>
-                      {e.attachment && <><span>•</span><span>📎</span></>}
-                    </div>
-                    {e.reason && (
-                      <div style={{fontSize:'12px', color:'#9ca3af', marginTop:'4px', fontStyle:'italic'}}>
-                        {e.reason.length > 60 ? e.reason.slice(0, 60) + '…' : e.reason}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        );
-      })()}
-
-      <div style={{marginTop:'20px', display:'flex', justifyContent:'flex-end', gap:'8px'}}>
-        <button className="btn btn-primary" onClick={() => { setShowModal(true); setDayModalDate(null); }}>
-          ➕ Нова заявка
-        </button>
-        <button className="btn btn-secondary" onClick={() => setDayModalDate(null)}>Затвори</button>
-      </div>
-    </div>
-  </div>
-)}
       {showModal && <LeaveRequestModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
 
-/* ============ LEAVES REPORTS ============ */
 function LeavesReports() {
   const { currentUser, users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2711,7 +2702,6 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -3180,7 +3170,6 @@ function TimeModule({ scope }) {
   );
 }
 
-/* ============ HOLIDAYS SETTINGS ============ */
 function HolidaysSettings() {
   const holidaysList = useFirebaseList('holidays');
   const [form, setForm] = useState({ name: '', date: '' });
@@ -3359,7 +3348,6 @@ function HolidaysSettings() {
   );
 }
 
-/* ============ PROJECTS MODULE ============ */
 function ProjectsModule() {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
@@ -3449,7 +3437,6 @@ function ProjectsModule() {
   );
 }
 
-/* ============ COMPANY ============ */
 function CompanyPage() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -3528,7 +3515,6 @@ function CompanyPage() {
   );
 }
 
-/* ============ USERS MANAGER ============ */
 function UsersManager() {
   const { users, addUser, updateUser, deleteUser, currentUser } = useAuth();
   const [form, setForm] = useState({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
@@ -3682,7 +3668,6 @@ function UsersManager() {
   );
 }
 
-/* ============ LEAVE TYPES ============ */
 function LeaveTypesSettings() {
   const leaveTypes = useFirebaseObject('leaveTypes', {});
   const [form, setForm] = useState({ name: '', color: '#7c3aed', deducts: true });
@@ -3806,7 +3791,6 @@ function LeaveTypesSettings() {
   );
 }
 
-/* ============ APP ============ */
 function App() {
   const { currentUser, loading } = useAuth();
   const [page, setPage] = useState('home');
@@ -3858,7 +3842,6 @@ function App() {
   );
 }
 
-/* ============ RENDER ============ */
 console.log('🚀 Rendering App...');
 try {
   const root = ReactDOM.createRoot(document.getElementById('root'));
