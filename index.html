@@ -820,26 +820,7 @@
 <body>
 <div id="root"></div>
 
-<!-- СТАРТОВ FALLBACK - показва се докато React се зареди -->
-<div id="fallback" style="position:fixed;inset:0;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#fff;border-radius:20px;padding:44px;text-align:center;box-shadow:0 24px 70px rgba(124,58,237,0.35);">
-    <h1 style="color:#7c3aed;margin-bottom:20px;">⏰ Clocky</h1>
-    <div style="display:inline-block;width:30px;height:30px;border:3px solid rgba(124,58,237,0.2);border-top-color:#7c3aed;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-    <p style="color:#9ca3af;margin-top:16px;font-size:13px;">Зареждане...</p>
-  </div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-</div>
-
 <script type="text/babel" data-presets="react">
-/* ============ СКРИЙ FALLBACK СЛЕД КАТО REACT СЕ ЗАРЕДИ ============ */
-(function() {
-  const fb = document.getElementById('fallback');
-  if (fb) {
-    // Скриваме fallback след 100ms за да се даде време на React да рендира
-    setTimeout(() => { fb.style.display = 'none'; }, 200);
-  }
-})();
-
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
 
 /* ============ ERROR BOUNDARY ============ */
@@ -860,7 +841,7 @@ class ErrorBoundary extends React.Component {
         <div className="error-screen">
           <div className="error-screen-inner">
             <h2>⚠️ Възникна грешка</h2>
-            <p className="text-muted">Моля, презаредете страницата или се свържете с администратор.</p>
+            <p className="text-muted">Моля, презаредете страницата.</p>
             <pre>{String(this.state.error?.message || this.state.error)}</pre>
             <button
               className="btn btn-primary"
@@ -1216,7 +1197,7 @@ async function generateUserPDF(user) {
   doc.text(`Генериран на ${new Date().toLocaleDateString('bg-BG')}`, pageWidth - marginX, footerY, { align: 'right' });
 
   doc.setFontSize(7.5);
-  doc.text('Моля, съхранявайте този документ на сигурно място и не споделяйте паролата си.', marginX, footerY + 5);
+  doc.text('Моля, съхранявайте този документ на сигурно място.', marginX, footerY + 5);
 
   const filename = `Clocky_${user.username}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(filename);
@@ -1324,7 +1305,7 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.save(`Zaiavka_${request.userName?.replace(/\s+/g, '_')}_${request.startDate}.pdf`);
 }
 
-/* ============ AUTH CONTEXT ============ */
+/* ============ AUTH CONTEXT (ПОПРАВЕНО) ============ */
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -1336,10 +1317,7 @@ function AuthProvider({ children }) {
   const seededRef = useRef(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setLoading(false);
-      if (!firebaseReady) setDbError("Не може да се свърже с базата данни.");
-    }, 5000);
+    console.log("🔵 AuthProvider mounted");
 
     const stored = localStorage.getItem('clocky_user');
     if (stored) {
@@ -1347,20 +1325,29 @@ function AuthProvider({ children }) {
     }
 
     if (!firebaseReady || !db) {
+      console.error("❌ Firebase not ready");
       setLoading(false);
-      return () => clearTimeout(timeout);
+      setDbError("Не може да се свърже с Firebase. Провери правилата на базата.");
+      return;
     }
 
+    console.log("🔵 Опитвам да заредя users от Firebase...");
+
     const ref = db.ref('users');
+    let resolved = false;
+
     const handler = (snap) => {
-      clearTimeout(timeout);
+      resolved = true;
+      console.log("✅ Получени данни от Firebase:", snap.val());
       const data = snap.val() || {};
       const list = Object.values(data);
       setUsers(list);
       setLoading(false);
+      setDbError(null);
 
       if (list.length === 0 && !seededRef.current) {
         seededRef.current = true;
+        console.log("🌱 Създавам admin потребител...");
         const admin = {
           id: uid(),
           username: 'admin',
@@ -1372,7 +1359,7 @@ function AuthProvider({ children }) {
           usedLeaveDays: 0,
           createdAt: new Date().toISOString()
         };
-        db.ref('users/' + admin.id).set(admin).catch(e => console.error(e));
+        db.ref('users/' + admin.id).set(admin).catch(e => console.error("Seeding error:", e));
       }
 
       const storedNow = localStorage.getItem('clocky_user');
@@ -1392,15 +1379,25 @@ function AuthProvider({ children }) {
     };
 
     const errorHandler = (err) => {
-      clearTimeout(timeout);
-      console.error("DB error:", err);
-      setDbError("Грешка при връзка: " + err.message);
+      resolved = true;
+      console.error("❌ Firebase error:", err);
+      setDbError("Грешка при връзка с Firebase: " + err.message + " • Провери правилата на базата.");
       setLoading(false);
     };
 
     ref.on('value', handler, errorHandler);
+
+    // Fallback timeout - ако Firebase не отговори за 8 сек, показваме login с грешка
+    const timeoutId = setTimeout(() => {
+      if (!resolved) {
+        console.warn("⚠️ Firebase timeout - няма отговор за 8 секунди");
+        setLoading(false);
+        setDbError("Връзката с Firebase отнема твърде дълго. Провери правилата на базата: https://console.firebase.google.com/project/clocky-4efd9/database/clocky-4efd9-default-rtdb/rules");
+      }
+    }, 8000);
+
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
       ref.off('value', handler);
     };
   }, []);
@@ -1408,10 +1405,10 @@ function AuthProvider({ children }) {
   useEffect(() => {
     if (!firebaseReady || !db) return;
     db.ref('leaveTypes').once('value').then(snap => {
-      if (!snap.exists()) db.ref('leaveTypes').set(DEFAULT_LEAVE_TYPES).catch(e => console.error(e));
+      if (!snap.exists()) db.ref('leaveTypes').set(DEFAULT_LEAVE_TYPES).catch(() => {});
     }).catch(() => {});
     db.ref('company').once('value').then(snap => {
-      if (!snap.exists()) db.ref('company').set(DEFAULT_COMPANY).catch(e => console.error(e));
+      if (!snap.exists()) db.ref('company').set(DEFAULT_COMPANY).catch(() => {});
     }).catch(() => {});
     db.ref('holidays').once('value').then(snap => {
       if (!snap.exists()) {
@@ -1423,7 +1420,7 @@ function AuthProvider({ children }) {
           const id = uid();
           seeded[id] = { id, name: h.name, date: dateISO, createdAt: new Date().toISOString() };
         });
-        db.ref('holidays').set(seeded).catch(e => console.error(e));
+        db.ref('holidays').set(seeded).catch(() => {});
       }
     }).catch(() => {});
   }, []);
@@ -3127,7 +3124,7 @@ function HolidaysSettings() {
         onAdd={() => setShowModal(true)} addLabel="Нов празник" />
 
       <div className="warning-box">
-        ℹ️ Празниците автоматично се маркират в календара и <b>не се броят</b> като работни дни при подаване на заявка.
+        ℹ️ Празниците автоматично се маркират в календара и <b>не се броят</b> като работни дни.
       </div>
 
       <div className="card">
@@ -3679,12 +3676,6 @@ function LeaveTypesSettings() {
 function App() {
   const { currentUser, loading } = useAuth();
   const [page, setPage] = useState('home');
-
-  // Скрива fallback-а при първо зареждане на App
-  useEffect(() => {
-    const fb = document.getElementById('fallback');
-    if (fb) fb.style.display = 'none';
-  }, []);
 
   if (loading) {
     return (
