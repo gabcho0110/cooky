@@ -815,12 +815,49 @@
     overflow: auto;
     margin-top: 16px;
   }
+
+  #startup-error {
+    display: none;
+    padding: 40px;
+    font-family: monospace;
+    background: #fef2f2;
+    color: #991b1b;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
 </style>
 </head>
 <body>
+<div id="startup-error"></div>
 <div id="root"></div>
 
+<script>
+// Глобално прихващане на грешки ПРЕДИ React
+window.onerror = function(msg, url, line, col, err) {
+  var errDiv = document.getElementById('startup-error');
+  if (errDiv) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = '<h2>⚠️ Грешка при зареждане</h2>' +
+      '<p><b>Съобщение:</b> ' + msg + '</p>' +
+      '<p><b>Файл:</b> ' + url + '</p>' +
+      '<p><b>Ред:</b> ' + line + ':' + col + '</p>' +
+      '<pre>' + (err && err.stack ? err.stack : 'Няма stack trace') + '</pre>' +
+      '<button onclick="location.reload()" style="padding:10px 20px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Презареди</button>';
+  }
+  console.error('Global error:', msg, line, col, err);
+  return false;
+};
+
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('Unhandled promise rejection:', e.reason);
+});
+
+console.log('🚀 Startup script loaded');
+</script>
+
 <script type="text/babel" data-presets="react">
+console.log('🚀 Babel script starting');
+
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
 
 /* ============ ERROR BOUNDARY ============ */
@@ -1305,7 +1342,7 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.save(`Zaiavka_${request.userName?.replace(/\s+/g, '_')}_${request.startDate}.pdf`);
 }
 
-/* ============ AUTH CONTEXT (ПОПРАВЕНО) ============ */
+/* ============ AUTH CONTEXT ============ */
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -1387,12 +1424,11 @@ function AuthProvider({ children }) {
 
     ref.on('value', handler, errorHandler);
 
-    // Fallback timeout - ако Firebase не отговори за 8 сек, показваме login с грешка
     const timeoutId = setTimeout(() => {
       if (!resolved) {
         console.warn("⚠️ Firebase timeout - няма отговор за 8 секунди");
         setLoading(false);
-        setDbError("Връзката с Firebase отнема твърде дълго. Провери правилата на базата: https://console.firebase.google.com/project/clocky-4efd9/database/clocky-4efd9-default-rtdb/rules");
+        setDbError("Връзката с Firebase отнема твърде дълго. Провери правилата на базата.");
       }
     }, 8000);
 
@@ -3725,18 +3761,20 @@ function App() {
 }
 
 /* ============ RENDER ============ */
+console.log('🚀 Rendering App...');
 try {
-  ReactDOM.createRoot(document.getElementById('root')).render(
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(
     <ErrorBoundary>
       <AuthProvider>
         <App />
       </AuthProvider>
     </ErrorBoundary>
   );
-  console.log("✅ App rendered successfully");
+  console.log("✅ Render called successfully");
 } catch (e) {
   console.error("❌ Render failed:", e);
-  document.getElementById('root').innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#dc2626;"><h2>Грешка при стартиране</h2><pre>' + e.message + '</pre></div>';
+  document.getElementById('root').innerHTML = '<div style="padding:40px;font-family:monospace;color:#dc2626;background:#fef2f2;min-height:100vh;"><h2>Грешка при стартиране</h2><pre>' + e.message + '\n\n' + e.stack + '</pre></div>';
 }
 </script>
 </body>
