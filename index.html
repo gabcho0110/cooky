@@ -2,23 +2,57 @@
 <html lang="bg">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Clocky - Система за отпуски</title>
+
+<!-- ============ PWA META TAGS ============ -->
+<meta name="theme-color" content="#7c3aed" />
+<meta name="description" content="Clocky – Система за отпуски и работно време" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Clocky" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="application-name" content="Clocky" />
+<meta name="format-detection" content="telephone=no" />
+
+<!-- ============ PWA MANIFEST ============ -->
+<link rel="manifest" href="/manifest.json" />
+
+<!-- ============ APPLE TOUCH ICONS ============ -->
+<link rel="apple-touch-icon" href="/icons/icon-152.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+<link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144.png" />
+<link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png" />
+<link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-76.png" />
+
+<!-- ============ FAVICON ============ -->
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72.png" />
+
+<!-- ============ SCRIPTS ============ -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #faf5ff;
     color: #1e1b4b;
     min-height: 100vh;
     font-size: 14px;
-    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   #root { min-height: 100vh; }
   .loading-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
@@ -61,6 +95,10 @@
 
   .sidebar-logout { margin-top: auto; padding: 11px 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
   .sidebar-logout:hover { background: #fee2e2; }
+
+  .sidebar-install-btn { display: none; margin-bottom: 8px; padding: 11px 12px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: all 0.2s; }
+  .sidebar-install-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.45); }
+  .sidebar-install-btn.visible { display: flex; }
 
   .main-wrapper { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; }
   .top-header { background: #fff; border-bottom: 1px solid #ede9fe; padding: 14px 32px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(124,58,237,0.04); }
@@ -417,6 +455,63 @@
     min-width: 0;
   }
 
+  /* ========== OFFLINE BANNER ========== */
+  .offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #dc2626;
+    color: #fff;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    transform: translateY(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  }
+  .offline-banner.visible { transform: translateY(0); }
+
+  /* ========== UPDATE BANNER ========== */
+  .update-banner {
+    position: fixed;
+    bottom: 90px;
+    left: 16px;
+    right: 16px;
+    background: #7c3aed;
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(124,58,237,0.4);
+    z-index: 9998;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeInUp 0.3s;
+  }
+  .update-banner.visible { display: flex; }
+  .update-banner button {
+    background: #fff;
+    color: #7c3aed;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
   /* === RESPONSIVE === */
   @media (max-width: 900px) {
     .sidebar { display: none; }
@@ -468,9 +563,27 @@
     .mobile-nav-btn .nav-emoji { font-size: 18px; }
     .mobile-nav-btn { padding: 5px 4px; }
   }
+
+  /* === STANDALONE MODE (когато е инсталирано) === */
+  @media (display-mode: standalone) {
+    .top-header { padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+  }
 </style>
 </head>
 <body>
+
+<!-- ========== OFFLINE BANNER ========== -->
+<div id="offline-banner" class="offline-banner">
+  <span>📡</span>
+  <span>Няма интернет връзка</span>
+</div>
+
+<!-- ========== UPDATE BANNER ========== -->
+<div id="update-banner" class="update-banner">
+  <span>🔄 Налична е нова версия</span>
+  <button onclick="updateApp()">Обнови</button>
+</div>
+
 <div id="startup-error"></div>
 <div id="root"></div>
 
@@ -492,6 +605,116 @@ window.onerror = function(msg, url, line, col, err) {
 
 window.addEventListener('unhandledrejection', function(e) {
   console.error('Unhandled promise rejection:', e.reason);
+});
+
+// ========== PWA: Service Worker Registration ==========
+let newWorker = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then((registration) => {
+        console.log('✅ Service Worker registered:', registration.scope);
+
+        // Проверка за ъпдейти
+        registration.addEventListener('updatefound', () => {
+          newWorker = registration.installing;
+          console.log('🔄 New Service Worker installing...');
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('✨ New version available');
+              const banner = document.getElementById('update-banner');
+              if (banner) banner.classList.add('visible');
+            }
+          });
+        });
+
+        // Периодична проверка за ъпдейти (на всеки 60 минути)
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000);
+      })
+      .catch((err) => console.error('❌ SW registration failed:', err));
+  });
+
+  // Презареждане при активиране на нов SW
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
+window.updateApp = function() {
+  if (newWorker) {
+    newWorker.postMessage('SKIP_WAITING');
+  } else {
+    window.location.reload();
+  }
+};
+
+// ========== PWA: Install Prompt ==========
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('💡 PWA install prompt available');
+
+  // Покажи install бутоните
+  const btnSidebar = document.getElementById('sidebar-install-btn');
+  if (btnSidebar) btnSidebar.classList.add('visible');
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 Clocky installed!');
+  deferredPrompt = null;
+  const btnSidebar = document.getElementById('sidebar-install-btn');
+  if (btnSidebar) btnSidebar.classList.remove('visible');
+});
+
+window.installPWA = async function() {
+  if (!deferredPrompt) {
+    alert('Приложението вече е инсталирано или браузърът не поддържа инсталация.\n\nОтворете менюто на браузъра → "Инсталирай приложение" или "Добави към начален екран".');
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log('Install outcome:', outcome);
+  deferredPrompt = null;
+};
+
+// ========== OFFLINE/ONLINE INDICATOR ==========
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (navigator.onLine) {
+    banner.classList.remove('visible');
+    console.log('🟢 Online');
+  } else {
+    banner.classList.add('visible');
+    console.log('🔴 Offline');
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ========== PREVENT DOUBLE-TAP ZOOM (mobile) ==========
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+// ========== HANDLE ANDROID BACK BUTTON (по избор) ==========
+// Ако потребителят натисне back и има отворен модал, го затваряме
+window.addEventListener('popstate', (e) => {
+  // Тук може да добавиш логика ако имаш отворени модали
 });
 
 console.log('🚀 Startup script loaded');
@@ -1292,6 +1515,9 @@ function Sidebar({ currentPage, onNavigate }) {
           );
         })}
       </nav>
+      <button id="sidebar-install-btn" className="sidebar-install-btn" onClick={() => window.installPWA && window.installPWA()}>
+        📲 Инсталирай Clocky
+      </button>
       <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
     </aside>
   );
