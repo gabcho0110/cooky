@@ -788,6 +788,33 @@
     margin-bottom: 16px;
   }
 
+  .doc-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #faf5ff;
+    border-radius: 12px;
+    border: 1px solid #ede9fe;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+  .doc-card:hover { border-color: #c4b5fd; box-shadow: 0 2px 12px rgba(168,85,247,0.1); }
+  .doc-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-name { font-weight: 600; color: #1e1b4b; margin-bottom: 4px; }
+  .doc-meta { font-size: 12px; color: #9ca3af; display: flex; gap: 8px; flex-wrap: wrap; }
+  .doc-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
   .error-screen {
     min-height: 100vh;
     display: flex;
@@ -832,7 +859,6 @@
 <div id="root"></div>
 
 <script>
-// Глобално прихващане на грешки ПРЕДИ React
 window.onerror = function(msg, url, line, col, err) {
   var errDiv = document.getElementById('startup-error');
   if (errDiv) {
@@ -859,8 +885,6 @@ console.log('🚀 Startup script loaded');
 console.log('🚀 Babel script starting');
 
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
-
-/* ============ ERROR BOUNDARY ============ */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -880,11 +904,8 @@ class ErrorBoundary extends React.Component {
             <h2>⚠️ Възникна грешка</h2>
             <p className="text-muted">Моля, презаредете страницата.</p>
             <pre>{String(this.state.error?.message || this.state.error)}</pre>
-            <button
-              className="btn btn-primary"
-              style={{marginTop:'20px'}}
-              onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
-            >
+            <button className="btn btn-primary" style={{marginTop:'20px'}}
+              onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}>
               Презареди
             </button>
           </div>
@@ -895,7 +916,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-/* ============ FIREBASE ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyDmdAdWxhtMf6AJ-i3215loRuAp5wmAjKY",
   authDomain: "clocky-4efd9.firebaseapp.com",
@@ -919,12 +939,16 @@ try {
   console.error("❌ Firebase init failed:", e);
 }
 
-/* ============ HELPERS ============ */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const formatDate = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleDateString('bg-BG');
+};
+const formatDateTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('bg-BG');
 };
 const pad = (n) => String(n).padStart(2, '0');
 const todayISO = () => {
@@ -969,7 +993,6 @@ const calcDuration = (entry, now = Date.now()) => {
   const start = new Date(entry.checkIn).getTime();
   const end = entry.checkOut ? new Date(entry.checkOut).getTime() : now;
   let total = end - start;
-
   const pauses = entry.pauses || [];
   pauses.forEach(p => {
     const pStart = new Date(p.start).getTime();
@@ -977,7 +1000,6 @@ const calcDuration = (entry, now = Date.now()) => {
     const dur = pEnd - pStart;
     if (dur > 0) total -= dur;
   });
-
   return Math.max(0, total);
 };
 
@@ -1039,6 +1061,14 @@ const calcWorkingDays = (startDate, endDate, holidays) => {
   return count;
 };
 
+const formatFileSize = (dataUrl) => {
+  if (!dataUrl) return '';
+  const sizeInBytes = Math.round((dataUrl.length - 22) * 3 / 4);
+  if (sizeInBytes < 1024) return sizeInBytes + ' B';
+  if (sizeInBytes < 1024 * 1024) return (sizeInBytes / 1024).toFixed(1) + ' KB';
+  return (sizeInBytes / (1024 * 1024)).toFixed(2) + ' MB';
+};
+
 const DEFAULT_LEAVE_TYPES = {
   paid: { id: 'paid', name: 'Платен отпуск', color: '#10b981', deducts: true },
   unpaid: { id: 'unpaid', name: 'Неплатен отпуск', color: '#ef4444', deducts: false },
@@ -1075,9 +1105,17 @@ const DEFAULT_HOLIDAYS = {
   '12-26': { name: 'Рождество Христово' }
 };
 
+const DOC_CATEGORIES = {
+  contract: { name: 'Трудов договор', color: '#3b82f6', icon: '📝' },
+  diploma: { name: 'Диплома', color: '#8b5cf6', icon: '🎓' },
+  certificate: { name: 'Сертификат', color: '#10b981', icon: '🏆' },
+  medical: { name: 'Медицинско', color: '#ef4444', icon: '🏥' },
+  id: { name: 'Лична карта', color: '#f59e0b', icon: '🪪' },
+  other: { name: 'Друго', color: '#6b7280', icon: '📄' }
+};
+
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
-/* ============ PDF FONT ============ */
 let cachedFontBase64 = null;
 
 async function loadCyrillicFont() {
@@ -1096,7 +1134,6 @@ async function loadCyrillicFont() {
   return cachedFontBase64;
 }
 
-/* ============ PDF USER ============ */
 async function generateUserPDF(user) {
   const { jsPDF } = window.jspdf;
   let fontBase64;
@@ -1240,7 +1277,6 @@ async function generateUserPDF(user) {
   doc.save(filename);
 }
 
-/* ============ PDF LEAVE ============ */
 async function generateLeaveRequestPDF(request, leaveType, companyName) {
   const { jsPDF } = window.jspdf;
   let fontBase64;
@@ -1342,7 +1378,6 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.save(`Zaiavka_${request.userName?.replace(/\s+/g, '_')}_${request.startDate}.pdf`);
 }
 
-/* ============ AUTH CONTEXT ============ */
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -1503,7 +1538,6 @@ function AuthProvider({ children }) {
   );
 }
 
-/* ============ HOOKS ============ */
 function useFirebaseList(path) {
   const [data, setData] = useState([]);
   useEffect(() => {
@@ -1542,8 +1576,6 @@ function useHolidaysMap() {
     return map;
   }, [list]);
 }
-
-/* ============ SIDEBAR ============ */
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -1562,6 +1594,9 @@ function Sidebar({ currentPage, onNavigate }) {
       { id: 'time', icon: '⏱️', label: 'Време', items: [
         { id: 'time-me', label: 'Моето време' },
         { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
+      ]},
+      { id: 'documents', icon: '📄', label: 'Документи', items: [
+        { id: 'documents-list', label: 'Всички документи' }
       ]},
       { id: 'company', icon: '🏢', label: 'Компания', items: [
         { id: 'company-data', label: 'Данни за компанията' }
@@ -1665,7 +1700,6 @@ function Sidebar({ currentPage, onNavigate }) {
   );
 }
 
-/* ============ TOP HEADER ============ */
 function TopHeader() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -1697,7 +1731,6 @@ function TopHeader() {
   );
 }
 
-/* ============ LOGIN ============ */
 function Login() {
   const { login, loading, dbError } = useAuth();
   const [username, setUsername] = useState('');
@@ -1751,7 +1784,6 @@ function Login() {
   );
 }
 
-/* ============ PAGE HEADER ============ */
 function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
   return (
     <div className="page-header">
@@ -1768,7 +1800,6 @@ function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
   );
 }
 
-/* ============ LEAVE DETAIL MODAL ============ */
 function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, onDelete, onApprove, onReject }) {
   const { users } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -1888,11 +1919,9 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
       </div>
 
       {showImage && request.attachment && (
-        <div
-          className="modal-backdrop"
+        <div className="modal-backdrop"
           style={{background:'rgba(0,0,0,0.9)', zIndex: 1100}}
-          onClick={(e) => { e.stopPropagation(); setShowImage(false); }}
-        >
+          onClick={(e) => { e.stopPropagation(); setShowImage(false); }}>
           <img src={request.attachment} alt="Бележка" style={{maxWidth:'95vw', maxHeight:'95vh', objectFit:'contain', borderRadius:'8px'}} />
         </div>
       )}
@@ -1900,7 +1929,6 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
   );
 }
 
-/* ============ HOME ============ */
 function Home({ onNavigate }) {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2008,7 +2036,6 @@ function Home({ onNavigate }) {
   );
 }
 
-/* ============ LEAVE REQUEST MODAL ============ */
 function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
@@ -2161,8 +2188,6 @@ function LeaveRequestModal({ onClose }) {
     </div>
   );
 }
-
-/* ============ MY REQUESTS ============ */
 function MyRequests() {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2233,7 +2258,6 @@ function MyRequests() {
   );
 }
 
-/* ============ LEAVE REQUESTS PAGE ============ */
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2379,7 +2403,6 @@ function LeaveRequestsPage() {
   );
 }
 
-/* ============ CALENDAR ============ */
 function CalendarPage() {
   const { users, currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2389,6 +2412,7 @@ function CalendarPage() {
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [dayModalDate, setDayModalDate] = useState(null);
 
   const year = month.getFullYear();
   const m = month.getMonth();
@@ -2408,6 +2432,7 @@ function CalendarPage() {
   const deleteRequest = async (r) => {
     await db.ref('leaveRequests/' + r.id).remove();
     setSelected(null);
+    setDayModalDate(null);
   };
 
   const approve = async (r) => {
@@ -2436,9 +2461,29 @@ function CalendarPage() {
 
   const todayStr = todayISO();
 
+  const openDayModal = (day) => {
+    if (!day) return;
+    const dateStr = `${year}-${pad(m + 1)}-${pad(day)}`;
+    setDayModalDate(dateStr);
+  };
+
+  const dayModalEvents = dayModalDate
+    ? requests.filter(r => dayModalDate >= r.startDate && dayModalDate <= r.endDate)
+    : [];
+
+  const dayModalHoliday = dayModalDate ? holidays[dayModalDate] : null;
+
+  const formatDayTitle = (dateStr) => {
+    const d = new Date(dateStr);
+    const dayName = d.toLocaleDateString('bg-BG', { weekday: 'long' });
+    return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} (${dayName})`;
+  };
+
+  const statusLabels = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+
   return (
     <div className="animate-in">
-      <PageHeader title="Табло – Календар" subtitle="Всички отпуски и отсъствия"
+      <PageHeader title="Табло – Календар" subtitle="Кликнете на дата за да видите всички отпуски"
         onAdd={() => setShowModal(true)} addLabel="Нова заявка" />
 
       <div className="card">
@@ -2459,16 +2504,25 @@ function CalendarPage() {
             const holidayInfo = holidays[dateStr];
             const events = getEventsForDay(day);
             return (
-              <div key={idx} className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}>
+              <div
+                key={idx}
+                className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}
+                onClick={() => openDayModal(day)}
+                style={{ cursor: day ? 'pointer' : 'default' }}
+              >
                 {day && <div className="day-num">{day}</div>}
                 {holidayInfo && <div className="holiday-tag" title={holidayInfo.name}>🎉 {holidayInfo.name}</div>}
                 {events.slice(0, 2).map(e => {
                   const t = getType(e.type);
                   const opacity = e.status === 'pending' ? 0.5 : 1;
                   return (
-                    <div key={e.id} className="day-event" style={{background: t.color, opacity}}
+                    <div
+                      key={e.id}
+                      className="day-event"
+                      style={{background: t.color, opacity}}
                       title={`${getUserName(e.userId, e.userName)} • ${t.name}`}
-                      onClick={() => setSelected(e)}>
+                      onClick={(ev) => { ev.stopPropagation(); setSelected(e); }}
+                    >
                       {getUserName(e.userId, e.userName).split(' ')[0]}
                     </div>
                   );
@@ -2493,6 +2547,87 @@ function CalendarPage() {
         </div>
       </div>
 
+      {dayModalDate && (
+        <div className="modal-backdrop" onClick={() => setDayModalDate(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+              <h3 style={{marginBottom:0}}>📅 {formatDayTitle(dayModalDate)}</h3>
+              <button className="btn btn-secondary btn-sm" onClick={() => setDayModalDate(null)}
+                style={{width:'32px', height:'32px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✕</button>
+            </div>
+
+            {dayModalHoliday && (
+              <div style={{padding:'12px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:'10px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'10px'}}>
+                <span style={{fontSize:'24px'}}>🎉</span>
+                <div>
+                  <div style={{fontWeight:600, color:'#b91c1c'}}>Национален празник</div>
+                  <div style={{fontSize:'13px', color:'#991b1b'}}>{dayModalHoliday.name}</div>
+                </div>
+              </div>
+            )}
+
+            {dayModalEvents.length === 0 ? (
+              <div className="empty-state">Няма отпуски за тази дата</div>
+            ) : (
+              <>
+                <div style={{fontSize:'13px', color:'#7c3aed', marginBottom:'12px', fontWeight:600}}>
+                  {dayModalEvents.length} {dayModalEvents.length === 1 ? 'отпуск' : 'отпуски'} за тази дата:
+                </div>
+                <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+                  {dayModalEvents.map(e => {
+                    const t = getType(e.type);
+                    return (
+                      <div key={e.id}
+                        onClick={() => { setSelected(e); setDayModalDate(null); }}
+                        style={{
+                          padding:'12px 14px',
+                          background:'#faf5ff',
+                          border:'1px solid #ede9fe',
+                          borderLeft:`4px solid ${t.color}`,
+                          borderRadius:'10px',
+                          cursor:'pointer',
+                          transition:'all 0.2s'
+                        }}
+                        onMouseEnter={(ev) => { ev.currentTarget.style.background = '#f3e8ff'; }}
+                        onMouseLeave={(ev) => { ev.currentTarget.style.background = '#faf5ff'; }}
+                      >
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px'}}>
+                          <div style={{fontWeight:600, color:'#1e1b4b', fontSize:'14px'}}>
+                            {getUserName(e.userId, e.userName)}
+                          </div>
+                          <span className={`badge ${e.status}`}>{statusLabels[e.status]}</span>
+                        </div>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#7c3aed', opacity:0.85}}>
+                          <span style={{display:'inline-flex', alignItems:'center', gap:'4px'}}>
+                            <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                            {t.name}
+                          </span>
+                          <span>•</span>
+                          <span>{formatDate(e.startDate)} – {formatDate(e.endDate)}</span>
+                          {e.attachment && <><span>•</span><span>📎</span></>}
+                        </div>
+                        {e.reason && (
+                          <div style={{fontSize:'12px', color:'#9ca3af', marginTop:'4px', fontStyle:'italic'}}>
+                            {e.reason.length > 60 ? e.reason.slice(0, 60) + '…' : e.reason}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            <div style={{marginTop:'20px', display:'flex', justifyContent:'flex-end', gap:'8px'}}>
+              <button className="btn btn-primary" onClick={() => { setShowModal(true); setDayModalDate(null); }}>
+                ➕ Нова заявка
+              </button>
+              <button className="btn btn-secondary" onClick={() => setDayModalDate(null)}>Затвори</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selected && (
         <LeaveDetailModal
           request={selected}
@@ -2511,7 +2646,312 @@ function CalendarPage() {
   );
 }
 
-/* ============ LEAVES REPORTS ============ */
+/* ============ ДОКУМЕНТИ ============ */
+function DocumentsPage() {
+  const { currentUser, users } = useAuth();
+  const documents = useFirebaseList('documents');
+  const isAdmin = currentUser.role === 'admin';
+  const [showModal, setShowModal] = useState(false);
+  const [filterUser, setFilterUser] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [previewDoc, setPreviewDoc] = useState(null);
+
+  const [form, setForm] = useState({
+    userId: '',
+    name: '',
+    category: 'other',
+    file: null,
+    fileName: '',
+    fileType: ''
+  });
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const getCategory = (id) => DOC_CATEGORIES[id] || DOC_CATEGORIES.other;
+  const getUserName = (id) => users.find(u => u.id === id)?.fullName || 'Неизвестен';
+
+  let visibleDocs = isAdmin ? documents : documents.filter(d => d.userId === currentUser.id);
+
+  if (filterUser !== 'all') visibleDocs = visibleDocs.filter(d => d.userId === filterUser);
+  if (filterCategory !== 'all') visibleDocs = visibleDocs.filter(d => d.category === filterCategory);
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    visibleDocs = visibleDocs.filter(d =>
+      (d.name || '').toLowerCase().includes(q) ||
+      (d.fileName || '').toLowerCase().includes(q)
+    );
+  }
+
+  visibleDocs = [...visibleDocs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFormError('');
+
+    if (file.size > 1024 * 1024) {
+      setFormError('Файлът е прекалено голям (макс. 1MB).');
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      setForm(f => ({ ...f, file: dataUrl, fileName: file.name, fileType: file.type }));
+    } catch (err) {
+      setFormError('Грешка при четене на файла');
+    }
+  };
+
+  const removeFile = () => {
+    setForm(f => ({ ...f, file: null, fileName: '', fileType: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!form.userId) return setFormError('Изберете служител');
+    if (!form.name.trim()) return setFormError('Въведете име на документа');
+    if (!form.file) return setFormError('Изберете файл');
+
+    setSubmitting(true);
+
+    try {
+      const id = uid();
+      const doc = {
+        id,
+        userId: form.userId,
+        name: form.name.trim(),
+        category: form.category,
+        fileName: form.fileName,
+        fileType: form.fileType,
+        file: form.file,
+        uploadedBy: currentUser.id,
+        uploadedByName: currentUser.fullName,
+        createdAt: new Date().toISOString()
+      };
+
+      await db.ref('documents/' + id).set(doc);
+
+      setForm({ userId: '', name: '', category: 'other', file: null, fileName: '', fileType: '' });
+      setShowModal(false);
+    } catch (err) {
+      setFormError('Грешка при запазване: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const remove = async (doc) => {
+    if (!isAdmin) return;
+    if (!confirm(`Сигурни ли сте, че искате да изтриете "${doc.name}"?`)) return;
+    await db.ref('documents/' + doc.id).remove();
+  };
+
+  const downloadDoc = (doc) => {
+    const link = document.createElement('a');
+    link.href = doc.file;
+    link.download = doc.fileName || doc.name;
+    link.click();
+  };
+
+  const isImageDoc = (doc) => {
+    if (!doc.fileType) return false;
+    return doc.fileType.startsWith('image/');
+  };
+
+  const isPdfDoc = (doc) => {
+    return doc.fileType === 'application/pdf';
+  };
+
+  return (
+    <div className="animate-in">
+      <PageHeader
+        title="Документи"
+        subtitle={isAdmin
+          ? `Управление на документи на всички служители (${visibleDocs.length})`
+          : `Вашите документи (${visibleDocs.length})`}
+        onAdd={isAdmin ? () => setShowModal(true) : null}
+        addLabel="Качи документ"
+      />
+
+      <div className="warning-box">
+        ℹ️ {isAdmin
+          ? 'Като администратор можете да качвате, преглеждате и изтривате документи на всички служители.'
+          : 'Тук можете да преглеждате и изтегляте само вашите документи. За качване се свържете с администратор.'}
+      </div>
+
+      <div className="card">
+        <div style={{display:'grid', gridTemplateColumns: isAdmin ? '1fr 1fr 2fr' : '1fr 2fr', gap:'12px', alignItems:'end'}}>
+          {isAdmin && (
+            <div className="form-group" style={{marginBottom:0}}>
+              <label>Филтър по служител</label>
+              <select value={filterUser} onChange={e => setFilterUser(e.target.value)}>
+                <option value="all">Всички служители</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.fullName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="form-group" style={{marginBottom:0}}>
+            <label>Категория</label>
+            <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+              <option value="all">Всички категории</option>
+              {Object.entries(DOC_CATEGORIES).map(([id, c]) => (
+                <option key={id} value={id}>{c.icon} {c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group" style={{marginBottom:0}}>
+            <label>Търсене</label>
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Търсене по име на документ или файл..." />
+          </div>
+        </div>
+      </div>
+
+      {visibleDocs.length === 0 ? (
+        <div className="card">
+          <div className="empty-state">
+            {isAdmin ? 'Няма качени документи. Кликнете "Качи документ".' : 'Няма документи за вас.'}
+          </div>
+        </div>
+      ) : (
+        <div className="card">
+          <h3>📄 {isAdmin ? 'Всички документи' : 'Моите документи'} ({visibleDocs.length})</h3>
+          <div style={{marginTop:'12px'}}>
+            {visibleDocs.map(doc => {
+              const cat = getCategory(doc.category);
+              return (
+                <div key={doc.id} className="doc-card">
+                  <div className="doc-icon" style={{background: cat.color + '20', color: cat.color}}>
+                    {cat.icon}
+                  </div>
+                  <div className="doc-info">
+                    <div className="doc-name">{doc.name}</div>
+                    <div className="doc-meta">
+                      <span style={{color: cat.color, fontWeight:600}}>{cat.name}</span>
+                      {isAdmin && <span>👤 {getUserName(doc.userId)}</span>}
+                      <span>📅 {formatDate(doc.createdAt)}</span>
+                      {doc.file && <span>💾 {formatFileSize(doc.file)}</span>}
+                    </div>
+                  </div>
+                  <div className="doc-actions">
+                    {isImageDoc(doc) && (
+                      <button className="btn btn-secondary btn-sm" onClick={() => setPreviewDoc(doc)} title="Преглед">👁️</button>
+                    )}
+                    <button className="btn btn-primary btn-sm" onClick={() => downloadDoc(doc)} title="Изтегли">⬇️</button>
+                    {isAdmin && (
+                      <button className="btn btn-danger btn-sm" onClick={() => remove(doc)} title="Изтрий">🗑️</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {previewDoc && (
+        <div className="modal-backdrop" onClick={() => setPreviewDoc(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{maxWidth:'800px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+              <h3 style={{marginBottom:0}}>{previewDoc.name}</h3>
+              <button className="btn btn-secondary btn-sm" onClick={() => setPreviewDoc(null)}
+                style={{width:'32px', height:'32px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✕</button>
+            </div>
+            <div style={{textAlign:'center'}}>
+              <img src={previewDoc.file} alt={previewDoc.name}
+                style={{maxWidth:'100%', maxHeight:'70vh', borderRadius:'8px'}} />
+            </div>
+            <div className="text-muted" style={{textAlign:'center', marginTop:'12px', fontSize:'12px'}}>
+              {previewDoc.fileName} • {formatFileSize(previewDoc.file)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModal && isAdmin && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>➕ Качване на документ</h3>
+            {formError && <div className="error">{formError}</div>}
+            <form onSubmit={submit}>
+              <div className="form-group">
+                <label>Служител <span className="required-mark">*</span></label>
+                <select value={form.userId} onChange={e => setForm({...form, userId: e.target.value})} required>
+                  <option value="">-- Изберете служител --</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.fullName} ({u.username})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Име на документа <span className="required-mark">*</span></label>
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="напр. Трудов договор 2026" required />
+              </div>
+
+              <div className="form-group">
+                <label>Категория</label>
+                <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                  {Object.entries(DOC_CATEGORIES).map(([id, c]) => (
+                    <option key={id} value={id}>{c.icon} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Файл <span className="required-mark">*</span></label>
+                <p className="text-muted" style={{marginBottom:'6px', fontSize:'12px'}}>
+                  PDF, PNG, JPG или друг файл • макс. 1MB
+                </p>
+
+                {!form.file ? (
+                  <div className="upload-box" onClick={() => fileInputRef.current?.click()}>
+                    <div className="upload-icon">📤</div>
+                    <div className="upload-text">Кликнете за избор на файл</div>
+                    <div className="upload-hint">PDF, PNG, JPG • макс. 1MB</div>
+                  </div>
+                ) : (
+                  <div className="upload-box has-file" onClick={() => fileInputRef.current?.click()}>
+                    {form.fileType && form.fileType.startsWith('image/') ? (
+                      <img src={form.file} alt="Преглед" className="upload-preview" />
+                    ) : (
+                      <div className="upload-icon">📄</div>
+                    )}
+                    <div className="upload-file-info">
+                      <span>✅ {form.fileName} ({formatFileSize(form.file)})</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                        style={{background:'none', border:'none', color:'#dc2626', cursor:'pointer', fontWeight:'bold'}}>✕</button>
+                    </div>
+                  </div>
+                )}
+
+                <input ref={fileInputRef} type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt"
+                  onChange={handleFileChange} style={{display:'none'}} />
+              </div>
+
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? '⏳ Качване...' : 'Качи документ'}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Отказ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LeavesReports() {
   const { currentUser, users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2613,7 +3053,6 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -3082,7 +3521,6 @@ function TimeModule({ scope }) {
   );
 }
 
-/* ============ HOLIDAYS SETTINGS ============ */
 function HolidaysSettings() {
   const holidaysList = useFirebaseList('holidays');
   const [form, setForm] = useState({ name: '', date: '' });
@@ -3261,7 +3699,6 @@ function HolidaysSettings() {
   );
 }
 
-/* ============ PROJECTS MODULE ============ */
 function ProjectsModule() {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
@@ -3351,7 +3788,6 @@ function ProjectsModule() {
   );
 }
 
-/* ============ COMPANY ============ */
 function CompanyPage() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -3430,7 +3866,6 @@ function CompanyPage() {
   );
 }
 
-/* ============ USERS MANAGER ============ */
 function UsersManager() {
   const { users, addUser, updateUser, deleteUser, currentUser } = useAuth();
   const [form, setForm] = useState({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
@@ -3584,7 +4019,6 @@ function UsersManager() {
   );
 }
 
-/* ============ LEAVE TYPES ============ */
 function LeaveTypesSettings() {
   const leaveTypes = useFirebaseObject('leaveTypes', {});
   const [form, setForm] = useState({ name: '', color: '#7c3aed', deducts: true });
@@ -3708,7 +4142,6 @@ function LeaveTypesSettings() {
   );
 }
 
-/* ============ APP ============ */
 function App() {
   const { currentUser, loading } = useAuth();
   const [page, setPage] = useState('home');
@@ -3738,6 +4171,7 @@ function App() {
       case 'leaves-reports': return <LeavesReports />;
       case 'time-me': return <TimeModule scope="me" />;
       case 'time-reports': return <TimeModule scope={isAdmin ? 'all' : 'reports'} />;
+      case 'documents-list': return <DocumentsPage />;
       case 'company-data': return <CompanyPage />;
       case 'settings-users': return isAdmin ? <UsersManager /> : <Home onNavigate={setPage} />;
       case 'settings-leavetypes': return isAdmin ? <LeaveTypesSettings /> : <Home onNavigate={setPage} />;
@@ -3760,7 +4194,6 @@ function App() {
   );
 }
 
-/* ============ RENDER ============ */
 console.log('🚀 Rendering App...');
 try {
   const root = ReactDOM.createRoot(document.getElementById('root'));
