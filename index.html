@@ -18,6 +18,7 @@
     color: #1e1b4b;
     min-height: 100vh;
     font-size: 14px;
+    overflow-x: hidden;
   }
   #root { min-height: 100vh; }
   .loading-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
@@ -76,7 +77,7 @@
   .top-header-user-name { font-size: 13px; font-weight: 600; color: #1e1b4b; }
   .top-header-user-role { font-size: 11px; color: #7c3aed; opacity: 0.75; }
 
-  .main-content { flex: 1; padding: 28px 32px; }
+  .main-content { flex: 1; padding: 28px 32px; padding-bottom: 100px; }
 
   .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 26px; font-weight: 700; margin-bottom: 6px; color: #1e1b4b; }
@@ -251,6 +252,222 @@
   .error-screen-inner pre { background: #fef2f2; padding: 16px; border-radius: 10px; text-align: left; font-size: 12px; color: #991b1b; overflow: auto; margin-top: 16px; }
 
   #startup-error { display: none; padding: 40px; font-family: monospace; background: #fef2f2; color: #991b1b; min-height: 100vh; box-sizing: border-box; }
+
+  /* ========== MOBILE BOTTOM NAV ========== */
+  .mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #ede9fe;
+    box-shadow: 0 -4px 20px rgba(124,58,237,0.1);
+    z-index: 500;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .mobile-bottom-nav.hidden { transform: translateY(100%); }
+
+  .mobile-nav-inner {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    color: #9ca3af;
+    border-radius: 10px;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+  }
+  .mobile-nav-btn.active {
+    color: #7c3aed;
+    background: #f3e8ff;
+  }
+  .mobile-nav-btn .nav-emoji {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .mobile-nav-btn .nav-text {
+    font-size: 10px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .mobile-nav-btn .nav-chev-up {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    font-size: 8px;
+    color: #c4b5fd;
+  }
+
+  .mobile-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(76,29,149,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1100;
+    animation: fadeIn 0.2s;
+  }
+  .mobile-sheet {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 -8px 40px rgba(124,58,237,0.35);
+    z-index: 1101;
+    padding: 20px 16px;
+    animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .mobile-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+  .mobile-sheet-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #1e1b4b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mobile-sheet-close {
+    background: #f3e8ff;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #7c3aed;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .mobile-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1e1b4b;
+    background: #faf5ff;
+    margin-bottom: 8px;
+    border: 1px solid #ede9fe;
+    transition: all 0.2s;
+  }
+  .mobile-sheet-item:hover, .mobile-sheet-item:active {
+    background: #f3e8ff;
+    border-color: #c4b5fd;
+  }
+  .mobile-sheet-item.active {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #7c3aed;
+  }
+  .mobile-sheet-item.active .sheet-icon {
+    background: rgba(255,255,255,0.25);
+  }
+  .mobile-sheet-item .sheet-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f3e8ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .mobile-sheet-item .sheet-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-wrapper { margin-left: 0; padding-bottom: 76px; }
+    .mobile-bottom-nav { display: block; }
+    .top-header { padding: 10px 16px; grid-template-columns: auto 1fr auto; gap: 8px; }
+    .top-header-logo { width: 34px; height: 34px; font-size: 16px; }
+    .top-header-tagline-side { display: none; }
+    .top-header-company { font-size: 14px; max-width: none; }
+    .top-header-tagline { font-size: 10px; }
+    .top-header-user { padding: 4px 8px; gap: 6px; }
+    .top-header-user-avatar { width: 28px; height: 28px; font-size: 12px; }
+    .top-header-user-info { display: none; }
+    .main-content { padding: 16px 14px; padding-bottom: 90px; }
+    .page-title { font-size: 20px; }
+    .page-subtitle { font-size: 12px; }
+    .page-header { margin-bottom: 18px; }
+    .card, .dash-card { padding: 18px; border-radius: 14px; }
+    .dash-card h2 { font-size: 20px; }
+    .dash-grid { grid-template-columns: 1fr; gap: 16px; }
+    .dash-stat-value { font-size: 34px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-card .value { font-size: 22px; }
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+    .clock-display { font-size: 46px; }
+    .calendar-day { min-height: 56px; padding: 4px; font-size: 11px; }
+    .calendar-day .day-event { font-size: 9px; padding: 1px 3px; }
+    .holiday-tag { font-size: 7px; padding: 1px 2px; }
+    .modal { padding: 20px; max-height: 92vh; border-radius: 16px; }
+    .modal-backdrop { padding: 12px; align-items: flex-end; }
+    .modal { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 6px; }
+    .doc-card { flex-wrap: wrap; gap: 10px; padding: 12px; }
+    .doc-actions { width: 100%; justify-content: flex-end; }
+    .next-absence-date { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .next-date-box { border-right: none; border-bottom: 1px solid #ede9fe; padding: 6px 0 12px 0; display: flex; gap: 8px; align-items: baseline; }
+    .next-date-num { font-size: 26px; }
+    .action-buttons { flex-wrap: wrap; }
+  }
+
+  @media (max-width: 480px) {
+    .top-header-company { font-size: 12px; }
+    .page-title { font-size: 18px; }
+    .dash-stat-value { font-size: 28px; }
+    .stat-card .value { font-size: 20px; }
+    .mobile-nav-btn .nav-text { font-size: 9px; }
+    .mobile-nav-btn .nav-emoji { font-size: 18px; }
+    .mobile-nav-btn { padding: 5px 4px; }
+  }
 </style>
 </head>
 <body>
@@ -283,7 +500,8 @@ console.log('🚀 Startup script loaded');
 <script type="text/babel" data-presets="env,react">
 console.log('🚀 Babel script starting');
 
-const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
+const { useState, useEffect, createContext, useContext, useRef, useMemo, useCallback } = React;
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -345,22 +563,13 @@ const todayISO = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-// ★ ВАЖНО: Изчислява минимална разрешена дата за служител
-// Правило: от понеделника на седмицата СЛЕД следващата
-// Пример: днес е 6.10 → може от 20.10 (понеделник)
 const getMinAllowedDateForEmployee = () => {
   const today = new Date();
-  const dow = today.getDay(); // 0=НД, 1=ПН, ..., 6=СБ
-
-  // Намираме следващия понеделник (ако днес е ПН, отиваме след 7 дни)
-  // 8 - dow: за ПН(1)→7, ВТ(2)→6, СР(3)→5, ЧТ(4)→4, ПТ(5)→3, СБ(6)→2, НД(0)→8
+  const dow = today.getDay();
   const daysToNextMonday = ((8 - dow) % 7) || 7;
   const nextMonday = new Date(today);
   nextMonday.setDate(today.getDate() + daysToNextMonday);
-
-  // + 7 дни още = понеделник на СЛЕДВАЩАТА след следващата
   nextMonday.setDate(nextMonday.getDate() + 7);
-
   return `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth() + 1)}-${pad(nextMonday.getDate())}`;
 };
 
@@ -1088,6 +1297,116 @@ function Sidebar({ currentPage, onNavigate }) {
   );
 }
 
+function MobileBottomNav({ currentPage, onNavigate }) {
+  const { currentUser } = useAuth();
+  const isAdmin = currentUser.role === 'admin';
+  const [openSheet, setOpenSheet] = useState(null);
+
+  const tabs = useMemo(() => {
+    const leavesItems = [
+      { id: 'leaves-calendar', label: 'Календар', icon: '📅' },
+      { id: 'leaves-my', label: 'Моите отпуски', icon: '🏖️' }
+    ];
+    if (isAdmin) leavesItems.push({ id: 'leaves-requests', label: 'Заявки за отпуск', icon: '📥' });
+    leavesItems.push({ id: 'leaves-reports', label: 'Справки', icon: '📊' });
+
+    const timeItems = [
+      { id: 'time-me', label: 'Моето време', icon: '⏱️' },
+      { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети', icon: '📈' }
+    ];
+
+    const settingsItems = isAdmin ? [
+      { id: 'settings-users', label: 'Потребители', icon: '👥' },
+      { id: 'settings-leavetypes', label: 'Видове отпуски', icon: '🏷️' },
+      { id: 'settings-holidays', label: 'Всички празници', icon: '🎉' },
+      { id: 'settings-projects', label: 'Всички проекти', icon: '📂' }
+    ] : [];
+
+    const baseTabs = [
+      { id: 'home', icon: '🏠', label: 'Начало', type: 'link', target: 'home' },
+      { id: 'leaves', icon: '🏖️', label: 'Отпуски', type: 'sheet', items: leavesItems },
+      { id: 'time', icon: '⏱️', label: 'Време', type: 'sheet', items: timeItems },
+      { id: 'documents', icon: '📄', label: 'Документи', type: 'link', target: 'documents-list' },
+      { id: 'company', icon: '🏢', label: 'Компания', type: 'link', target: 'company-data' }
+    ];
+
+    if (isAdmin && settingsItems.length > 0) {
+      baseTabs.push({ id: 'settings', icon: '⚙️', label: 'Настройки', type: 'sheet', items: settingsItems });
+    }
+
+    return baseTabs;
+  }, [isAdmin]);
+
+  const isTabActive = (tab) => {
+    if (tab.type === 'link') return currentPage === tab.target;
+    return tab.items?.some(it => it.id === currentPage);
+  };
+
+  const handleTabClick = (tab) => {
+    if (tab.type === 'link') {
+      onNavigate(tab.target);
+      setOpenSheet(null);
+    } else {
+      setOpenSheet(openSheet === tab.id ? null : tab.id);
+    }
+  };
+
+  const handleSheetItemClick = (itemId) => {
+    onNavigate(itemId);
+    setOpenSheet(null);
+  };
+
+  const activeSheet = tabs.find(t => t.id === openSheet);
+
+  return (
+    <>
+      {openSheet && activeSheet && (
+        <>
+          <div className="mobile-sheet-backdrop" onClick={() => setOpenSheet(null)} />
+          <div className="mobile-sheet">
+            <div className="mobile-sheet-header">
+              <h3>
+                <span>{activeSheet.icon}</span>
+                <span>{activeSheet.label}</span>
+              </h3>
+              <button className="mobile-sheet-close" onClick={() => setOpenSheet(null)}>✕</button>
+            </div>
+            {activeSheet.items.map(item => (
+              <div
+                key={item.id}
+                className={`mobile-sheet-item ${currentPage === item.id ? 'active' : ''}`}
+                onClick={() => handleSheetItemClick(item.id)}
+              >
+                <div className="sheet-icon">{item.icon}</div>
+                <div className="sheet-label">{item.label}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <nav className="mobile-bottom-nav">
+        <div className="mobile-nav-inner">
+          {tabs.map(tab => {
+            const active = isTabActive(tab) || openSheet === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className={`mobile-nav-btn ${active ? 'active' : ''}`}
+                onClick={() => handleTabClick(tab)}
+              >
+                {tab.type === 'sheet' && <span className="nav-chev-up">▲</span>}
+                <span className="nav-emoji">{tab.icon}</span>
+                <span className="nav-text">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
+  );
+}
+
 function TopHeader() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -1183,6 +1502,7 @@ function PageHeader({ title, subtitle, onAdd, addLabel = 'Добави' }) {
     </div>
   );
 }
+
 function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, onDelete, onApprove, onReject }) {
   const { users } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -1353,7 +1673,7 @@ function Home({ onNavigate }) {
         )}
 
         <div className="dash-divider"></div>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'8px'}}>
           <span className="text-muted">Показва се най-близкият ви одобрен отпуск</span>
           <span className="link" onClick={() => onNavigate('leaves-calendar')}>Виж целия календар →</span>
         </div>
@@ -1369,14 +1689,12 @@ function Home({ onNavigate }) {
   );
 }
 
-// ★ ПОПРАВЕНА версия на LeaveRequestModal с нова логика
 function LeaveRequestModal({ onClose, forUserId = null }) {
   const { currentUser, users } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const holidays = useHolidaysMap();
   const isAdmin = currentUser.role === 'admin';
 
-  // ★ Админ може да пуска за друг служител
   const [targetUserId, setTargetUserId] = useState(forUserId || currentUser.id);
 
   const [form, setForm] = useState({ startDate: '', endDate: '', reason: '', type: 'paid' });
@@ -1386,13 +1704,8 @@ function LeaveRequestModal({ onClose, forUserId = null }) {
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
-  // ★ Target user (за кого е заявката)
   const targetUser = users.find(u => u.id === targetUserId) || currentUser;
 
-  // ★ Изчисляваме минимална разрешена дата
-  // - Админ: няма ограничение (може и минали)
-  // - Служител: от понеделника на седмицата СЛЕД следващата
-  // - Болничен: всички могат по всяко време
   const sick = isSickLeave(form.type, leaveTypes);
   const minAllowedDate = isAdmin || sick ? '' : getMinAllowedDateForEmployee();
 
@@ -1429,7 +1742,6 @@ function LeaveRequestModal({ onClose, forUserId = null }) {
     if (!form.startDate || !form.endDate) return setError('Изберете дати');
     if (form.endDate < form.startDate) return setError('Крайната дата трябва да е след началната');
 
-    // ★ Валидация: служител не може да пуска за текущата и следващата седмица
     if (!isAdmin && !sick && minAllowedDate && form.startDate < minAllowedDate) {
       return setError(`Като служител не можете да пускате отпуск преди ${formatDate(minAllowedDate)}. Можете да пускате от понеделника на седмицата след следващата.`);
     }
@@ -1470,7 +1782,6 @@ function LeaveRequestModal({ onClose, forUserId = null }) {
         <h3>📝 {isAdmin && targetUserId !== currentUser.id ? 'Нова заявка за служител' : 'Нова заявка за отпуск'}</h3>
         {error && <div className="error">{error}</div>}
 
-        {/* ★ Админ може да избере за кого е заявката */}
         {isAdmin && (
           <div className="form-group">
             <label>За кого е заявката? <span className="required-mark">*</span></label>
@@ -1483,7 +1794,6 @@ function LeaveRequestModal({ onClose, forUserId = null }) {
           </div>
         )}
 
-        {/* ★ Info box за служителя */}
         {!isAdmin && !sick && minAllowedDate && (
           <div className="info-box">
             ℹ️ <b>Внимание:</b> Като служител можете да пускате отпуск само от <b>{formatDate(minAllowedDate)}</b> нататък
@@ -1606,30 +1916,32 @@ function MyRequests() {
         {myRequests.length === 0 ? (
           <div className="empty-state">Нямате заявки</div>
         ) : (
-          <table>
-            <thead>
-              <tr><th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Прикачено</th><th>Статус</th></tr>
-            </thead>
-            <tbody>
-              {myRequests.map(r => {
-                const t = getType(r.type);
-                return (
-                  <tr key={r.id} className="clickable" onClick={() => setSelectedRequest(r)}>
-                    <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
-                      <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                      {t.name}
-                    </span></td>
-                    <td>{formatDate(r.startDate)}</td>
-                    <td>{formatDate(r.endDate)}</td>
-                    <td>{r.days}</td>
-                    <td>{r.reason || '-'}</td>
-                    <td>{r.attachment ? '📎' : '-'}</td>
-                    <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead>
+                <tr><th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Прикачено</th><th>Статус</th></tr>
+              </thead>
+              <tbody>
+                {myRequests.map(r => {
+                  const t = getType(r.type);
+                  return (
+                    <tr key={r.id} className="clickable" onClick={() => setSelectedRequest(r)}>
+                      <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
+                        <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                        {t.name}
+                      </span></td>
+                      <td>{formatDate(r.startDate)}</td>
+                      <td>{formatDate(r.endDate)}</td>
+                      <td>{r.days}</td>
+                      <td>{r.reason || '-'}</td>
+                      <td>{r.attachment ? '📎' : '-'}</td>
+                      <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -1730,34 +2042,36 @@ function LeaveRequestsPage() {
         {sorted.length === 0 ? (
           <div className="empty-state">Няма заявки</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Служител</th>
-                <th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Прикачено</th><th>Статус</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(r => {
-                const t = getType(r.type);
-                return (
-                  <tr key={r.id} className="clickable" onClick={() => setSelectedRequest(r)}>
-                    <td>{getUserName(r.userId, r.userName)}</td>
-                    <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
-                      <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                      {t.name}
-                    </span></td>
-                    <td>{formatDate(r.startDate)}</td>
-                    <td>{formatDate(r.endDate)}</td>
-                    <td>{r.days}</td>
-                    <td>{r.reason || '-'}</td>
-                    <td>{r.attachment ? '📎' : '-'}</td>
-                    <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Служител</th>
+                  <th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Причина</th><th>Прикачено</th><th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(r => {
+                  const t = getType(r.type);
+                  return (
+                    <tr key={r.id} className="clickable" onClick={() => setSelectedRequest(r)}>
+                      <td>{getUserName(r.userId, r.userName)}</td>
+                      <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
+                        <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                        {t.name}
+                      </span></td>
+                      <td>{formatDate(r.startDate)}</td>
+                      <td>{formatDate(r.endDate)}</td>
+                      <td>{r.days}</td>
+                      <td>{r.reason || '-'}</td>
+                      <td>{r.attachment ? '📎' : '-'}</td>
+                      <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -1943,7 +2257,7 @@ function CalendarPage() {
                           </div>
                           <span className={`badge ${e.status}`}>{statusLabels[e.status]}</span>
                         </div>
-                        <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#7c3aed', opacity:0.85}}>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#7c3aed', opacity:0.85, flexWrap:'wrap'}}>
                           <span style={{display:'inline-flex', alignItems:'center', gap:'4px'}}>
                             <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
                             {t.name}
@@ -1964,7 +2278,7 @@ function CalendarPage() {
               </>
             )}
 
-            <div style={{marginTop:'20px', display:'flex', justifyContent:'flex-end', gap:'8px'}}>
+            <div style={{marginTop:'20px', display:'flex', justifyContent:'flex-end', gap:'8px', flexWrap:'wrap'}}>
               <button className="btn btn-primary" onClick={() => { setShowModal(true); setDayModalDate(null); }}>
                 ➕ Нова заявка
               </button>
@@ -1984,6 +2298,7 @@ function CalendarPage() {
     </div>
   );
 }
+
 function DocumentsPage() {
   const { currentUser, users } = useAuth();
   const documents = useFirebaseList('documents');
@@ -2080,7 +2395,7 @@ function DocumentsPage() {
       </div>
 
       <div className="card">
-        <div style={{display:'grid', gridTemplateColumns: isAdmin ? '1fr 1fr 2fr' : '1fr 2fr', gap:'12px', alignItems:'end'}}>
+        <div style={{display:'grid', gridTemplateColumns: '1fr', gap:'12px', alignItems:'end'}}>
           {isAdmin && (
             <div className="form-group" style={{marginBottom:0}}>
               <label>Филтър по служител</label>
@@ -2260,24 +2575,26 @@ function LeavesReports() {
 
       <div className="card">
         <h3>{isAdmin ? '👥 По служители' : '👤 Моят баланс'}</h3>
-        <table>
-          <thead>
-            <tr>
-              {isAdmin && <th>Служител</th>}
-              <th>Одобрени заявки</th><th>Използвани дни</th><th>Общо дни</th><th>Оставащи</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.map(s => (
-              <tr key={s.user.id}>
-                {isAdmin && <td>{s.user.fullName}</td>}
-                <td>{s.approvedCount}</td><td>{s.usedDays}</td>
-                <td>{s.user.totalLeaveDays || 0}</td>
-                <td><b style={{color: s.remaining < 5 ? '#ef4444' : '#10b981'}}>{s.remaining}</b></td>
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead>
+              <tr>
+                {isAdmin && <th>Служител</th>}
+                <th>Одобрени заявки</th><th>Използвани дни</th><th>Общо дни</th><th>Оставащи</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {stats.map(s => (
+                <tr key={s.user.id}>
+                  {isAdmin && <td>{s.user.fullName}</td>}
+                  <td>{s.approvedCount}</td><td>{s.usedDays}</td>
+                  <td>{s.user.totalLeaveDays || 0}</td>
+                  <td><b style={{color: s.remaining < 5 ? '#ef4444' : '#10b981'}}>{s.remaining}</b></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {!isAdmin && (
@@ -2286,24 +2603,26 @@ function LeavesReports() {
           {myRequests.filter(r => new Date(r.startDate).getFullYear() === year).length === 0 ? (
             <div className="empty-state">Няма заявки за {year} г.</div>
           ) : (
-            <table>
-              <thead><tr><th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Статус</th></tr></thead>
-              <tbody>
-                {myRequests.filter(r => new Date(r.startDate).getFullYear() === year).map(r => {
-                  const t = getType(r.type);
-                  return (
-                    <tr key={r.id}>
-                      <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
-                        <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                        {t.name}
-                      </span></td>
-                      <td>{formatDate(r.startDate)}</td><td>{formatDate(r.endDate)}</td><td>{r.days}</td>
-                      <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div style={{overflowX:'auto'}}>
+              <table>
+                <thead><tr><th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Статус</th></tr></thead>
+                <tbody>
+                  {myRequests.filter(r => new Date(r.startDate).getFullYear() === year).map(r => {
+                    const t = getType(r.type);
+                    return (
+                      <tr key={r.id}>
+                        <td><span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
+                          <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                          {t.name}
+                        </span></td>
+                        <td>{formatDate(r.startDate)}</td><td>{formatDate(r.endDate)}</td><td>{r.days}</td>
+                        <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -2518,14 +2837,16 @@ function TimeModule({ scope }) {
           {projectSummary.length === 0 ? (
             <div className="empty-state">Няма данни</div>
           ) : (
-            <table>
-              <thead><tr><th>Проект</th><th>Записи</th><th>Общо време</th></tr></thead>
-              <tbody>
-                {projectSummary.map((p, i) => (
-                  <tr key={i}><td>{p.name}</td><td>{p.count}</td><td>{fmtTime(p.total)}</td></tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{overflowX:'auto'}}>
+              <table>
+                <thead><tr><th>Проект</th><th>Записи</th><th>Общо време</th></tr></thead>
+                <tbody>
+                  {projectSummary.map((p, i) => (
+                    <tr key={i}><td>{p.name}</td><td>{p.count}</td><td>{fmtTime(p.total)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -2535,45 +2856,47 @@ function TimeModule({ scope }) {
         {entries.length === 0 ? (
           <div className="empty-state">Няма записи</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                {isAdmin && <th>Служител</th>}
-                <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Паузи</th><th>Продължителност</th>
-                {isAdmin && <th>Действия</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {entries.slice(0, 200).map(e => {
-                const start = new Date(e.checkIn);
-                const end = e.checkOut ? new Date(e.checkOut) : null;
-                const dur = calcDuration(e, now);
-                const active = !e.checkOut;
-                const paused = isPaused(e);
-                const pausesCount = (e.pauses || []).length;
-                return (
-                  <tr key={e.id}>
-                    {isAdmin && <td>{getUserName(e.userId) || e.userName}</td>}
-                    <td>{start.toLocaleDateString('bg-BG')}</td>
-                    <td>{start.toLocaleTimeString('bg-BG')}</td>
-                    <td>{end ? end.toLocaleTimeString('bg-BG') : paused ? <span className="badge paused">на пауза</span> : <span className="badge active">на работа</span>}</td>
-                    <td>{e.projectName || '-'}</td>
-                    <td>{pausesCount > 0 ? <span className="link" onClick={() => setDetailEntry(e)}>{pausesCount} паузи</span> : '-'}</td>
-                    <td>{fmtTime(dur)}</td>
-                    {isAdmin && (
-                      <td>
-                        <div className="admin-actions">
-                          {active && !paused && <button className="btn btn-warning btn-sm" onClick={() => openStopModal(e)}>⏹</button>}
-                          <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(e)}>✏️</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => deleteEntry(e)}>🗑️</button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead>
+                <tr>
+                  {isAdmin && <th>Служител</th>}
+                  <th>Дата</th><th>Начало</th><th>Край</th><th>Проект</th><th>Паузи</th><th>Продължителност</th>
+                  {isAdmin && <th>Действия</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {entries.slice(0, 200).map(e => {
+                  const start = new Date(e.checkIn);
+                  const end = e.checkOut ? new Date(e.checkOut) : null;
+                  const dur = calcDuration(e, now);
+                  const active = !e.checkOut;
+                  const paused = isPaused(e);
+                  const pausesCount = (e.pauses || []).length;
+                  return (
+                    <tr key={e.id}>
+                      {isAdmin && <td>{getUserName(e.userId) || e.userName}</td>}
+                      <td>{start.toLocaleDateString('bg-BG')}</td>
+                      <td>{start.toLocaleTimeString('bg-BG')}</td>
+                      <td>{end ? end.toLocaleTimeString('bg-BG') : paused ? <span className="badge paused">на пауза</span> : <span className="badge active">на работа</span>}</td>
+                      <td>{e.projectName || '-'}</td>
+                      <td>{pausesCount > 0 ? <span className="link" onClick={() => setDetailEntry(e)}>{pausesCount} паузи</span> : '-'}</td>
+                      <td>{fmtTime(dur)}</td>
+                      {isAdmin && (
+                        <td>
+                          <div className="admin-actions">
+                            {active && !paused && <button className="btn btn-warning btn-sm" onClick={() => openStopModal(e)}>⏹</button>}
+                            <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(e)}>✏️</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => deleteEntry(e)}>🗑️</button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -2723,36 +3046,38 @@ function HolidaysSettings() {
         {sorted.length === 0 ? (
           <div className="empty-state">Няма празници за {selectedYear}</div>
         ) : (
-          <table>
-            <thead><tr><th>Дата</th><th>Ден</th><th>Име</th><th>Действия</th></tr></thead>
-            <tbody>
-              {sorted.map(h => {
-                const d = new Date(h.date);
-                const dayName = d.toLocaleDateString('bg-BG', { weekday: 'long' });
-                const isEditing = editingId === h.id;
-                return (
-                  <tr key={h.id}>
-                    <td>{isEditing ? <input type="date" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} /> : <b>{formatDate(h.date)}</b>}</td>
-                    <td style={{textTransform:'capitalize', color:'#7c3aed', opacity:0.8}}>{dayName}</td>
-                    <td>{isEditing ? <input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} /> : h.name}</td>
-                    <td>
-                      {isEditing ? (
-                        <>
-                          <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                          <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
-                        </>
-                      ) : (
-                        <>
-                          <button className="btn btn-secondary btn-sm" onClick={() => startEdit(h)}>✏️</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => remove(h.id)} style={{marginLeft:'4px'}}>🗑️</button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead><tr><th>Дата</th><th>Ден</th><th>Име</th><th>Действия</th></tr></thead>
+              <tbody>
+                {sorted.map(h => {
+                  const d = new Date(h.date);
+                  const dayName = d.toLocaleDateString('bg-BG', { weekday: 'long' });
+                  const isEditing = editingId === h.id;
+                  return (
+                    <tr key={h.id}>
+                      <td>{isEditing ? <input type="date" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} /> : <b>{formatDate(h.date)}</b>}</td>
+                      <td style={{textTransform:'capitalize', color:'#7c3aed', opacity:0.8}}>{dayName}</td>
+                      <td>{isEditing ? <input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} /> : h.name}</td>
+                      <td>
+                        {isEditing ? (
+                          <>
+                            <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="btn btn-secondary btn-sm" onClick={() => startEdit(h)}>✏️</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => remove(h.id)} style={{marginLeft:'4px'}}>🗑️</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -2887,14 +3212,14 @@ function CompanyPage() {
               style={{width:'38px', height:'38px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✏️</button>
           )}
         </div>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px'}}>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'20px'}}>
           {fields.map(f => (
             <div key={f.key}>
               <label style={{fontSize:'13px', color:'#7c3aed', marginBottom:'6px', display:'block', fontWeight:600, opacity:0.8}}>{f.label}</label>
               {editing ? (
                 <input type={f.type || 'text'} value={form[f.key] || ''} onChange={e => setForm({...form, [f.key]: e.target.value})} />
               ) : (
-                <div style={{padding:'11px 14px', background:'#faf5ff', borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa', fontSize:'14px', border:'1px solid #ede9fe', minHeight:'42px'}}>
+                <div style={{padding:'11px 14px', background:'#faf5ff', borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa', fontSize:'14px', border:'1px solid #ede9fe', minHeight:'42px', wordBreak:'break-word'}}>
                   {form[f.key] || '-'}
                 </div>
               )}
@@ -2956,45 +3281,47 @@ function UsersManager() {
       <PageHeader title="Потребители" subtitle={`Всички (${users.length})`} onAdd={() => setShowModal(true)} addLabel="Нов потребител" />
       <div className="card">
         {users.length === 0 ? <div className="empty-state">Няма потребители</div> : (
-          <table>
-            <thead><tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr></thead>
-            <tbody>
-              {users.map(u => editingId === u.id ? (
-                <tr key={u.id}>
-                  <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} style={{width:'130px'}} /></td>
-                  <td><input value={editData.username} onChange={e => setEditData({...editData, username: e.target.value})} style={{width:'100px'}} /></td>
-                  <td><input value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} style={{width:'100px'}} /></td>
-                  <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} style={{width:'150px'}} /></td>
-                  <td><select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
-                    <option value="employee">Служител</option><option value="admin">Админ</option>
-                  </select></td>
-                  <td><input type="number" style={{width:'60px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
-                  <td>
-                    <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={u.id}>
-                  <td>{u.fullName}</td>
-                  <td><code>{u.username}</code></td>
-                  <td><code>{u.password}</code></td>
-                  <td>{u.email}</td>
-                  <td><span className="badge pending">{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
-                  <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-pdf" onClick={() => downloadPDF(u)} disabled={downloadingId === u.id}>
-                        {downloadingId === u.id ? '⏳' : '📄'} PDF
-                      </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => remove(u.id)}>🗑️</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead><tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr></thead>
+              <tbody>
+                {users.map(u => editingId === u.id ? (
+                  <tr key={u.id}>
+                    <td><input value={editData.fullName} onChange={e => setEditData({...editData, fullName: e.target.value})} style={{width:'130px'}} /></td>
+                    <td><input value={editData.username} onChange={e => setEditData({...editData, username: e.target.value})} style={{width:'100px'}} /></td>
+                    <td><input value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} style={{width:'100px'}} /></td>
+                    <td><input value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} style={{width:'150px'}} /></td>
+                    <td><select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}>
+                      <option value="employee">Служител</option><option value="admin">Админ</option>
+                    </select></td>
+                    <td><input type="number" style={{width:'60px'}} value={editData.totalLeaveDays} onChange={e => setEditData({...editData, totalLeaveDays: e.target.value})} /></td>
+                    <td>
+                      <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={u.id}>
+                    <td>{u.fullName}</td>
+                    <td><code>{u.username}</code></td>
+                    <td><code>{u.password}</code></td>
+                    <td>{u.email}</td>
+                    <td><span className="badge pending">{u.role === 'admin' ? 'Админ' : 'Служител'}</span></td>
+                    <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="btn-pdf" onClick={() => downloadPDF(u)} disabled={downloadingId === u.id}>
+                          {downloadingId === u.id ? '⏳' : '📄'} PDF
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => remove(u.id)}>🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -3073,44 +3400,46 @@ function LeaveTypesSettings() {
       <PageHeader title="Видове отпуски" subtitle={`${types.length} вида`} onAdd={() => setShowModal(true)} addLabel="Нов вид" />
       <div className="card">
         {types.length === 0 ? <div className="empty-state">Няма видове</div> : (
-          <table>
-            <thead><tr><th>Цвят</th><th>Име</th><th>Приспада се</th><th>Действия</th></tr></thead>
-            <tbody>
-              {types.map(t => editingId === t.id ? (
-                <tr key={t.id}>
-                  <td>
-                    <div className="color-presets">
-                      {COLOR_PRESETS.map(c => (
-                        <div key={c} className={`color-dot ${editData.color === c ? 'selected' : ''}`}
-                          style={{background: c, width:'24px', height:'24px'}}
-                          onClick={() => setEditData({...editData, color: c})} />
-                      ))}
-                    </div>
-                  </td>
-                  <td><input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} /></td>
-                  <td>
-                    <select value={editData.deducts ? 'yes' : 'no'} onChange={e => setEditData({...editData, deducts: e.target.value === 'yes'})}>
-                      <option value="yes">Да</option><option value="no">Не</option>
-                    </select>
-                  </td>
-                  <td>
-                    <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={t.id}>
-                  <td><div style={{width:'28px', height:'28px', borderRadius:'8px', background:t.color}}></div></td>
-                  <td>{t.name}</td>
-                  <td>{t.deducts ? '✅ Да' : '❌ Не'}</td>
-                  <td>
-                    <button className="btn btn-secondary btn-sm" onClick={() => startEdit(t)}>✏️</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => remove(t.id)} style={{marginLeft:'4px'}}>🗑️</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead><tr><th>Цвят</th><th>Име</th><th>Приспада се</th><th>Действия</th></tr></thead>
+              <tbody>
+                {types.map(t => editingId === t.id ? (
+                  <tr key={t.id}>
+                    <td>
+                      <div className="color-presets">
+                        {COLOR_PRESETS.map(c => (
+                          <div key={c} className={`color-dot ${editData.color === c ? 'selected' : ''}`}
+                            style={{background: c, width:'24px', height:'24px'}}
+                            onClick={() => setEditData({...editData, color: c})} />
+                        ))}
+                      </div>
+                    </td>
+                    <td><input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} /></td>
+                    <td>
+                      <select value={editData.deducts ? 'yes' : 'no'} onChange={e => setEditData({...editData, deducts: e.target.value === 'yes'})}>
+                        <option value="yes">Да</option><option value="no">Не</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)} style={{marginLeft:'4px'}}>Отказ</button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={t.id}>
+                    <td><div style={{width:'28px', height:'28px', borderRadius:'8px', background:t.color}}></div></td>
+                    <td>{t.name}</td>
+                    <td>{t.deducts ? '✅ Да' : '❌ Не'}</td>
+                    <td>
+                      <button className="btn btn-secondary btn-sm" onClick={() => startEdit(t)}>✏️</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => remove(t.id)} style={{marginLeft:'4px'}}>🗑️</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
       {showModal && (
@@ -3194,6 +3523,7 @@ function App() {
           {renderPage()}
         </main>
       </div>
+      <MobileBottomNav currentPage={page} onNavigate={setPage} />
     </div>
   );
 }
