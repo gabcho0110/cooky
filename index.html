@@ -21,6 +21,22 @@
   }
   #root { min-height: 100vh; }
 
+  .loading-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  }
+  .loading-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 44px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(124,58,237,0.35);
+  }
+  .loading-card h1 { color: #7c3aed; margin-bottom: 20px; }
+
   .login-wrap {
     min-height: 100vh;
     display: flex;
@@ -693,9 +709,6 @@
   .animate-in {
     animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
   }
-  .card, .dash-card, .stat-card, .project-item {
-    animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-  }
 
   .text-muted { color: #9ca3af; font-size: 13px; }
   .mt-2 { margin-top: 16px; }
@@ -807,7 +820,26 @@
 <body>
 <div id="root"></div>
 
+<!-- СТАРТОВ FALLBACK - показва се докато React се зареди -->
+<div id="fallback" style="position:fixed;inset:0;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;border-radius:20px;padding:44px;text-align:center;box-shadow:0 24px 70px rgba(124,58,237,0.35);">
+    <h1 style="color:#7c3aed;margin-bottom:20px;">⏰ Clocky</h1>
+    <div style="display:inline-block;width:30px;height:30px;border:3px solid rgba(124,58,237,0.2);border-top-color:#7c3aed;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <p style="color:#9ca3af;margin-top:16px;font-size:13px;">Зареждане...</p>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
 <script type="text/babel" data-presets="react">
+/* ============ СКРИЙ FALLBACK СЛЕД КАТО REACT СЕ ЗАРЕДИ ============ */
+(function() {
+  const fb = document.getElementById('fallback');
+  if (fb) {
+    // Скриваме fallback след 100ms за да се даде време на React да рендира
+    setTimeout(() => { fb.style.display = 'none'; }, 200);
+  }
+})();
+
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
 
 /* ============ ERROR BOUNDARY ============ */
@@ -983,10 +1015,7 @@ const calcWorkingDays = (startDate, endDate, holidays) => {
     const dow = cur.getDay();
     const isWeekend = dow === 0 || dow === 6;
     const holiday = isHoliday(dateStr, holidays);
-
-    if (!holiday && !isWeekend) {
-      count++;
-    }
+    if (!holiday && !isWeekend) count++;
     cur.setDate(cur.getDate() + 1);
   }
   return count;
@@ -1030,7 +1059,7 @@ const DEFAULT_HOLIDAYS = {
 
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
-/* ============ PDF: FONT LOADING ============ */
+/* ============ PDF FONT ============ */
 let cachedFontBase64 = null;
 
 async function loadCyrillicFont() {
@@ -1049,18 +1078,12 @@ async function loadCyrillicFont() {
   return cachedFontBase64;
 }
 
-/* ============ PDF: USER CREDENTIALS ============ */
+/* ============ PDF USER ============ */
 async function generateUserPDF(user) {
   const { jsPDF } = window.jspdf;
-
   let fontBase64;
-  try {
-    fontBase64 = await loadCyrillicFont();
-  } catch (e) {
-    alert('Не може да се зареди шрифт с кирилица. Провери връзката с интернет.');
-    console.error(e);
-    return;
-  }
+  try { fontBase64 = await loadCyrillicFont(); }
+  catch (e) { alert('Не може да се зареди шрифт.'); return; }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
@@ -1069,7 +1092,6 @@ async function generateUserPDF(user) {
   const FONT = 'Roboto';
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-
   const purple = [124, 58, 237];
   const lightPurple = [168, 85, 247];
   const veryLightPurple = [243, 232, 255];
@@ -1104,7 +1126,6 @@ async function generateUserPDF(user) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(26);
   doc.text('Clocky', logoX, 45, { align: 'center' });
-
   doc.setFontSize(10);
   doc.text('Система за отпуски и време', logoX, 52, { align: 'center' });
 
@@ -1201,17 +1222,12 @@ async function generateUserPDF(user) {
   doc.save(filename);
 }
 
-/* ============ PDF: LEAVE REQUEST ============ */
+/* ============ PDF LEAVE ============ */
 async function generateLeaveRequestPDF(request, leaveType, companyName) {
   const { jsPDF } = window.jspdf;
-
   let fontBase64;
-  try {
-    fontBase64 = await loadCyrillicFont();
-  } catch (e) {
-    alert('Не може да се зареди шрифт.');
-    return;
-  }
+  try { fontBase64 = await loadCyrillicFont(); }
+  catch (e) { alert('Не може да се зареди шрифт.'); return; }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
@@ -1220,14 +1236,12 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   const FONT = 'Roboto';
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-
   const purple = [124, 58, 237];
   const dark = [30, 27, 75];
   const muted = [100, 116, 139];
 
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
   doc.setFillColor(purple[0], purple[1], purple[2]);
   doc.rect(0, 0, pageWidth, 8, 'F');
 
@@ -1270,10 +1284,7 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
 
   doc.setTextColor(dark[0], dark[1], dark[2]);
   doc.setFontSize(13);
-  doc.text(
-    `${formatDate(request.startDate)}  –  ${formatDate(request.endDate)}`,
-    pageWidth / 2, boxY + 11, { align: 'center' }
-  );
+  doc.text(`${formatDate(request.startDate)}  –  ${formatDate(request.endDate)}`, pageWidth / 2, boxY + 11, { align: 'center' });
   doc.setFontSize(10);
   doc.setTextColor(purple[0], purple[1], purple[2]);
   doc.text(`Общо: ${request.days} ${request.days === 1 ? 'ден' : 'дни'}`, pageWidth / 2, boxY + 20, { align: 'center' });
@@ -1313,7 +1324,7 @@ async function generateLeaveRequestPDF(request, leaveType, companyName) {
   doc.save(`Zaiavka_${request.userName?.replace(/\s+/g, '_')}_${request.startDate}.pdf`);
 }
 
-/* ============ CONTEXT ============ */
+/* ============ AUTH CONTEXT ============ */
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -1494,9 +1505,7 @@ function useHolidaysMap() {
   const list = useFirebaseList('holidays');
   return useMemo(() => {
     const map = {};
-    list.forEach(h => {
-      if (h.date) map[h.date] = h;
-    });
+    list.forEach(h => { if (h.date) map[h.date] = h; });
     return map;
   }, [list]);
 }
@@ -1511,43 +1520,24 @@ function Sidebar({ currentPage, onNavigate }) {
       { id: 'leaves-calendar', label: 'Календар' },
       { id: 'leaves-my', label: 'Моите отпуски' }
     ];
-    if (isAdmin) {
-      leavesItems.push({ id: 'leaves-requests', label: 'Заявки за отпуск' });
-    }
+    if (isAdmin) leavesItems.push({ id: 'leaves-requests', label: 'Заявки за отпуск' });
     leavesItems.push({ id: 'leaves-reports', label: 'Справки' });
 
     const items = [
       { id: 'home', icon: '🏠', label: 'Начало', items: null },
-      {
-        id: 'leaves',
-        icon: '🏖️',
-        label: 'Отпуски',
-        items: leavesItems
-      },
-      {
-        id: 'time',
-        icon: '⏱️',
-        label: 'Време',
-        items: [
-          { id: 'time-me', label: 'Моето време' },
-          { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
-        ]
-      },
-      {
-        id: 'company',
-        icon: '🏢',
-        label: 'Компания',
-        items: [
-          { id: 'company-data', label: 'Данни за компанията' }
-        ]
-      }
+      { id: 'leaves', icon: '🏖️', label: 'Отпуски', items: leavesItems },
+      { id: 'time', icon: '⏱️', label: 'Време', items: [
+        { id: 'time-me', label: 'Моето време' },
+        { id: 'time-reports', label: isAdmin ? 'Отчети (всички)' : 'Моите отчети' }
+      ]},
+      { id: 'company', icon: '🏢', label: 'Компания', items: [
+        { id: 'company-data', label: 'Данни за компанията' }
+      ]}
     ];
 
     if (isAdmin) {
       items.push({
-        id: 'settings',
-        icon: '⚙️',
-        label: 'Настройки',
+        id: 'settings', icon: '⚙️', label: 'Настройки',
         items: [
           { id: 'settings-users', label: 'Потребители' },
           { id: 'settings-leavetypes', label: 'Видове отпуски' },
@@ -1564,8 +1554,7 @@ function Sidebar({ currentPage, onNavigate }) {
     const initial = {};
     menuConfig.forEach(g => {
       if (g.items) {
-        const isActive = g.items.some(it => it.id === currentPage);
-        initial[g.id] = isActive;
+        initial[g.id] = g.items.some(it => it.id === currentPage);
       }
     });
     return initial;
@@ -1760,14 +1749,12 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
     setPrinting(true);
     try {
       await generateLeaveRequestPDF({ ...request, userName }, leaveType, companyName);
-    } catch (e) {
-      alert('Грешка при генериране: ' + e.message);
-    }
+    } catch (e) { alert('Грешка: ' + e.message); }
     setPrinting(false);
   };
 
   const handleDelete = async () => {
-    if (confirm('Сигурни ли сте, че искате да изтриете тази заявка?')) {
+    if (confirm('Сигурни ли сте?')) {
       setProcessing(true);
       await onDelete(request);
       setProcessing(false);
@@ -1797,9 +1784,7 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
             background: leaveType?.color || '#7c3aed',
             display:'flex', alignItems:'center', justifyContent:'center',
             color:'#fff', fontSize:'20px'
-          }}>
-            🏖️
-          </div>
+          }}>🏖️</div>
           <div>
             <h3 style={{marginBottom:'2px'}}>Заявка за отпуск</h3>
             <div className="text-muted">{userName}</div>
@@ -1844,40 +1829,27 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
 
         {request.attachment && (
           <div style={{marginTop:'16px', padding:'14px', background:'#f0fdf4', borderRadius:'12px', border:'1px solid #bbf7d0'}}>
-            <div style={{fontSize:'13px', fontWeight:600, color:'#15803d', marginBottom:'10px', display:'flex', alignItems:'center', gap:'6px'}}>
+            <div style={{fontSize:'13px', fontWeight:600, color:'#15803d', marginBottom:'10px'}}>
               📎 Прикачена бележка
             </div>
-            <img
-              src={request.attachment}
-              alt="Бележка"
-              className="modal-image"
-              onClick={() => setShowImage(true)}
-            />
-            <div className="text-muted" style={{fontSize:'11px', textAlign:'center'}}>
-              Кликнете за уголемяване
-            </div>
+            <img src={request.attachment} alt="Бележка" className="modal-image" onClick={() => setShowImage(true)} />
+            <div className="text-muted" style={{fontSize:'11px', textAlign:'center'}}>Кликнете за уголемяване</div>
           </div>
         )}
 
         <div className="flex gap-2 mt-2" style={{justifyContent:'flex-end', flexWrap:'wrap'}}>
           {isAdmin && request.status === 'pending' && (
             <>
-              <button className="btn btn-danger" onClick={handleReject} disabled={processing}>
-                ✕ Отхвърли
-              </button>
-              <button className="btn btn-success" onClick={handleApprove} disabled={processing}>
-                ✓ Одобри
-              </button>
+              <button className="btn btn-danger" onClick={handleReject} disabled={processing}>✕ Отхвърли</button>
+              <button className="btn btn-success" onClick={handleApprove} disabled={processing}>✓ Одобри</button>
             </>
           )}
           {isAdmin && request.status !== 'pending' && (
-            <button className="btn btn-danger" onClick={handleDelete} disabled={processing}>
-              🗑️ Изтрий
-            </button>
+            <button className="btn btn-danger" onClick={handleDelete} disabled={processing}>🗑️ Изтрий</button>
           )}
           <button className="btn btn-secondary" onClick={onClose}>Затвори</button>
           <button className="btn btn-primary" onClick={handlePrint} disabled={printing}>
-            {printing ? '⏳ Генериране...' : '🖨️ Принтирай'}
+            {printing ? '⏳...' : '🖨️ Принтирай'}
           </button>
         </div>
       </div>
@@ -1888,11 +1860,7 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
           style={{background:'rgba(0,0,0,0.9)', zIndex: 1100}}
           onClick={(e) => { e.stopPropagation(); setShowImage(false); }}
         >
-          <img
-            src={request.attachment}
-            alt="Бележка"
-            style={{maxWidth:'95vw', maxHeight:'95vh', objectFit:'contain', borderRadius:'8px'}}
-          />
+          <img src={request.attachment} alt="Бележка" style={{maxWidth:'95vw', maxHeight:'95vh', objectFit:'contain', borderRadius:'8px'}} />
         </div>
       )}
     </div>
@@ -1924,7 +1892,6 @@ function Home({ onNavigate }) {
     .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0];
 
   const daysUntil = upcoming ? Math.ceil((new Date(upcoming.startDate) - new Date(today)) / (1000*60*60*24)) : 0;
-
   const getLeaveTypeName = (typeId) => (leaveTypes[typeId]?.name) || 'Отпуск';
 
   return (
@@ -1934,23 +1901,19 @@ function Home({ onNavigate }) {
       <div className="dash-card">
         <div className="dash-card-header">
           <h2>Отпуски</h2>
-          <button className="dash-plus" onClick={() => onNavigate('leaves-my')} title="Нова заявка">+</button>
+          <button className="dash-plus" onClick={() => onNavigate('leaves-my')}>+</button>
         </div>
         <p className="sub">Обобщение на отпуските ви за {year} г.</p>
 
         <div className="dash-grid">
           <div>
             <div className="dash-stat-label">Баланс на платения отпуск</div>
-            <div className="dash-stat-value">
-              {remaining} <span className="unit">дни</span>
-            </div>
+            <div className="dash-stat-value">{remaining} <span className="unit">дни</span></div>
             <div className="dash-stat-hint">остават {remainingPct}%</div>
           </div>
           <div>
             <div className="dash-stat-label">Полагаем платен отпуск</div>
-            <div className="dash-stat-value">
-              {totalDays} <span className="unit">дни</span>
-            </div>
+            <div className="dash-stat-value">{totalDays} <span className="unit">дни</span></div>
             <div className="dash-stat-hint">1 януари – 31 декември {year} г.</div>
           </div>
         </div>
@@ -1961,16 +1924,12 @@ function Home({ onNavigate }) {
         {upcoming ? (
           <div className="next-absence-date">
             <div className="next-date-box">
-              <div className="next-date-month">
-                {monthShort[new Date(upcoming.startDate).getMonth()]}РНИ
-              </div>
+              <div className="next-date-month">{monthShort[new Date(upcoming.startDate).getMonth()]}РНИ</div>
               <div className="next-date-num">{new Date(upcoming.startDate).getDate()}</div>
               <div className="next-date-day">{dayShort[new Date(upcoming.startDate).getDay()]}</div>
             </div>
             <div>
-              <div style={{fontWeight:600, color:'#1e1b4b', marginBottom:'4px'}}>
-                {getLeaveTypeName(upcoming.type || 'paid')}
-              </div>
+              <div style={{fontWeight:600, color:'#1e1b4b', marginBottom:'4px'}}>{getLeaveTypeName(upcoming.type || 'paid')}</div>
               <div style={{fontSize:'13px', color:'#7c3aed', opacity:0.75, display:'flex', alignItems:'center', gap:'8px'}}>
                 <span>{formatDate(upcoming.startDate)} г.</span>
                 <span style={{width:'4px', height:'4px', borderRadius:'50%', background:'#7c3aed', display:'inline-block'}}></span>
@@ -1988,12 +1947,9 @@ function Home({ onNavigate }) {
         )}
 
         <div className="dash-divider"></div>
-
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <span className="text-muted">Показва се най-близкият ви одобрен отпуск</span>
-          <span className="link" onClick={() => onNavigate('leaves-calendar')}>
-            Виж целия календар →
-          </span>
+          <span className="link" onClick={() => onNavigate('leaves-calendar')}>Виж целия календар →</span>
         </div>
       </div>
 
@@ -2024,9 +1980,7 @@ function LeaveRequestModal({ onClose }) {
   const { currentUser } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
   const holidays = useHolidaysMap();
-  const [form, setForm] = useState({
-    startDate: '', endDate: '', reason: '', type: 'paid'
-  });
+  const [form, setForm] = useState({ startDate: '', endDate: '', reason: '', type: 'paid' });
   const [attachment, setAttachment] = useState(null);
   const [attachmentError, setAttachmentError] = useState('');
   const [error, setError] = useState('');
@@ -2040,32 +1994,18 @@ function LeaveRequestModal({ onClose }) {
   const willDeduct = selectedType?.deducts;
   const sick = isSickLeave(form.type, leaveTypes);
 
-  const canSubmit =
-    (!willDeduct || workingDays <= remaining) &&
-    form.reason.trim().length > 0 &&
-    (!sick || !!attachment);
+  const canSubmit = (!willDeduct || workingDays <= remaining) && form.reason.trim().length > 0 && (!sick || !!attachment);
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAttachmentError('');
-
-    if (file.size > 1024 * 1024) {
-      setAttachmentError('Файлът е прекалено голям (макс. 1MB).');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      setAttachmentError('Моля, прикачете само изображение (PNG, JPG)');
-      return;
-    }
-
+    if (file.size > 1024 * 1024) return setAttachmentError('Файлът е прекалено голям (макс. 1MB).');
+    if (!file.type.startsWith('image/')) return setAttachmentError('Само изображения (PNG, JPG)');
     try {
       const dataUrl = await readFileAsDataURL(file);
       setAttachment({ name: file.name, dataUrl });
-    } catch (err) {
-      setAttachmentError('Грешка при четене на файла');
-      console.error(err);
-    }
+    } catch (err) { setAttachmentError('Грешка при четене'); }
   };
 
   const removeAttachment = () => {
@@ -2081,10 +2021,9 @@ function LeaveRequestModal({ onClose }) {
     if (form.endDate < form.startDate) return setError('Крайната дата трябва да е след началната');
     if (!form.reason.trim()) return setError('Причината е задължителна');
     if (willDeduct && workingDays > remaining) return setError(`Нямате достатъчно дни (остават ${remaining})`);
-    if (sick && !attachment) return setError('За болничен е задължително да прикачите скрийншот от Школо/НЕИСПУО');
+    if (sick && !attachment) return setError('За болничен е задължителен скрийншот');
 
     setSubmitting(true);
-
     const req = {
       id: uid(),
       userId: currentUser.id,
@@ -2099,7 +2038,6 @@ function LeaveRequestModal({ onClose }) {
       createdAt: new Date().toISOString(),
       attachment: attachment ? attachment.dataUrl : null
     };
-
     try {
       await db.ref('leaveRequests/' + req.id).set(req);
       onClose();
@@ -2119,9 +2057,7 @@ function LeaveRequestModal({ onClose }) {
             <label>Вид отпуск</label>
             <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
               {Object.values(leaveTypes).map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.name} {t.deducts ? '(приспада се)' : '(не се приспада)'}
-                </option>
+                <option key={t.id} value={t.id}>{t.name} {t.deducts ? '(приспада се)' : '(не се приспада)'}</option>
               ))}
             </select>
           </div>
@@ -2142,9 +2078,7 @@ function LeaveRequestModal({ onClose }) {
               <div><b>Календарни дни:</b> {days}</div>
               <div><b>Работни дни (без почивни и празници):</b> {workingDays}</div>
               {workingDays !== days && (
-                <div style={{marginTop:'6px', fontSize:'12px'}}>
-                  ℹ️ Приспадат се само работните дни. Празниците и уикендите не се броят.
-                </div>
+                <div style={{marginTop:'6px', fontSize:'12px'}}>ℹ️ Приспадат се само работните дни.</div>
               )}
               {willDeduct && <div style={{marginTop:'6px', fontSize:'12px'}}>Ще се приспаднат от платения ви отпуск</div>}
             </div>
@@ -2152,23 +2086,13 @@ function LeaveRequestModal({ onClose }) {
 
           <div className="form-group mt-2">
             <label>Причина <span className="required-mark">*</span></label>
-            <textarea
-              value={form.reason}
-              onChange={e => setForm({...form, reason: e.target.value})}
-              rows="3"
-              placeholder="Опишете причината за отпуска..."
-              required
-            />
+            <textarea value={form.reason} onChange={e => setForm({...form, reason: e.target.value})} rows="3" placeholder="Опишете причината..." required />
           </div>
 
           {sick && (
             <div className="form-group mt-2">
-              <label>
-                📎 Скрийншот от Школо / НЕИСПУО <span className="required-mark">*</span>
-              </label>
-              <p className="text-muted" style={{marginBottom:'6px', fontSize:'12px'}}>
-                Моля, прикачете скрийншот на издадената болнична бележка.
-              </p>
+              <label>📎 Скрийншот от Школо / НЕИСПУО <span className="required-mark">*</span></label>
+              <p className="text-muted" style={{marginBottom:'6px', fontSize:'12px'}}>Прикачете скрийншот на болничната бележка.</p>
 
               {attachmentError && <div className="error" style={{marginBottom:'10px'}}>{attachmentError}</div>}
 
@@ -2183,24 +2107,13 @@ function LeaveRequestModal({ onClose }) {
                   <img src={attachment.dataUrl} alt="Преглед" className="upload-preview" />
                   <div className="upload-file-info">
                     <span>✅ {attachment.name}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeAttachment(); }}
-                      style={{background:'none', border:'none', color:'#dc2626', cursor:'pointer', fontWeight:'bold'}}
-                    >
-                      ✕
-                    </button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); removeAttachment(); }}
+                      style={{background:'none', border:'none', color:'#dc2626', cursor:'pointer', fontWeight:'bold'}}>✕</button>
                   </div>
                 </div>
               )}
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                style={{display:'none'}}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{display:'none'}} />
             </div>
           )}
 
@@ -2234,12 +2147,8 @@ function MyRequests() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Моите отпуски"
-        subtitle="Преглед на всички ваши заявки"
-        onAdd={() => setShowModal(true)}
-        addLabel="Нова заявка"
-      />
+      <PageHeader title="Моите отпуски" subtitle="Преглед на всички ваши заявки"
+        onAdd={() => setShowModal(true)} addLabel="Нова заявка" />
 
       <div className="card">
         {myRequests.length === 0 ? (
@@ -2291,7 +2200,7 @@ function MyRequests() {
   );
 }
 
-/* ============ LEAVE REQUESTS PAGE (ADMIN ONLY) ============ */
+/* ============ LEAVE REQUESTS PAGE ============ */
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2305,10 +2214,8 @@ function LeaveRequestsPage() {
   if (!isAdmin) {
     return (
       <div className="animate-in">
-        <PageHeader title="Няма достъп" subtitle="Тази страница е само за администратори" />
-        <div className="card">
-          <div className="empty-state">🔒 Нямате права да виждате тази страница</div>
-        </div>
+        <PageHeader title="Няма достъп" subtitle="Само за администратори" />
+        <div className="card"><div className="empty-state">🔒 Нямате права</div></div>
       </div>
     );
   }
@@ -2358,12 +2265,8 @@ function LeaveRequestsPage() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Заявки за отпуск"
-        subtitle="Кликнете на заявка за преглед, одобрение или отхвърляне"
-        onAdd={() => setShowModal(true)}
-        addLabel="Нова заявка"
-      />
+      <PageHeader title="Заявки за отпуск" subtitle="Кликнете на заявка за преглед"
+        onAdd={() => setShowModal(true)} addLabel="Нова заявка" />
 
       <div className="stats-grid">
         <div className="stat-card warning">
@@ -2382,8 +2285,7 @@ function LeaveRequestsPage() {
 
       <div className="flex gap-2" style={{marginBottom:'16px', flexWrap:'wrap'}}>
         {['pending','approved','rejected','all'].map(f => (
-          <button key={f}
-            className={`btn btn-sm ${filter===f?'btn-primary':'btn-secondary'}`}
+          <button key={f} className={`btn btn-sm ${filter===f?'btn-primary':'btn-secondary'}`}
             onClick={()=>setFilter(f)}>
             {f === 'pending' ? 'Чакащи' : f === 'approved' ? 'Одобрени' : f === 'rejected' ? 'Отхвърлени' : 'Всички'}
           </button>
@@ -2503,12 +2405,8 @@ function CalendarPage() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Табло – Календар"
-        subtitle="Всички отпуски и отсъствия"
-        onAdd={() => setShowModal(true)}
-        addLabel="Нова заявка"
-      />
+      <PageHeader title="Табло – Календар" subtitle="Всички отпуски и отсъствия"
+        onAdd={() => setShowModal(true)} addLabel="Нова заявка" />
 
       <div className="card">
         <div className="calendar-header">
@@ -2530,22 +2428,14 @@ function CalendarPage() {
             return (
               <div key={idx} className={`calendar-day ${!day ? 'empty' : ''} ${isTodayDay ? 'today' : ''} ${holiday ? 'holiday' : ''}`}>
                 {day && <div className="day-num">{day}</div>}
-                {holidayInfo && (
-                  <div className="holiday-tag" title={holidayInfo.name}>
-                    🎉 {holidayInfo.name}
-                  </div>
-                )}
+                {holidayInfo && <div className="holiday-tag" title={holidayInfo.name}>🎉 {holidayInfo.name}</div>}
                 {events.slice(0, 2).map(e => {
                   const t = getType(e.type);
                   const opacity = e.status === 'pending' ? 0.5 : 1;
                   return (
-                    <div
-                      key={e.id}
-                      className="day-event"
-                      style={{background: t.color, opacity}}
+                    <div key={e.id} className="day-event" style={{background: t.color, opacity}}
                       title={`${getUserName(e.userId, e.userName)} • ${t.name}`}
-                      onClick={() => setSelected(e)}
-                    >
+                      onClick={() => setSelected(e)}>
                       {getUserName(e.userId, e.userName).split(' ')[0]}
                     </div>
                   );
@@ -2626,9 +2516,7 @@ function LeavesReports() {
     <div className="animate-in">
       <PageHeader
         title={isAdmin ? 'Справки' : 'Моите справки'}
-        subtitle={isAdmin
-          ? `Обобщение на отпуските за всички служители за ${year} г.`
-          : `Обобщение на вашите отпуски за ${year} г.`}
+        subtitle={isAdmin ? `Всички служители за ${year} г.` : `Вашите отпуски за ${year} г.`}
       />
 
       <div className="card">
@@ -2664,35 +2552,25 @@ function LeavesReports() {
             <div className="empty-state">Няма заявки за {year} г.</div>
           ) : (
             <table>
-              <thead>
-                <tr>
-                  <th>Вид</th>
-                  <th>От</th>
-                  <th>До</th>
-                  <th>Дни</th>
-                  <th>Статус</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Вид</th><th>От</th><th>До</th><th>Дни</th><th>Статус</th></tr></thead>
               <tbody>
-                {myRequests
-                  .filter(r => new Date(r.startDate).getFullYear() === year)
-                  .map(r => {
-                    const t = getType(r.type);
-                    return (
-                      <tr key={r.id}>
-                        <td>
-                          <span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
-                            <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
-                            {t.name}
-                          </span>
-                        </td>
-                        <td>{formatDate(r.startDate)}</td>
-                        <td>{formatDate(r.endDate)}</td>
-                        <td>{r.days}</td>
-                        <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
-                      </tr>
-                    );
-                  })}
+                {myRequests.filter(r => new Date(r.startDate).getFullYear() === year).map(r => {
+                  const t = getType(r.type);
+                  return (
+                    <tr key={r.id}>
+                      <td>
+                        <span style={{display:'inline-flex', alignItems:'center', gap:'8px'}}>
+                          <span style={{width:'8px', height:'8px', borderRadius:'50%', background: t.color}}></span>
+                          {t.name}
+                        </span>
+                      </td>
+                      <td>{formatDate(r.startDate)}</td>
+                      <td>{formatDate(r.endDate)}</td>
+                      <td>{r.days}</td>
+                      <td><span className={`badge ${r.status}`}>{statusText[r.status]}</span></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -2763,9 +2641,7 @@ function TimeModule({ scope }) {
     if (!activeEntry || onPause) return;
     const pauses = activeEntry.pauses || [];
     const newPause = { start: new Date().toISOString(), end: null };
-    await db.ref('timeEntries/' + activeEntry.id).update({
-      pauses: [...pauses, newPause]
-    });
+    await db.ref('timeEntries/' + activeEntry.id).update({ pauses: [...pauses, newPause] });
   };
 
   const resumePause = async () => {
@@ -2804,9 +2680,7 @@ function TimeModule({ scope }) {
     setPendingCheckout(null);
   };
 
-  const cancelCheckout = () => {
-    setPendingCheckout(null);
-  };
+  const cancelCheckout = () => setPendingCheckout(null);
 
   const openStopModal = (entry) => {
     setStoppingEntry(entry);
@@ -2872,7 +2746,7 @@ function TimeModule({ scope }) {
   };
 
   const deleteEntry = async (entry) => {
-    if (!confirm('Сигурни ли сте, че искате да изтриете този запис?')) return;
+    if (!confirm('Сигурни ли сте?')) return;
     await db.ref('timeEntries/' + entry.id).remove();
   };
 
@@ -2893,14 +2767,10 @@ function TimeModule({ scope }) {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [entries, now]);
 
-  // ===== МОЕТО ВРЕМЕ (scope === 'me') =====
   if (scope === 'me') {
     return (
       <div className="animate-in">
-        <PageHeader
-          title="Моето време"
-          subtitle="Чекиране и проследяване на работното време"
-        />
+        <PageHeader title="Моето време" subtitle="Чекиране и проследяване" />
 
         <div className="card">
           <h3>🕐 Таймер</h3>
@@ -2956,13 +2826,11 @@ function TimeModule({ scope }) {
           <div className="modal-backdrop" onClick={cancelCheckout}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               <h3>⏹ Приключване на смяна</h3>
-              <p className="text-muted" style={{marginBottom:'16px'}}>Изберете проект, по който сте работили</p>
+              <p className="text-muted" style={{marginBottom:'16px'}}>Изберете проект</p>
               <div className="form-group">
                 <label>Проект</label>
-                <select
-                  value={pendingCheckout.projectId}
-                  onChange={e => setPendingCheckout({ ...pendingCheckout, projectId: e.target.value })}
-                >
+                <select value={pendingCheckout.projectId}
+                  onChange={e => setPendingCheckout({ ...pendingCheckout, projectId: e.target.value })}>
                   <option value="">-- Без проект --</option>
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -2980,16 +2848,13 @@ function TimeModule({ scope }) {
     );
   }
 
-  // ===== ОТЧЕТИ (scope === 'all' или 'reports') =====
   const isAdminView = scope === 'all' && isAdmin;
 
   return (
     <div className="animate-in">
       <PageHeader
         title={isAdmin ? 'Отчети за работно време' : 'Моите отчети'}
-        subtitle={isAdmin
-          ? 'Всички служители • можете да редактирате, спирате и изтривате смени'
-          : 'Пълна история на вашите чекирания'}
+        subtitle={isAdmin ? 'Всички служители' : 'Пълна история на чекиранията'}
       />
 
       {isAdmin && (
@@ -2999,16 +2864,10 @@ function TimeModule({ scope }) {
             <div className="empty-state">Няма данни</div>
           ) : (
             <table>
-              <thead>
-                <tr><th>Проект</th><th>Записи</th><th>Общо време</th></tr>
-              </thead>
+              <thead><tr><th>Проект</th><th>Записи</th><th>Общо време</th></tr></thead>
               <tbody>
                 {projectSummary.map((p, i) => (
-                  <tr key={i}>
-                    <td>{p.name}</td>
-                    <td>{p.count}</td>
-                    <td>{fmtTime(p.total)}</td>
-                  </tr>
+                  <tr key={i}><td>{p.name}</td><td>{p.count}</td><td>{fmtTime(p.total)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -3053,11 +2912,7 @@ function TimeModule({ scope }) {
                     <td>{e.projectName || '-'}</td>
                     <td>
                       {pausesCount > 0
-                        ? <span
-                            className="link"
-                            onClick={(ev) => { ev.stopPropagation(); setDetailEntry(e); }}
-                            title="Виж паузите"
-                          >
+                        ? <span className="link" onClick={(ev) => { ev.stopPropagation(); setDetailEntry(e); }} title="Виж паузите">
                             {pausesCount} {pausesCount === 1 ? 'пауза' : 'паузи'}
                           </span>
                         : '-'}
@@ -3067,28 +2922,10 @@ function TimeModule({ scope }) {
                       <td>
                         <div className="admin-actions">
                           {active && !paused && (
-                            <button
-                              className="btn btn-warning btn-sm"
-                              onClick={() => openStopModal(e)}
-                              title="Спри смяната"
-                            >
-                              ⏹ Спри
-                            </button>
+                            <button className="btn btn-warning btn-sm" onClick={() => openStopModal(e)}>⏹ Спри</button>
                           )}
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => openEditModal(e)}
-                            title="Редактирай"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => deleteEntry(e)}
-                            title="Изтрий"
-                          >
-                            🗑️
-                          </button>
+                          <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(e)}>✏️</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => deleteEntry(e)}>🗑️</button>
                         </div>
                       </td>
                     )}
@@ -3107,11 +2944,8 @@ function TimeModule({ scope }) {
             <p className="text-muted" style={{marginBottom:'16px'}}>
               Служител: <b>{getUserName(stoppingEntry.userId) || stoppingEntry.userName}</b>
             </p>
-            <p className="text-muted" style={{marginBottom:'16px'}}>
-              Начало: {new Date(stoppingEntry.checkIn).toLocaleString('bg-BG')}
-            </p>
             <div className="form-group">
-              <label>Проект (по който е работил)</label>
+              <label>Проект</label>
               <select value={stopProjectId} onChange={e => setStopProjectId(e.target.value)}>
                 <option value="">-- Без проект --</option>
                 {projects.map(p => (
@@ -3137,26 +2971,18 @@ function TimeModule({ scope }) {
             {editError && <div className="error">{editError}</div>}
             <div className="form-group">
               <label>Начален час <span className="required-mark">*</span></label>
-              <input
-                type="datetime-local"
-                value={editForm.checkIn}
-                onChange={e => setEditForm({...editForm, checkIn: e.target.value})}
-              />
+              <input type="datetime-local" value={editForm.checkIn}
+                onChange={e => setEditForm({...editForm, checkIn: e.target.value})} />
             </div>
             <div className="form-group">
               <label>Краен час (празно = още работи)</label>
-              <input
-                type="datetime-local"
-                value={editForm.checkOut}
-                onChange={e => setEditForm({...editForm, checkOut: e.target.value})}
-              />
+              <input type="datetime-local" value={editForm.checkOut}
+                onChange={e => setEditForm({...editForm, checkOut: e.target.value})} />
             </div>
             <div className="form-group">
               <label>Проект</label>
-              <select
-                value={editForm.projectId}
-                onChange={e => setEditForm({...editForm, projectId: e.target.value})}
-              >
+              <select value={editForm.projectId}
+                onChange={e => setEditForm({...editForm, projectId: e.target.value})}>
                 <option value="">-- Без проект --</option>
                 {projects.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
@@ -3242,19 +3068,14 @@ function HolidaysSettings() {
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.name.trim()) return setError('Въведете име на празника');
+    if (!form.name.trim()) return setError('Въведете име');
     if (!form.date) return setError('Изберете дата');
 
     const exists = holidaysList.find(h => h.date === form.date);
     if (exists) return setError('Вече има празник на тази дата: ' + exists.name);
 
     const id = uid();
-    const h = {
-      id,
-      name: form.name.trim(),
-      date: form.date,
-      createdAt: new Date().toISOString()
-    };
+    const h = { id, name: form.name.trim(), date: form.date, createdAt: new Date().toISOString() };
     await db.ref('holidays/' + id).set(h);
     setForm({ name: '', date: '' });
     setShowModal(false);
@@ -3277,7 +3098,7 @@ function HolidaysSettings() {
   };
 
   const remove = async (id) => {
-    if (confirm('Сигурни ли сте, че искате да изтриете този празник?')) {
+    if (confirm('Сигурни ли сте?')) {
       await db.ref('holidays/' + id).remove();
     }
   };
@@ -3295,40 +3116,29 @@ function HolidaysSettings() {
       batch[id] = { id, name: h.name, date: dateISO, createdAt: new Date().toISOString() };
       added++;
     });
-    if (added === 0) {
-      alert('Всички стандартни празници вече са добавени за тази година.');
-      return;
-    }
+    if (added === 0) return alert('Всички стандартни празници вече са добавени.');
     await db.ref('holidays').update(batch);
-    alert(`Добавени ${added} празника за ${selectedYear} г.`);
+    alert(`Добавени ${added} празника.`);
   };
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Всички празници"
-        subtitle="Национални празници, които са автоматично почивни дни за всички служители"
-        onAdd={() => setShowModal(true)}
-        addLabel="Нов празник"
-      />
+      <PageHeader title="Всички празници" subtitle="Национални празници - автоматично почивни дни"
+        onAdd={() => setShowModal(true)} addLabel="Нов празник" />
 
       <div className="warning-box">
-        ℹ️ Празниците автоматично се маркират в календара и <b>не се броят</b> като работни дни при подаване на заявка за отпуск.
+        ℹ️ Празниците автоматично се маркират в календара и <b>не се броят</b> като работни дни при подаване на заявка.
       </div>
 
       <div className="card">
         <div style={{display:'flex', gap:'12px', alignItems:'center', flexWrap:'wrap', marginBottom:'16px'}}>
           <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
             <label style={{fontSize:'13px', fontWeight:600, color:'#4c1d95'}}>Година:</label>
-            <select
-              value={selectedYear}
+            <select value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              style={{padding:'8px 12px', border:'1.5px solid #e9d5ff', borderRadius:'10px', fontSize:'14px', fontFamily:'inherit'}}
-            >
-              {years.length === 0 && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
+              style={{padding:'8px 12px', border:'1.5px solid #e9d5ff', borderRadius:'10px', fontSize:'14px', fontFamily:'inherit'}}>
+              {!years.includes(selectedYear) && <option value={selectedYear}>{selectedYear}</option>}
               {years.map(y => <option key={y} value={y}>{y}</option>)}
-              {!years.includes(new Date().getFullYear()) && <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>}
-              {!years.includes(new Date().getFullYear() + 1) && <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1}</option>}
             </select>
           </div>
           <button className="btn btn-info btn-sm" onClick={addDefaults}>
@@ -3343,9 +3153,7 @@ function HolidaysSettings() {
           <div className="empty-state">Няма добавени празници за {selectedYear} г.</div>
         ) : (
           <table>
-            <thead>
-              <tr><th>Дата</th><th>Ден</th><th>Име</th><th>Действия</th></tr>
-            </thead>
+            <thead><tr><th>Дата</th><th>Ден</th><th>Име</th><th>Действия</th></tr></thead>
             <tbody>
               {sorted.map(h => {
                 const d = new Date(h.date);
@@ -3355,26 +3163,19 @@ function HolidaysSettings() {
                   <tr key={h.id}>
                     <td>
                       {isEditing ? (
-                        <input
-                          type="date"
-                          value={editData.date}
+                        <input type="date" value={editData.date}
                           onChange={e => setEditData({...editData, date: e.target.value})}
-                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px'}}
-                        />
+                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px'}} />
                       ) : (
                         <b>{formatDate(h.date)}</b>
                       )}
                     </td>
-                    <td style={{textTransform:'capitalize', color:'#7c3aed', opacity:0.8}}>
-                      {dayName}
-                    </td>
+                    <td style={{textTransform:'capitalize', color:'#7c3aed', opacity:0.8}}>{dayName}</td>
                     <td>
                       {isEditing ? (
-                        <input
-                          value={editData.name}
+                        <input value={editData.name}
                           onChange={e => setEditData({...editData, name: e.target.value})}
-                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px', width:'100%'}}
-                        />
+                          style={{padding:'6px 10px', border:'1.5px solid #e9d5ff', borderRadius:'8px', width:'100%'}} />
                       ) : (
                         h.name
                       )}
@@ -3408,22 +3209,12 @@ function HolidaysSettings() {
             <form onSubmit={submit}>
               <div className="form-group">
                 <label>Име на празника <span className="required-mark">*</span></label>
-                <input
-                  value={form.name}
-                  onChange={e => setForm({...form, name: e.target.value})}
-                  placeholder="напр. Нова година"
-                  required
-                  autoFocus
-                />
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="напр. Нова година" required autoFocus />
               </div>
               <div className="form-group">
                 <label>Дата <span className="required-mark">*</span></label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={e => setForm({...form, date: e.target.value})}
-                  required
-                />
+                <input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} required />
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">Добави</button>
@@ -3468,12 +3259,8 @@ function ProjectsModule() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Проекти"
-        subtitle={`Всички проекти в системата (${projects.length})`}
-        onAdd={() => setShowModal(true)}
-        addLabel="Нов проект"
-      />
+      <PageHeader title="Проекти" subtitle={`Всички проекти (${projects.length})`}
+        onAdd={() => setShowModal(true)} addLabel="Нов проект" />
 
       <div className="card">
         {projects.length === 0 ? (
@@ -3501,7 +3288,7 @@ function ProjectsModule() {
             {error && <div className="error">{error}</div>}
             <form onSubmit={addProject}>
               <div className="form-group">
-                <label>Име на проекта *</label>
+                <label>Име *</label>
                 <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required autoFocus />
               </div>
               <div className="form-group">
@@ -3512,12 +3299,10 @@ function ProjectsModule() {
                 <label>Цвят</label>
                 <div className="color-presets">
                   {COLOR_PRESETS.map(c => (
-                    <div
-                      key={c}
+                    <div key={c}
                       className={`color-dot ${form.color === c ? 'selected' : ''}`}
                       style={{background: c}}
-                      onClick={() => setForm({...form, color: c})}
-                    />
+                      onClick={() => setForm({...form, color: c})} />
                   ))}
                 </div>
               </div>
@@ -3542,9 +3327,7 @@ function CompanyPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (company) {
-      setForm({ ...DEFAULT_COMPANY, ...company });
-    }
+    if (company) setForm({ ...DEFAULT_COMPANY, ...company });
   }, [company]);
 
   const isAdmin = currentUser.role === 'admin';
@@ -3573,25 +3356,16 @@ function CompanyPage() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title={`Данни за компанията – ${form.name || ''}`}
-        subtitle="Основна информация"
-      />
+      <PageHeader title={`Данни за компанията`} subtitle="Основна информация" />
 
-      {saved && <div className="success">✅ Промените са запазени успешно</div>}
+      {saved && <div className="success">✅ Промените са запазени</div>}
 
       <div className="card">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-          <h3 style={{margin:0}}>Информация за компанията</h3>
+          <h3 style={{margin:0}}>Информация</h3>
           {isAdmin && !editing && (
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setEditing(true)}
-              style={{width:'38px', height:'38px', padding:0, justifyContent:'center', borderRadius:'50%'}}
-              title="Редактирай"
-            >
-              ✏️
-            </button>
+            <button className="btn btn-secondary btn-sm" onClick={() => setEditing(true)}
+              style={{width:'38px', height:'38px', padding:0, justifyContent:'center', borderRadius:'50%'}}>✏️</button>
           )}
         </div>
 
@@ -3600,23 +3374,11 @@ function CompanyPage() {
             <div key={f.key}>
               <label style={{fontSize:'13px', color:'#7c3aed', marginBottom:'6px', display:'block', fontWeight:600, opacity:0.8}}>{f.label}</label>
               {editing ? (
-                <input
-                  type={f.type || 'text'}
-                  value={form[f.key] || ''}
+                <input type={f.type || 'text'} value={form[f.key] || ''}
                   onChange={e => setForm({...form, [f.key]: e.target.value})}
-                  style={{
-                    width:'100%', padding:'11px 14px',
-                    background:'#fff', border:'1.5px solid #e9d5ff',
-                    borderRadius:'10px', color:'#1e1b4b',
-                    fontSize:'14px', fontFamily:'inherit'
-                  }}
-                />
+                  style={{width:'100%', padding:'11px 14px', background:'#fff', border:'1.5px solid #e9d5ff', borderRadius:'10px', color:'#1e1b4b', fontSize:'14px', fontFamily:'inherit'}} />
               ) : (
-                <div style={{
-                  padding:'11px 14px', background:'#faf5ff',
-                  borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa',
-                  fontSize:'14px', border:'1px solid #ede9fe', minHeight:'42px'
-                }}>
+                <div style={{padding:'11px 14px', background:'#faf5ff', borderRadius:'10px', color: form[f.key] ? '#1e1b4b' : '#a78bfa', fontSize:'14px', border:'1px solid #ede9fe', minHeight:'42px'}}>
                   {form[f.key] || '-'}
                 </div>
               )}
@@ -3638,10 +3400,7 @@ function CompanyPage() {
 /* ============ USERS MANAGER ============ */
 function UsersManager() {
   const { users, addUser, updateUser, deleteUser, currentUser } = useAuth();
-  const [form, setForm] = useState({
-    username: '', password: '', fullName: '', email: '',
-    role: 'employee', totalLeaveDays: 20
-  });
+  const [form, setForm] = useState({ username: '', password: '', fullName: '', email: '', role: 'employee', totalLeaveDays: 20 });
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -3678,23 +3437,15 @@ function UsersManager() {
 
   const downloadPDF = async (user) => {
     setDownloadingId(user.id);
-    try {
-      await generateUserPDF(user);
-    } catch (e) {
-      console.error(e);
-      alert('Грешка при генериране на PDF: ' + e.message);
-    }
+    try { await generateUserPDF(user); }
+    catch (e) { alert('Грешка: ' + e.message); }
     setTimeout(() => setDownloadingId(null), 800);
   };
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Потребители"
-        subtitle={`Управление на потребители и роли (${users.length})`}
-        onAdd={() => setShowModal(true)}
-        addLabel="Нов потребител"
-      />
+      <PageHeader title="Потребители" subtitle={`Всички потребители (${users.length})`}
+        onAdd={() => setShowModal(true)} addLabel="Нов потребител" />
 
       <div className="card">
         {users.length === 0 ? (
@@ -3702,15 +3453,7 @@ function UsersManager() {
         ) : (
           <table>
             <thead>
-              <tr>
-                <th>Име</th>
-                <th>Потребител</th>
-                <th>Парола</th>
-                <th>Email</th>
-                <th>Роля</th>
-                <th>Отпуск</th>
-                <th>Действия</th>
-              </tr>
+              <tr><th>Име</th><th>Потребител</th><th>Парола</th><th>Email</th><th>Роля</th><th>Отпуск</th><th>Действия</th></tr>
             </thead>
             <tbody>
               {users.map(u => editingId === u.id ? (
@@ -3743,16 +3486,11 @@ function UsersManager() {
                   <td>{u.usedLeaveDays || 0} / {u.totalLeaveDays}</td>
                   <td>
                     <div className="action-buttons">
-                      <button
-                        className="btn-pdf"
-                        onClick={() => downloadPDF(u)}
-                        disabled={downloadingId === u.id}
-                        title="Изтегли PDF с данни за вход"
-                      >
+                      <button className="btn-pdf" onClick={() => downloadPDF(u)} disabled={downloadingId === u.id}>
                         {downloadingId === u.id ? '⏳' : '📄'} PDF
                       </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)} title="Редактирай">✏️</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => remove(u.id)} title="Изтрий">🗑️</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => startEdit(u)}>✏️</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => remove(u.id)}>🗑️</button>
                     </div>
                   </td>
                 </tr>
@@ -3847,33 +3585,25 @@ function LeaveTypesSettings() {
 
   return (
     <div className="animate-in">
-      <PageHeader
-        title="Видове отпуски"
-        subtitle={`${types.length} вида в системата`}
-        onAdd={() => setShowModal(true)}
-        addLabel="Нов вид"
-      />
+      <PageHeader title="Видове отпуски" subtitle={`${types.length} вида`}
+        onAdd={() => setShowModal(true)} addLabel="Нов вид" />
 
       <div className="card">
         {types.length === 0 ? (
-          <div className="empty-state">Няма добавени видове</div>
+          <div className="empty-state">Няма видове</div>
         ) : (
           <table>
-            <thead>
-              <tr><th>Цвят</th><th>Име</th><th>Приспада се</th><th>Действия</th></tr>
-            </thead>
+            <thead><tr><th>Цвят</th><th>Име</th><th>Приспада се</th><th>Действия</th></tr></thead>
             <tbody>
               {types.map(t => editingId === t.id ? (
                 <tr key={t.id}>
                   <td>
                     <div className="color-presets">
                       {COLOR_PRESETS.map(c => (
-                        <div
-                          key={c}
+                        <div key={c}
                           className={`color-dot ${editData.color === c ? 'selected' : ''}`}
                           style={{background: c, width:'24px', height:'24px'}}
-                          onClick={() => setEditData({...editData, color: c})}
-                        />
+                          onClick={() => setEditData({...editData, color: c})} />
                       ))}
                     </div>
                   </td>
@@ -3891,9 +3621,7 @@ function LeaveTypesSettings() {
                 </tr>
               ) : (
                 <tr key={t.id}>
-                  <td>
-                    <div style={{width:'28px', height:'28px', borderRadius:'8px', background:t.color, boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}></div>
-                  </td>
+                  <td><div style={{width:'28px', height:'28px', borderRadius:'8px', background:t.color}}></div></td>
                   <td>{t.name}</td>
                   <td>{t.deducts ? '✅ Да' : '❌ Не'}</td>
                   <td>
@@ -3914,7 +3642,8 @@ function LeaveTypesSettings() {
             <form onSubmit={addType}>
               <div className="form-group">
                 <label>Име *</label>
-                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="напр. Платен отпуск" required autoFocus />
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="напр. Платен отпуск" required autoFocus />
               </div>
               <div className="form-group">
                 <label>Приспада се от платения отпуск?</label>
@@ -3924,15 +3653,13 @@ function LeaveTypesSettings() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Цвят в календара</label>
+                <label>Цвят</label>
                 <div className="color-presets">
                   {COLOR_PRESETS.map(c => (
-                    <div
-                      key={c}
+                    <div key={c}
                       className={`color-dot ${form.color === c ? 'selected' : ''}`}
                       style={{background: c}}
-                      onClick={() => setForm({...form, color: c})}
-                    />
+                      onClick={() => setForm({...form, color: c})} />
                   ))}
                 </div>
               </div>
@@ -3953,12 +3680,18 @@ function App() {
   const { currentUser, loading } = useAuth();
   const [page, setPage] = useState('home');
 
+  // Скрива fallback-а при първо зареждане на App
+  useEffect(() => {
+    const fb = document.getElementById('fallback');
+    if (fb) fb.style.display = 'none';
+  }, []);
+
   if (loading) {
     return (
-      <div className="login-wrap">
-        <div className="login-card" style={{textAlign:'center'}}>
+      <div className="loading-screen">
+        <div className="loading-card">
           <h1>⏰ Clocky</h1>
-          <div className="spinner" style={{marginTop:'24px'}}></div>
+          <div className="spinner"></div>
           <p className="text-muted mt-2">Зареждане...</p>
         </div>
       </div>
@@ -4000,13 +3733,20 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <ErrorBoundary>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </ErrorBoundary>
-);
+/* ============ RENDER ============ */
+try {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <ErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+  console.log("✅ App rendered successfully");
+} catch (e) {
+  console.error("❌ Render failed:", e);
+  document.getElementById('root').innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#dc2626;"><h2>Грешка при стартиране</h2><pre>' + e.message + '</pre></div>';
+}
 </script>
 </body>
 </html>
