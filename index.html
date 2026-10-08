@@ -774,6 +774,34 @@
     font-size: 13px;
     margin-bottom: 16px;
   }
+
+  .error-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #faf5ff;
+  }
+  .error-screen-inner {
+    background: #fff;
+    padding: 40px;
+    border-radius: 20px;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(124,58,237,0.15);
+  }
+  .error-screen-inner h2 { color: #dc2626; margin-bottom: 16px; }
+  .error-screen-inner pre {
+    background: #fef2f2;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 12px;
+    color: #991b1b;
+    overflow: auto;
+    margin-top: 16px;
+  }
 </style>
 </head>
 <body>
@@ -781,6 +809,41 @@
 
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
+
+/* ============ ERROR BOUNDARY ============ */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-screen">
+          <div className="error-screen-inner">
+            <h2>⚠️ Възникна грешка</h2>
+            <p className="text-muted">Моля, презаредете страницата или се свържете с администратор.</p>
+            <pre>{String(this.state.error?.message || this.state.error)}</pre>
+            <button
+              className="btn btn-primary"
+              style={{marginTop:'20px'}}
+              onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            >
+              Презареди
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 /* ============ FIREBASE ============ */
 const firebaseConfig = {
@@ -2639,7 +2702,7 @@ function LeavesReports() {
   );
 }
 
-/* ============ TIME MODULE (FIXED CHECKOUT) ============ */
+/* ============ TIME MODULE ============ */
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = currentUser.role === 'admin';
@@ -2647,8 +2710,7 @@ function TimeModule({ scope }) {
   const [entries, setEntries] = useState([]);
   const projects = useFirebaseList('projects');
 
-  // ✅ ПОПРАВКА: запазваме ЦЕЛИЯ entry, не само ID
-  const [pendingCheckout, setPendingCheckout] = useState(null); // { entry: {...}, projectId: '' }
+  const [pendingCheckout, setPendingCheckout] = useState(null);
   const [stoppingEntry, setStoppingEntry] = useState(null);
   const [stopProjectId, setStopProjectId] = useState('');
 
@@ -2715,7 +2777,6 @@ function TimeModule({ scope }) {
     await db.ref('timeEntries/' + activeEntry.id).update({ pauses });
   };
 
-  // ✅ ПОПРАВКА: отваряме модала с целия entry
   const openCheckoutModal = () => {
     if (!activeEntry) return;
     setPendingCheckout({
@@ -2730,7 +2791,6 @@ function TimeModule({ scope }) {
     const projId = pendingCheckout.projectId;
     const proj = projects.find(p => p.id === projId);
 
-    // Затваряме активна пауза ако има
     let pauses = entry.pauses || [];
     pauses = pauses.map(p => p.end ? p : { ...p, end: new Date().toISOString() });
 
@@ -2833,6 +2893,7 @@ function TimeModule({ scope }) {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [entries, now]);
 
+  // ===== МОЕТО ВРЕМЕ (scope === 'me') =====
   if (scope === 'me') {
     return (
       <div className="animate-in">
@@ -2891,7 +2952,6 @@ function TimeModule({ scope }) {
           )}
         </div>
 
-        {/* Checkout modal за служител */}
         {pendingCheckout && (
           <div className="modal-backdrop" onClick={cancelCheckout}>
             <div className="modal" onClick={e => e.stopPropagation()}>
@@ -2920,6 +2980,7 @@ function TimeModule({ scope }) {
     );
   }
 
+  // ===== ОТЧЕТИ (scope === 'all' или 'reports') =====
   const isAdminView = scope === 'all' && isAdmin;
 
   return (
@@ -3940,9 +4001,11 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </ErrorBoundary>
 );
 </script>
 </body>
