@@ -38,11 +38,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .app-layout { display: flex; min-height: 100vh; }
 .sidebar { width: 260px; background: #fff; border-right: 1px solid #ede9fe; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; overflow-y: auto; }
-.sidebar-logo { padding: 8px 12px 24px; font-size: 22px; font-weight: 700; color: #7c3aed; display: flex; align-items: center; gap: 8px; }
-.sidebar-user { display: flex; align-items: center; gap: 12px; padding: 12px; background: #faf5ff; border-radius: 14px; margin-bottom: 20px; border: 1px solid #ede9fe; }
-.sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 16px; flex-shrink: 0; }
-.sidebar-user-name { font-size: 14px; font-weight: 600; color: #1e1b4b; }
-.sidebar-user-role { font-size: 12px; color: #7c3aed; opacity: 0.75; }
+.sidebar-logo { padding: 8px 12px 6px; font-size: 22px; font-weight: 700; color: #7c3aed; display: flex; align-items: center; gap: 8px; }
+.sidebar-tagline { padding: 0 12px 20px; font-size: 11px; color: #7c3aed; opacity: 0.65; font-weight: 500; letter-spacing: 0.3px; }
+.sidebar-user { display: flex; align-items: center; justify-content: center; padding: 14px 12px; background: #faf5ff; border-radius: 14px; margin-bottom: 20px; border: 1px solid #ede9fe; position: relative; }
+.sidebar-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 24px; flex-shrink: 0; overflow: hidden; position: relative; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(124,58,237,0.2); }
+.sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-avatar .avatar-overlay { position: absolute; inset: 0; background: rgba(124,58,237,0.7); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; opacity: 0; transition: opacity 0.2s; }
+.sidebar-avatar:hover .avatar-overlay { opacity: 1; }
+.sidebar-avatar-edit { position: absolute; bottom: 0; right: 0; background: #7c3aed; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; border: 2px solid #fff; cursor: pointer; }
 
 .nav-group { margin-bottom: 4px; }
 .nav-group-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 10px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #4c1d95; transition: background 0.2s, color 0.2s; user-select: none; }
@@ -72,11 +75,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .top-header-side.right { justify-content: flex-end; }
 .top-header-center { text-align: center; }
 .top-header-logo { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 20px; }
-.top-header-tagline-side { font-size: 16px; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; }
 .top-header-company { font-size: 18px; font-weight: 700; color: #1e1b4b; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 600px; margin: 0 auto; }
 .top-header-tagline { font-size: 12px; color: #7c3aed; opacity: 0.7; margin-top: 2px; }
 .top-header-user { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: #faf5ff; border-radius: 12px; border: 1px solid #ede9fe; }
-.top-header-user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+.top-header-user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; overflow: hidden; }
+.top-header-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .top-header-user-info { display: flex; flex-direction: column; }
 .top-header-user-name { font-size: 13px; font-weight: 600; color: #1e1b4b; }
 .top-header-user-role { font-size: 11px; color: #7c3aed; opacity: 0.75; }
@@ -246,15 +249,17 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .error-screen-inner pre { background: #fef2f2; padding: 16px; border-radius: 10px; text-align: left; font-size: 12px; color: #991b1b; overflow: auto; margin-top: 16px; }
 #startup-error { display: none; padding: 40px; font-family: monospace; background: #fef2f2; color: #991b1b; min-height: 100vh; }
 
+/* ============== CHAT PANEL ============== */
 .msg-panel-backdrop { position: fixed; inset: 0; background: rgba(76,29,149,0.3); backdrop-filter: blur(4px); z-index: 1200; animation: fadeIn 0.2s; }
-.msg-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 100vw; background: #fff; box-shadow: -8px 0 40px rgba(124,58,237,0.2); z-index: 1201; display: flex; flex-direction: column; animation: slideInRight 0.3s; }
+.msg-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 560px; max-width: 100vw; background: #fff; box-shadow: -8px 0 40px rgba(124,58,237,0.2); z-index: 1201; display: flex; flex-direction: column; animation: slideInRight 0.3s; }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-.msg-panel-header { padding: 16px 20px; border-bottom: 1px solid #ede9fe; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
-.msg-panel-header h2 { font-size: 18px; color: #7c3aed; display: flex; align-items: center; gap: 8px; margin: 0; }
-.msg-panel-close { background: #fff; border: 1px solid #ede9fe; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #7c3aed; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-.msg-panel-body { flex: 1; overflow-y: auto; padding: 16px; }
-.msg-actions-bar { padding: 12px 20px; border-bottom: 1px solid #ede9fe; display: flex; gap: 8px; align-items: center; background: #faf5ff; flex-wrap: wrap; }
+.msg-panel-header { padding: 16px 20px; border-bottom: 1px solid #ede9fe; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); flex-shrink: 0; }
+.msg-panel-header h2 { font-size: 18px; color: #7c3aed; display: flex; align-items: center; gap: 8px; margin: 0; flex: 1; min-width: 0; }
+.msg-panel-close { background: #fff; border: 1px solid #ede9fe; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #7c3aed; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.msg-actions-bar { padding: 12px 20px; border-bottom: 1px solid #ede9fe; display: flex; gap: 8px; align-items: center; background: #faf5ff; flex-wrap: wrap; flex-shrink: 0; }
 .msg-search { flex: 1; padding: 8px 12px; border: 1.5px solid #e9d5ff; border-radius: 8px; font-size: 13px; font-family: inherit; min-width: 120px; }
+.msg-panel-body { flex: 1; overflow-y: auto; padding: 16px; }
+
 .msg-item { padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; border: 1px solid #ede9fe; background: #fff; position: relative; }
 .msg-item:hover { background: #faf5ff; border-color: #c4b5fd; }
 .msg-item.unread { background: #fef3c7; border-color: #fcd34d; }
@@ -266,11 +271,33 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .msg-preview { font-size: 12px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .msg-participants { font-size: 11px; color: #7c3aed; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
 .msg-empty { text-align: center; padding: 40px 20px; color: #a78bfa; }
-.msg-detail { padding: 20px; }
-.msg-detail h2 { font-size: 20px; color: #1e1b4b; margin-bottom: 8px; }
-.msg-detail-meta { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ede9fe; margin-bottom: 16px; font-size: 12px; color: #9ca3af; flex-wrap: wrap; }
-.msg-detail-content { font-size: 14px; line-height: 1.7; color: #1e1b4b; white-space: pre-wrap; word-break: break-word; }
+
+.chat-view { display: flex; flex-direction: column; height: 100%; }
+.chat-header { padding: 12px 20px; background: #faf5ff; border-bottom: 1px solid #ede9fe; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.chat-header-back { background: #fff; border: 1px solid #ede9fe; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #7c3aed; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-header-title { flex: 1; min-width: 0; }
+.chat-header-subject { font-size: 14px; font-weight: 700; color: #1e1b4b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-header-participants { font-size: 11px; color: #7c3aed; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px 20px; background: #faf5ff; display: flex; flex-direction: column; gap: 12px; }
+.chat-bubble-wrap { display: flex; flex-direction: column; max-width: 80%; }
+.chat-bubble-wrap.me { align-self: flex-end; align-items: flex-end; }
+.chat-bubble-wrap.other { align-self: flex-start; align-items: flex-start; }
+.chat-bubble-author { font-size: 11px; color: #7c3aed; font-weight: 600; margin-bottom: 2px; padding: 0 4px; }
+.chat-bubble { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+.chat-bubble.me { background: #7c3aed; color: #fff; border-bottom-right-radius: 4px; }
+.chat-bubble.other { background: #fff; color: #1e1b4b; border: 1px solid #ede9fe; border-bottom-left-radius: 4px; }
+.chat-bubble-time { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 4px; text-align: right; }
+.chat-bubble.other .chat-bubble-time { color: #9ca3af; }
+.chat-composer { padding: 12px 16px; border-top: 1px solid #ede9fe; background: #fff; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+.chat-composer textarea { flex: 1; padding: 10px 14px; border: 1.5px solid #e9d5ff; border-radius: 12px; font-size: 14px; font-family: inherit; resize: none; min-height: 42px; max-height: 120px; }
+.chat-composer textarea:focus { outline: none; border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168,85,247,0.12); }
+.chat-composer .send-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-composer .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .msg-recipient-tag { display: inline-block; padding: 3px 8px; background: #f3e8ff; color: #7c3aed; border-radius: 6px; font-size: 11px; font-weight: 600; margin-right: 4px; margin-top: 4px; }
+.recipients-list { max-height: 200px; overflow-y: auto; border: 1.5px solid #e9d5ff; border-radius: 10px; padding: 8px; background: #fff; }
+.recipient-row { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer; border-bottom: 1px solid #faf5ff; }
+.recipient-row.selected { background: #f3e8ff; }
 
 .mobile-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #ede9fe; z-index: 500; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
 .mobile-nav-inner { display: flex; justify-content: space-around; align-items: center; }
@@ -303,13 +330,17 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .approver-row.rejected { background: #fef2f2; border-color: #fecaca; }
 .approver-row.pending { background: #fffbeb; border-color: #fde68a; }
 
+/* Profile picture modal */
+.avatar-picker { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
+.avatar-preview { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px; font-weight: 700; overflow: hidden; border: 4px solid #ede9fe; }
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .main-wrapper { margin-left: 0; padding-bottom: 76px; }
   .mobile-bottom-nav { display: block; }
   .top-header { padding: 10px 16px; grid-template-columns: auto 1fr auto; gap: 8px; }
   .top-header-logo { width: 34px; height: 34px; font-size: 16px; }
-  .top-header-tagline-side { display: none; }
   .top-header-company { font-size: 14px; max-width: none; }
   .top-header-tagline { font-size: 10px; }
   .top-header-user { padding: 4px 8px; gap: 6px; }
@@ -332,6 +363,7 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
   table { font-size: 12px; }
   th, td { padding: 8px 6px; }
   .msg-panel { width: 100vw; }
+  .chat-bubble-wrap { max-width: 88%; }
 }
 </style>
 </head>
@@ -364,25 +396,25 @@ window.onerror = function(msg, url, line, col, err) {
 };
 window.addEventListener('unhandledrejection', function(e) { console.error('Unhandled:', e.reason); });
 
-let newWorker = null;
+var newWorker = null;
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then((reg) => {
-        reg.addEventListener('updatefound', () => {
+      .then(function(reg) {
+        reg.addEventListener('updatefound', function() {
           newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
+          newWorker.addEventListener('statechange', function() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              const b = document.getElementById('update-banner');
+              var b = document.getElementById('update-banner');
               if (b) b.classList.add('visible');
             }
           });
         });
-        setInterval(() => reg.update(), 3600000);
-      }).catch(() => {});
+        setInterval(function() { reg.update(); }, 3600000);
+      }).catch(function() {});
   });
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
+  var refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
     if (!refreshing) { refreshing = true; window.location.reload(); }
   });
 }
@@ -390,15 +422,15 @@ window.updateApp = function() {
   if (newWorker) newWorker.postMessage('SKIP_WAITING');
   else window.location.reload();
 };
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault(); deferredPrompt = e;
-  const btn = document.getElementById('sidebar-install-btn');
+  var btn = document.getElementById('sidebar-install-btn');
   if (btn) btn.classList.add('visible');
 });
-window.addEventListener('appinstalled', () => {
+window.addEventListener('appinstalled', function() {
   deferredPrompt = null;
-  const btn = document.getElementById('sidebar-install-btn');
+  var btn = document.getElementById('sidebar-install-btn');
   if (btn) btn.classList.remove('visible');
 });
 window.installPWA = async function() {
@@ -406,7 +438,7 @@ window.installPWA = async function() {
   deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
 };
 function updateOnlineStatus() {
-  const b = document.getElementById('offline-banner');
+  var b = document.getElementById('offline-banner');
   if (!b) return;
   if (navigator.onLine) b.classList.remove('visible');
   else b.classList.add('visible');
@@ -414,9 +446,9 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e) => {
-  const now = Date.now();
+var lastTouchEnd = 0;
+document.addEventListener('touchend', function(e) {
+  var now = Date.now();
   if (now - lastTouchEnd <= 300) e.preventDefault();
   lastTouchEnd = now;
 }, { passive: false });
@@ -428,9 +460,6 @@ console.log('🚀 Babel starting');
 
 const { useState, useEffect, createContext, useContext, useRef, useMemo, useCallback } = React;
 
-// ================================================================
-// ERROR BOUNDARY
-// ================================================================
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -441,7 +470,7 @@ class ErrorBoundary extends React.Component {
         <div className="error-screen">
           <div className="error-screen-inner">
             <h2>⚠️ Възникна грешка</h2>
-            <pre>{String(this.state.error && this.state.error.message || this.state.error)}</pre>
+            <pre>{String((this.state.error && this.state.error.message) || this.state.error)}</pre>
             <button className="btn btn-primary" style={{marginTop:'20px'}}
               onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}>
               Презареди
@@ -454,9 +483,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// ================================================================
-// FIREBASE
-// ================================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDmdAdWxhtMf6AJ-i3215loRuAp5wmAjKY",
   authDomain: "clocky-4efd9.firebaseapp.com",
@@ -476,14 +502,12 @@ try {
   console.log("✅ Firebase ready");
 } catch (e) { console.error("❌ Firebase:", e); }
 
-// ================================================================
-// HELPERS
-// ================================================================
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const pad = (n) => String(n).padStart(2, '0');
 const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); };
 const formatDate = (iso) => { if (!iso) return ''; return new Date(iso).toLocaleDateString('bg-BG'); };
 const formatDateTime = (iso) => { if (!iso) return ''; return new Date(iso).toLocaleString('bg-BG', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
+const formatTime = (iso) => { if (!iso) return ''; return new Date(iso).toLocaleTimeString('bg-BG', { hour:'2-digit', minute:'2-digit' }); };
 const formatRelative = (iso) => {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
@@ -581,9 +605,6 @@ const getMinAllowedDateForEmployee = () => {
   return nm.getFullYear() + '-' + pad(nm.getMonth()+1) + '-' + pad(nm.getDate());
 };
 
-// ================================================================
-// ROLES
-// ================================================================
 const ROLE_META = {
   admin: { bg: 'Администратор', icon: '👑', color: '#7c3aed', badgeClass: 'role-admin' },
   director: { bg: 'Директор', icon: '🏛️', color: '#dc2626', badgeClass: 'role-director' },
@@ -606,9 +627,6 @@ const isApproverUser = (user) => hasAnyRole(user, APPROVER_ROLES);
 const getRoleLabels = (user) => getUserRoles(user).map(function(r) { return (ROLE_META[r] && ROLE_META[r].bg) || r; }).join(' • ');
 const getRoleBadges = (user) => getUserRoles(user).map(function(r) { return ROLE_META[r] || ROLE_META.employee; });
 
-// ================================================================
-// DEFAULTS
-// ================================================================
 const DEFAULT_LEAVE_TYPES = {
   paid: { id: 'paid', name: 'Платен отпуск', color: '#10b981', deducts: true },
   unpaid: { id: 'unpaid', name: 'Неплатен отпуск', color: '#ef4444', deducts: false },
@@ -638,9 +656,6 @@ const DOC_CATEGORIES = {
 };
 const COLOR_PRESETS = ['#ef4444','#f97316','#eab308','#10b981','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#7c3aed','#14b8a6'];
 
-// ================================================================
-// PDF FONT
-// ================================================================
 let cachedFontBase64 = null;
 async function loadCyrillicFont() {
   if (cachedFontBase64) return cachedFontBase64;
@@ -664,7 +679,6 @@ async function generateUserPDF(user) {
   doc.addFileToVFS('Roboto.ttf', fontBase64);
   doc.addFont('Roboto.ttf', 'Roboto', 'normal');
   const W = doc.internal.pageSize.getWidth();
-  const H = doc.internal.pageSize.getHeight();
   doc.setFillColor(124, 58, 237);
   doc.rect(0, 0, W, 50, 'F');
   doc.setFont('Roboto', 'normal');
@@ -727,7 +741,6 @@ async function generateResignationPDF(resignation, currentUser, users) {
   const H = doc.internal.pageSize.getHeight();
   const leftM = 20;
   let y = 20;
-
   doc.setFont('Roboto', 'normal');
   doc.setTextColor(30, 27, 75);
   doc.setFontSize(10);
@@ -736,7 +749,6 @@ async function generateResignationPDF(resignation, currentUser, users) {
   doc.text('Г-Н РАДОСЛАВ ЯКИМОВ', leftM, y + 6);
   doc.setFontSize(10);
   doc.text('ДИРЕКТОР НА ПИГ „СВ. КЛИМЕНТ ОХРИДСКИ" - СОФИЯ', leftM, y + 12);
-
   const rX = W/2 + 10;
   doc.setFontSize(10);
   doc.text('ОТ:', rX, y);
@@ -745,11 +757,9 @@ async function generateResignationPDF(resignation, currentUser, users) {
   doc.text('ЕГН: ' + (resignation.egn || ''), rX, y + 18);
   doc.text('Адрес: ' + (resignation.address || ''), rX, y + 24);
   doc.text('Телефон: ' + (resignation.phone || ''), rX, y + 30);
-
-  y = y + 45;
+  y += 45;
   doc.setDrawColor(124, 58, 237);
   doc.line(leftM, y, W - 20, y);
-
   y += 20;
   doc.setFontSize(20);
   doc.setTextColor(124, 58, 237);
@@ -761,39 +771,32 @@ async function generateResignationPDF(resignation, currentUser, users) {
   y += 5;
   doc.setFontSize(9);
   doc.text('(на основание чл. 326, ал. 1 от Кодекса на труда)', W/2, y, { align: 'center' });
-
   y += 18;
   doc.setFontSize(12);
   doc.setTextColor(30, 27, 75);
   doc.text('УВАЖАЕМИ Г-Н ЯКИМОВ,', leftM, y);
-
   y += 12;
   doc.setFontSize(11);
-  const body1 = 'С настоящото Ви уведомявам, че на основание чл. 326, ал. 1 от Кодекса на труда упражнявам правото си да прекратя сключения между нас трудов договор с 30-дневно предизвестие.';
-  const b1Lines = doc.splitTextToSize(body1, W - 40);
-  doc.text(b1Lines, leftM, y);
-  y += b1Lines.length * 5 + 6;
-
+  const b1 = 'С настоящото Ви уведомявам, че на основание чл. 326, ал. 1 от Кодекса на труда упражнявам правото си да прекратя сключения между нас трудов договор с 30-дневно предизвестие.';
+  const b1L = doc.splitTextToSize(b1, W - 40);
+  doc.text(b1L, leftM, y);
+  y += b1L.length * 5 + 6;
   doc.text('Моля да считате настоящото предизвестие за връчено от ' + formatDate(resignation.handoverDate) + ' г.', leftM, y);
   y += 12;
-
-  const body2 = 'Срокът на предизвестието от 30 (тридесет) дни започва да тече от следващия ден съгласно чл. 326, ал. 4 от КТ и ще изтече на ' + formatDate(resignation.endDate) + ' г., който ден ще бъде и последният ми работен ден.';
-  const b2Lines = doc.splitTextToSize(body2, W - 40);
-  doc.text(b2Lines, leftM, y);
-  y += b2Lines.length * 5 + 6;
-
-  const body3 = 'Моля след изтичане на срока да ми бъде издадена трудовата книжка и да бъде извършено окончателно разплащане съгласно чл. 224, ал. 1 от КТ.';
-  const b3Lines = doc.splitTextToSize(body3, W - 40);
-  doc.text(b3Lines, leftM, y);
-  y += b3Lines.length * 5 + 15;
-
+  const b2 = 'Срокът на предизвестието от 30 (тридесет) дни започва да тече от следващия ден съгласно чл. 326, ал. 4 от КТ и ще изтече на ' + formatDate(resignation.endDate) + ' г., който ден ще бъде и последният ми работен ден.';
+  const b2L = doc.splitTextToSize(b2, W - 40);
+  doc.text(b2L, leftM, y);
+  y += b2L.length * 5 + 6;
+  const b3 = 'Моля след изтичане на срока да ми бъде издадена трудовата книжка и да бъде извършено окончателно разплащане съгласно чл. 224, ал. 1 от КТ.';
+  const b3L = doc.splitTextToSize(b3, W - 40);
+  doc.text(b3L, leftM, y);
+  y += b3L.length * 5 + 15;
   doc.setFontSize(11);
   doc.text('Дата: ' + formatDate(resignation.createdAt) + ' г.', leftM, y);
   doc.text('С уважение:', W - 80, y);
   y += 15;
   doc.text('Гр. София', leftM, y);
   doc.text('Подпис: .................', W - 80, y);
-
   y += 25;
   doc.setDrawColor(124, 58, 237);
   doc.line(leftM, y, W - 20, y);
@@ -810,19 +813,14 @@ async function generateResignationPDF(resignation, currentUser, users) {
     doc.text('✓ ' + (a.name || aid) + ' - ' + formatDateTime(a.at), leftM, y);
     y += 6;
   });
-
   doc.setFillColor(124, 58, 237);
   doc.rect(0, H - 10, W, 10, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.text('Генерирано от Clocky', W/2, H - 4, { align: 'center' });
-
   doc.save('Preduprezdenie_' + resignation.handoverDate + '.pdf');
 }
 
-// ================================================================
-// AUTH
-// ================================================================
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
 
@@ -945,9 +943,6 @@ function AuthProvider({ children }) {
   );
 }
 
-// ================================================================
-// HOOKS
-// ================================================================
 function useFirebaseList(path) {
   const [data, setData] = useState([]);
   useEffect(function() {
@@ -979,13 +974,101 @@ function useHolidaysMap() {
   }, [list]);
 }
 
-// ================================================================
-// SIDEBAR
-// ================================================================
+// ============== AVATAR COMPONENT ==============
+function UserAvatar({ user, size, className }) {
+  size = size || 40;
+  const style = {
+    width: size + 'px',
+    height: size + 'px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: Math.round(size * 0.4) + 'px',
+    overflow: 'hidden',
+    flexShrink: 0
+  };
+  if (user && user.avatar) {
+    return (
+      <div style={style} className={className || ''}>
+        <img src={user.avatar} alt="" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+      </div>
+    );
+  }
+  const initial = user && user.fullName ? user.fullName.charAt(0).toUpperCase() : '?';
+  return <div style={style} className={className || ''}>{initial}</div>;
+}
+
+function AvatarPickerModal({ onClose }) {
+  const { currentUser, updateUser } = useAuth();
+  const [preview, setPreview] = useState(currentUser.avatar || null);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFile = async function(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 1048576) return alert('Макс. 1MB');
+    if (file.type.indexOf('image/') !== 0) return alert('Само изображения');
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      setPreview(dataUrl);
+    } catch (err) { alert('Грешка'); }
+  };
+
+  const save = async function() {
+    setSaving(true);
+    await updateUser(currentUser.id, { avatar: preview });
+    setSaving(false);
+    onClose();
+  };
+
+  const removeAvatar = function() {
+    setPreview(null);
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={function(e){ e.stopPropagation(); }} style={{maxWidth:'400px'}}>
+        <h3>📷 Профилна снимка</h3>
+        <div className="avatar-picker">
+          <div className="avatar-preview">
+            {preview ? (
+              <img src={preview} alt="" />
+            ) : (
+              <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
+            )}
+          </div>
+          <div style={{display:'flex', gap:'8px', flexWrap:'wrap', justifyContent:'center'}}>
+            <button className="btn btn-primary btn-sm" onClick={function(){ fileInputRef.current && fileInputRef.current.click(); }}>
+              📤 Качи снимка
+            </button>
+            {preview && (
+              <button className="btn btn-danger btn-sm" onClick={removeAvatar}>🗑️ Премахни</button>
+            )}
+          </div>
+          <div className="text-muted" style={{fontSize:'12px', textAlign:'center'}}>
+            PNG, JPG • макс. 1MB
+          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{display:'none'}} />
+        </div>
+        <div className="flex gap-2" style={{justifyContent:'flex-end', marginTop:'16px'}}>
+          <button className="btn btn-secondary" onClick={onClose}>Отказ</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? '⏳' : 'Запази'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = isAdminUser(currentUser);
   const isApprover = isApproverUser(currentUser);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const menuConfig = useMemo(function() {
     const leavesItems = [
@@ -1050,57 +1133,63 @@ function Sidebar({ currentPage, onNavigate }) {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">⏰ Clocky</div>
-      <div className="sidebar-user">
-        <div className="sidebar-avatar">{currentUser.fullName.charAt(0)}</div>
-        <div style={{minWidth:0}}>
-          <div className="sidebar-user-name">{currentUser.fullName}</div>
-          <div className="sidebar-user-role">{getRoleLabels(currentUser)}</div>
+    <React.Fragment>
+      <aside className="sidebar">
+        <div className="sidebar-logo">⏰ Clocky</div>
+        <div className="sidebar-tagline">Система за отпуски и време</div>
+
+        <div className="sidebar-user">
+          <div className="sidebar-avatar" onClick={function(){ setShowAvatarPicker(true); }} title="Смени снимка">
+            {currentUser.avatar ? (
+              <img src={currentUser.avatar} alt="" />
+            ) : (
+              <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
+            )}
+            <div className="avatar-overlay">📷</div>
+          </div>
         </div>
-      </div>
-      <nav style={{flex: 1}}>
-        {menuConfig.map(function(group) {
-          const isOpen = !!openGroups[group.id];
-          const isActive = isGroupActive(group);
-          return (
-            <div key={group.id} className="nav-group">
-              <div className={'nav-group-header ' + (isActive ? 'active ' : '') + (isOpen ? 'open' : '')}
-                onClick={function() { handleGroupClick(group); }}>
-                <span className="nav-icon">{group.icon}</span>
-                <span className="nav-label">{group.label}</span>
-                {group.items && <span className="chev">▼</span>}
-              </div>
-              {group.items && (
-                <div className={'nav-sub-wrap ' + (isOpen ? 'open' : '')}>
-                  <div className="nav-sub">
-                    {group.items.map(function(item) {
-                      return (
-                        <div key={item.id}
-                          className={'nav-sub-item ' + (currentPage === item.id ? 'active' : '')}
-                          onClick={function(e) { e.stopPropagation(); onNavigate(item.id); }}>
-                          {item.label}
-                        </div>
-                      );
-                    })}
-                  </div>
+
+        <nav style={{flex: 1}}>
+          {menuConfig.map(function(group) {
+            const isOpen = !!openGroups[group.id];
+            const isActive = isGroupActive(group);
+            return (
+              <div key={group.id} className="nav-group">
+                <div className={'nav-group-header ' + (isActive ? 'active ' : '') + (isOpen ? 'open' : '')}
+                  onClick={function() { handleGroupClick(group); }}>
+                  <span className="nav-icon">{group.icon}</span>
+                  <span className="nav-label">{group.label}</span>
+                  {group.items && <span className="chev">▼</span>}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-      <button id="sidebar-install-btn" className="sidebar-install-btn" onClick={function() { window.installPWA && window.installPWA(); }}>
-        📲 Инсталирай Clocky
-      </button>
-      <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
-    </aside>
+                {group.items && (
+                  <div className={'nav-sub-wrap ' + (isOpen ? 'open' : '')}>
+                    <div className="nav-sub">
+                      {group.items.map(function(item) {
+                        return (
+                          <div key={item.id}
+                            className={'nav-sub-item ' + (currentPage === item.id ? 'active' : '')}
+                            onClick={function(e) { e.stopPropagation(); onNavigate(item.id); }}>
+                            {item.label}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+        <button id="sidebar-install-btn" className="sidebar-install-btn" onClick={function() { window.installPWA && window.installPWA(); }}>
+          📲 Инсталирай Clocky
+        </button>
+        <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
+      </aside>
+      {showAvatarPicker && <AvatarPickerModal onClose={function(){ setShowAvatarPicker(false); }} />}
+    </React.Fragment>
   );
 }
 
-// ================================================================
-// MOBILE NAV
-// ================================================================
 function MobileBottomNav({ currentPage, onNavigate }) {
   const { currentUser } = useAuth();
   const isAdmin = isAdminUser(currentUser);
@@ -1122,7 +1211,7 @@ function MobileBottomNav({ currentPage, onNavigate }) {
 
     const resItems = [
       { id: 'resignations-my', label: 'Моите', icon: '📄' },
-      { id: 'resignations-all', label: isApprover ? 'Всички' : 'Всички', icon: '📋' }
+      { id: 'resignations-all', label: isApprover ? 'За одобрение' : 'Всички', icon: '📋' }
     ];
 
     const settingsItems = isAdmin ? [
@@ -1199,10 +1288,7 @@ function MobileBottomNav({ currentPage, onNavigate }) {
   );
 }
 
-// ================================================================
-// TOP HEADER
-// ================================================================
-function TopHeader({ onOpenMessages, onOpenResignations, unreadMessages, unreadResignations }) {
+function TopHeader({ onOpenMessages, unreadMessages }) {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
   const companyName = (company && company.name) || DEFAULT_COMPANY.name;
@@ -1211,23 +1297,24 @@ function TopHeader({ onOpenMessages, onOpenResignations, unreadMessages, unreadR
     <header className="top-header">
       <div className="top-header-side">
         <div className="top-header-logo">🏛️</div>
-        <div className="top-header-tagline-side">Clocky</div>
       </div>
       <div className="top-header-center">
         <div className="top-header-company" title={companyName}>{companyName}</div>
         <div className="top-header-tagline">Система за отпуски и време</div>
       </div>
       <div className="top-header-side right">
-        <button className="header-icon-btn" onClick={onOpenMessages} title="Съобщения">
-          ✉️
+        <button className="header-icon-btn" onClick={onOpenMessages} title="Чат">
+          💬
           {unreadMessages > 0 && <span className="badge-red">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}
         </button>
-        <button className="header-icon-btn" onClick={onOpenResignations} title="Предизвестия">
-          📄
-          {unreadResignations > 0 && <span className="badge-red">{unreadResignations > 99 ? '99+' : unreadResignations}</span>}
-        </button>
         <div className="top-header-user">
-          <div className="top-header-user-avatar">{currentUser.fullName.charAt(0)}</div>
+          <div className="top-header-user-avatar">
+            {currentUser.avatar ? (
+              <img src={currentUser.avatar} alt="" />
+            ) : (
+              <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
+            )}
+          </div>
           <div className="top-header-user-info">
             <div className="top-header-user-name">{currentUser.fullName}</div>
             <div className="top-header-user-role">{getRoleLabels(currentUser)}</div>
@@ -1238,9 +1325,6 @@ function TopHeader({ onOpenMessages, onOpenResignations, unreadMessages, unreadR
   );
 }
 
-// ================================================================
-// LOGIN
-// ================================================================
 function Login() {
   const { login, loading, dbError } = useAuth();
   const [username, setUsername] = useState('');
@@ -1304,9 +1388,6 @@ function PageHeader({ title, subtitle, onAdd, addLabel }) {
   );
 }
 
-// ================================================================
-// LEAVE DETAIL MODAL
-// ================================================================
 function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, onDelete, onApprove, onReject }) {
   const { users } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -1367,9 +1448,6 @@ function LeaveDetailModal({ request, leaveType, onClose, companyName, isAdmin, o
   );
 }
 
-// ================================================================
-// HOME
-// ================================================================
 function Home({ onNavigate }) {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -1447,9 +1525,6 @@ function Home({ onNavigate }) {
   );
 }
 
-// ================================================================
-// LEAVE REQUEST MODAL
-// ================================================================
 function LeaveRequestModal({ onClose, forUserId }) {
   const { currentUser, users } = useAuth();
   const leaveTypes = useFirebaseObject('leaveTypes', DEFAULT_LEAVE_TYPES);
@@ -1580,9 +1655,6 @@ function LeaveRequestModal({ onClose, forUserId }) {
   );
 }
 
-// ================================================================
-// MY REQUESTS
-// ================================================================
 function MyRequests() {
   const { currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -1629,9 +1701,6 @@ function MyRequests() {
   );
 }
 
-// ================================================================
-// LEAVE REQUESTS ADMIN
-// ================================================================
 function LeaveRequestsPage() {
   const { currentUser, users, updateUser } = useAuth();
   const isAdmin = isAdminUser(currentUser);
@@ -1727,9 +1796,6 @@ function LeaveRequestsPage() {
   );
 }
 
-// ================================================================
-// CALENDAR PAGE
-// ================================================================
 function CalendarPage() {
   const { users, currentUser } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -1757,15 +1823,24 @@ function CalendarPage() {
   const getType = function(id) { return leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed' }; };
   const isAdmin = isAdminUser(currentUser);
 
+  // ВАЖНО: Филтрираме rejected заявки - НЕ се показват в календара
+  const calendarRequests = requests.filter(function(r) { return r.status !== 'rejected'; });
+
   const getEventsForDay = function(day) {
     if (!day) return [];
     const ds = year + '-' + pad(m + 1) + '-' + pad(day);
-    return requests.filter(function(r) { return ds >= r.startDate && ds <= r.endDate; });
+    return calendarRequests.filter(function(r) { return ds >= r.startDate && ds <= r.endDate; });
   };
   const todayStr = todayISO();
-  const dayModalEvents = dayModalDate ? requests.filter(function(r) { return dayModalDate >= r.startDate && dayModalDate <= r.endDate; }) : [];
+  const dayModalEvents = dayModalDate ? calendarRequests.filter(function(r) { return dayModalDate >= r.startDate && dayModalDate <= r.endDate; }) : [];
   const dayModalHoliday = dayModalDate ? holidays[dayModalDate] : null;
-  const statusLabels = { pending: 'Чакаща', approved: 'Одобрена', rejected: 'Отхвърлена' };
+  const statusLabels = { pending: 'Чакаща', approved: 'Одобрена' };
+
+  const deleteRequest = async function(r) {
+    await db.ref('leaveRequests/' + r.id).remove();
+    setSelected(null);
+    setDayModalDate(null);
+  };
 
   return (
     <div className="animate-in">
@@ -1831,15 +1906,11 @@ function CalendarPage() {
       )}
       {selected && <LeaveDetailModal request={selected} leaveType={getType(selected.type)}
         onClose={function(){ setSelected(null); }} companyName={company && company.name}
-        isAdmin={isAdmin} onDelete={function(){}} onApprove={function(){}} onReject={function(){}} />}
+        isAdmin={isAdmin} onDelete={deleteRequest} onApprove={function(){}} onReject={function(){}} />}
       {showModal && <LeaveRequestModal onClose={function(){ setShowModal(false); }} />}
     </div>
   );
 }
-
-// ================================================================
-// DOCUMENTS
-// ================================================================
 function DocumentsPage() {
   const { currentUser, users } = useAuth();
   const documents = useFirebaseList('documents');
@@ -1855,9 +1926,9 @@ function DocumentsPage() {
   const fileInputRef = useRef(null);
 
   const getCategory = function(id) { return DOC_CATEGORIES[id] || DOC_CATEGORIES.other; };
-  const getUserName = function(id) {
+  const getUserName = function(id, fb) {
     const u = users.find(function(x){ return x.id === id; });
-    return (u && u.fullName) || '?';
+    return (u && u.fullName) || fb || '?';
   };
 
   let visibleDocs = isAdmin ? documents : documents.filter(function(d){ return d.userId === currentUser.id; });
@@ -1887,9 +1958,16 @@ function DocumentsPage() {
     try {
       const id = uid();
       await db.ref('documents/' + id).set({
-        id: id, userId: form.userId, name: form.name.trim(), category: form.category,
-        fileName: form.fileName, fileType: form.fileType, file: form.file,
-        uploadedBy: currentUser.id, createdAt: new Date().toISOString()
+        id: id,
+        userId: form.userId,
+        name: form.name.trim(),
+        category: form.category,
+        fileName: form.fileName,
+        fileType: form.fileType,
+        file: form.file,
+        uploadedBy: currentUser.id,
+        uploadedByName: currentUser.fullName,
+        createdAt: new Date().toISOString()
       });
       setForm({ userId: '', name: '', category: 'other', file: null, fileName: '', fileType: '' });
       setShowModal(false);
@@ -1946,15 +2024,19 @@ function DocumentsPage() {
                 <div className="doc-info">
                   <div className="doc-name">{doc.name}</div>
                   <div className="doc-meta">
-                    <span style={{color: cat.color}}>{cat.name}</span>
-                    {isAdmin && <span>👤 {getUserName(doc.userId)}</span>}
+                    <span style={{color: cat.color, fontWeight:600}}>{cat.name}</span>
+                    <span title="Добавен от">👤 {getUserName(doc.uploadedBy, doc.uploadedByName || doc.userId)}</span>
+                    {isAdmin && doc.userId !== doc.uploadedBy && (
+                      <span title="Собственик">📋 {getUserName(doc.userId)}</span>
+                    )}
                     <span>📅 {formatDate(doc.createdAt)}</span>
+                    {doc.file && <span>💾 {formatFileSize(doc.file)}</span>}
                   </div>
                 </div>
                 <div className="doc-actions">
-                  {isImageDoc(doc) && <button className="btn btn-secondary btn-sm" onClick={function(){ setPreviewDoc(doc); }}>👁️</button>}
-                  <button className="btn btn-primary btn-sm" onClick={function(){ downloadDoc(doc); }}>⬇️</button>
-                  {isAdmin && <button className="btn btn-danger btn-sm" onClick={function(){ remove(doc); }}>🗑️</button>}
+                  {isImageDoc(doc) && <button className="btn btn-secondary btn-sm" onClick={function(){ setPreviewDoc(doc); }} title="Преглед">👁️</button>}
+                  <button className="btn btn-primary btn-sm" onClick={function(){ downloadDoc(doc); }} title="Изтегли">⬇️</button>
+                  {isAdmin && <button className="btn btn-danger btn-sm" onClick={function(){ remove(doc); }} title="Изтрий">🗑️</button>}
                 </div>
               </div>
             );
@@ -1978,7 +2060,7 @@ function DocumentsPage() {
             <h3>➕ Качване</h3>
             {formError && <div className="error">{formError}</div>}
             <form onSubmit={submit}>
-              <div className="form-group"><label>Служител *</label>
+              <div className="form-group"><label>Служител (собственик) *</label>
                 <select value={form.userId} onChange={function(e){ setForm(Object.assign({}, form, { userId: e.target.value })); }} required>
                   <option value="">-- Изберете --</option>
                   {users.map(function(u) { return <option key={u.id} value={u.id}>{u.fullName}</option>; })}
@@ -2023,9 +2105,6 @@ function DocumentsPage() {
   );
 }
 
-// ================================================================
-// REPORTS
-// ================================================================
 function LeavesReports() {
   const { currentUser, users } = useAuth();
   const requests = useFirebaseList('leaveRequests');
@@ -2072,9 +2151,6 @@ function LeavesReports() {
   );
 }
 
-// ================================================================
-// TIME MODULE
-// ================================================================
 function TimeModule({ scope }) {
   const { currentUser, users } = useAuth();
   const isAdmin = isAdminUser(currentUser);
@@ -2320,9 +2396,6 @@ function TimeModule({ scope }) {
   );
 }
 
-// ================================================================
-// HOLIDAYS SETTINGS
-// ================================================================
 function HolidaysSettings() {
   const holidaysList = useFirebaseList('holidays');
   const [form, setForm] = useState({ name: '', date: '' });
@@ -2407,9 +2480,6 @@ function HolidaysSettings() {
   );
 }
 
-// ================================================================
-// PROJECTS
-// ================================================================
 function ProjectsModule() {
   const { currentUser } = useAuth();
   const projects = useFirebaseList('projects');
@@ -2469,9 +2539,6 @@ function ProjectsModule() {
   );
 }
 
-// ================================================================
-// COMPANY PAGE
-// ================================================================
 function CompanyPage() {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
@@ -2519,9 +2586,6 @@ function CompanyPage() {
   );
 }
 
-// ================================================================
-// USERS MANAGER
-// ================================================================
 function UsersManager() {
   const { users, addUser, updateUser, deleteUser, currentUser } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -2591,21 +2655,22 @@ function UsersManager() {
         {users.length === 0 ? <div className="empty-state">Няма</div> : (
           <div style={{overflowX:'auto'}}>
             <table>
-              <thead><tr><th>Име</th><th>Потребител</th><th>Роли</th><th>Отпуск</th><th>Действия</th></tr></thead>
+              <thead><tr><th>Снимка</th><th>Име</th><th>Потребител</th><th>Роли</th><th>Отпуск</th><th>Действия</th></tr></thead>
               <tbody>
                 {users.map(function(u) {
                   if (editingId === u.id) {
                     return (
                       <tr key={u.id}>
+                        <td><UserAvatar user={u} size={36} /></td>
                         <td><input value={editData.fullName} onChange={function(e){ setEditData(Object.assign({}, editData, { fullName: e.target.value })); }} style={{width:'130px'}} /></td>
                         <td><input value={editData.username} onChange={function(e){ setEditData(Object.assign({}, editData, { username: e.target.value })); }} style={{width:'100px'}} /></td>
-                        <td colSpan="2">
+                        <td colSpan="1">
                           <div style={{marginBottom:'6px'}}>
                             <RoleCheckboxes values={editData.roles || []} onChange={function(r){ setEditData(Object.assign({}, editData, { roles: r })); }} />
                           </div>
                           <input type="number" placeholder="Дни" style={{width:'80px'}} value={editData.totalLeaveDays} onChange={function(e){ setEditData(Object.assign({}, editData, { totalLeaveDays: e.target.value })); }} />
                         </td>
-                        <td>
+                        <td colSpan="2">
                           <button className="btn btn-success btn-sm" onClick={saveEdit}>Запази</button>
                           <button className="btn btn-secondary btn-sm" onClick={function(){ setEditingId(null); }} style={{marginLeft:'4px'}}>Отказ</button>
                         </td>
@@ -2614,6 +2679,7 @@ function UsersManager() {
                   }
                   return (
                     <tr key={u.id}>
+                      <td><UserAvatar user={u} size={36} /></td>
                       <td>{u.fullName}</td>
                       <td><code>{u.username}</code></td>
                       <td>
@@ -2675,9 +2741,6 @@ function UsersManager() {
   );
 }
 
-// ================================================================
-// LEAVE TYPES SETTINGS
-// ================================================================
 function LeaveTypesSettings() {
   const leaveTypes = useFirebaseObject('leaveTypes', {});
   const [form, setForm] = useState({ name: '', color: '#7c3aed', deducts: true });
@@ -2742,9 +2805,6 @@ function LeaveTypesSettings() {
   );
 }
 
-// ================================================================
-// RESIGNATIONS MODULE
-// ================================================================
 function ResignationForm({ onClose }) {
   const { currentUser } = useAuth();
   const [form, setForm] = useState({
@@ -2953,6 +3013,7 @@ function ResignationDetail({ resignation, onClose }) {
             return (
               <div key={a.id} className={'approver-row ' + cls}>
                 <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                  <UserAvatar user={a} size={26} />
                   <span>{appr ? '✅' : rej ? '❌' : '⏳'}</span>
                   <span style={{fontWeight:600}}>{a.fullName}</span>
                   <span style={{fontSize:'11px', color:'#7c3aed'}}>({getRoleLabels(a)})</span>
@@ -3074,9 +3135,9 @@ function ResignationsPage({ scope }) {
 }
 
 // ================================================================
-// MESSAGES MODULE
+// CHAT MODULE (продължаващ разговор)
 // ================================================================
-function ComposeMessage({ onClose, users, currentUser }) {
+function ComposeThread({ onClose, users, currentUser }) {
   const [form, setForm] = useState({ subject: '', body: '', recipients: [] });
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -3109,22 +3170,44 @@ function ComposeMessage({ onClose, users, currentUser }) {
     if (form.recipients.length === 0) return setError('Получатели');
     setSending(true);
     try {
-      const recipientsNames = form.recipients.map(function(id) {
+      const threadId = 'thread_' + uid();
+      const now = new Date().toISOString();
+
+      // Всички участници = подател + получатели
+      const participants = Array.from(new Set([currentUser.id].concat(form.recipients)));
+      const participantsNames = participants.map(function(id) {
         const u = users.find(function(x){ return x.id === id; });
         return u ? u.fullName : '';
       }).filter(Boolean);
-      const msg = {
+
+      const thread = {
+        id: threadId,
+        subject: form.subject.trim(),
+        createdBy: currentUser.id,
+        createdByName: currentUser.fullName,
+        participants: participants,
+        participantsNames: participantsNames,
+        recipientIds: form.recipients, // за филтриране във "Входящи"
+        createdAt: now,
+        updatedAt: now,
+        lastMessage: form.body.trim(),
+        lastAuthorName: currentUser.fullName,
+        lastAuthorId: currentUser.id
+      };
+
+      const message = {
         id: uid(),
+        threadId: threadId,
         authorId: currentUser.id,
         authorName: currentUser.fullName,
-        recipients: form.recipients,
-        recipientsNames: recipientsNames,
-        subject: form.subject.trim(),
         body: form.body.trim(),
-        readBy: [],
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        readBy: [currentUser.id]
       };
-      await db.ref('messages/' + msg.id).set(msg);
+
+      // Записваме thread и първото съобщение
+      await db.ref('messageThreads/' + threadId).set(thread);
+      await db.ref('messages/' + message.id).set(message);
       onClose();
     } catch (err) { setError('Грешка: ' + err.message); }
     setSending(false);
@@ -3145,16 +3228,14 @@ function ComposeMessage({ onClose, users, currentUser }) {
             <button type="button" className="btn btn-danger btn-sm" onClick={clearRecipients}>✕ Изчисти</button>
           )}
         </div>
-        <div style={{maxHeight:'200px', overflowY:'auto', border:'1.5px solid #e9d5ff', borderRadius:'10px', padding:'8px', background:'#fff'}}>
+        <div className="recipients-list">
           {users.map(function(u) {
+            if (u.id === currentUser.id) return null;
             const sel = form.recipients.indexOf(u.id) !== -1;
             return (
-              <label key={u.id} style={{
-                display:'flex', alignItems:'center', gap:'8px', padding:'8px',
-                borderRadius:'8px', cursor:'pointer', background: sel ? '#f3e8ff' : 'transparent',
-                borderBottom:'1px solid #faf5ff'
-              }}>
+              <label key={u.id} className={'recipient-row ' + (sel ? 'selected' : '')}>
                 <input type="checkbox" checked={sel} onChange={function(){ toggleRecipient(u.id); }} style={{accentColor:'#7c3aed'}} />
+                <UserAvatar user={u} size={28} />
                 <span style={{fontWeight:600, fontSize:'13px'}}>{u.fullName}</span>
                 <span style={{fontSize:'11px', color:'#7c3aed', marginLeft:'auto'}}>{getRoleLabels(u)}</span>
               </label>
@@ -3169,135 +3250,269 @@ function ComposeMessage({ onClose, users, currentUser }) {
       <div className="form-group" style={{flex:1, display:'flex', flexDirection:'column'}}>
         <label>Съобщение *</label>
         <textarea value={form.body} onChange={function(e){ setForm(Object.assign({}, form, { body: e.target.value })); }}
-          style={{minHeight:'200px', resize:'vertical', fontFamily:'inherit'}} required />
+          style={{minHeight:'160px', resize:'vertical', fontFamily:'inherit'}} required />
       </div>
       <div style={{display:'flex', gap:'8px', justifyContent:'flex-end', paddingTop:'12px', borderTop:'1px solid #ede9fe'}}>
         <button type="button" className="btn btn-secondary" onClick={onClose}>Отказ</button>
-        <button type="submit" className="btn btn-primary" disabled={sending}>{sending ? '⏳' : '📨 Изпрати'}</button>
+        <button type="submit" className="btn btn-primary" disabled={sending}>{sending ? '⏳' : '📨 Създай разговор'}</button>
       </div>
     </form>
   );
 }
 
-function MessagesPanel({ onClose }) {
-  const { currentUser, users } = useAuth();
-  const [view, setView] = useState('inbox');
-  const [selectedMsg, setSelectedMsg] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const allMessages = useFirebaseList('messages');
-  const myMessages = allMessages.filter(function(m) {
-    return (m.recipients || []).indexOf(currentUser.id) !== -1;
+function ThreadView({ thread, messages, currentUser, users, onBack }) {
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Сортиране на съобщенията по дата
+  const sorted = messages.slice().sort(function(a, b) {
+    return new Date(a.createdAt) - new Date(b.createdAt);
   });
-  const sentMessages = allMessages.filter(function(m){ return m.authorId === currentUser.id; });
-  const unreadCount = myMessages.filter(function(m){ return (m.readBy || []).indexOf(currentUser.id) === -1; }).length;
 
-  let visibleMessages = view === 'sent' ? sentMessages : myMessages;
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase();
-    visibleMessages = visibleMessages.filter(function(m) {
-      return (m.subject || '').toLowerCase().indexOf(q) !== -1 ||
-             (m.body || '').toLowerCase().indexOf(q) !== -1 ||
-             (m.authorName || '').toLowerCase().indexOf(q) !== -1;
-    });
-  }
-  visibleMessages = visibleMessages.slice().sort(function(a, b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+  // Скрол до последното съобщение
+  useEffect(function() {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [sorted.length]);
 
-  const openMessage = async function(msg) {
-    setSelectedMsg(msg); setView('detail');
-    if ((msg.readBy || []).indexOf(currentUser.id) === -1) {
-      const readBy = (msg.readBy || []).concat([currentUser.id]);
-      await db.ref('messages/' + msg.id).update({ readBy: readBy });
+  const send = async function() {
+    if (!replyText.trim()) return;
+    setSending(true);
+    try {
+      const now = new Date().toISOString();
+      const message = {
+        id: uid(),
+        threadId: thread.id,
+        authorId: currentUser.id,
+        authorName: currentUser.fullName,
+        body: replyText.trim(),
+        createdAt: now,
+        readBy: [currentUser.id]
+      };
+      await db.ref('messages/' + message.id).set(message);
+      // Обновяваме thread metadata
+      await db.ref('messageThreads/' + thread.id).update({
+        updatedAt: now,
+        lastMessage: replyText.trim(),
+        lastAuthorName: currentUser.fullName,
+        lastAuthorId: currentUser.id
+      });
+      setReplyText('');
+      if (textareaRef.current) textareaRef.current.focus();
+    } catch (e) { alert('Грешка: ' + e.message); }
+    setSending(false);
+  };
+
+  const handleKeyDown = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
     }
   };
-  const deleteMessage = async function(msg) {
-    if (!confirm('Изтрий?')) return;
-    await db.ref('messages/' + msg.id).remove();
-    setSelectedMsg(null); setView('inbox');
+
+  const getAuthor = function(id) {
+    return users.find(function(u){ return u.id === id; }) || { fullName: '?', id: id };
   };
 
-  const headerText = view === 'compose' ? '✉️ Ново съобщение' :
-                     view === 'detail' ? '📩 Преглед' :
+  return (
+    <div className="chat-view">
+      <div className="chat-header">
+        <button className="chat-header-back" onClick={onBack}>←</button>
+        <div className="chat-header-title">
+          <div className="chat-header-subject">{thread.subject}</div>
+          <div className="chat-header-participants">
+            👥 {thread.participantsNames ? thread.participantsNames.slice(0, 3).join(', ') : ''}
+            {thread.participantsNames && thread.participantsNames.length > 3 ? ' +' + (thread.participantsNames.length - 3) : ''}
+          </div>
+        </div>
+      </div>
+
+      <div className="chat-messages">
+        {sorted.map(function(m) {
+          const me = m.authorId === currentUser.id;
+          const author = getAuthor(m.authorId);
+          return (
+            <div key={m.id} className={'chat-bubble-wrap ' + (me ? 'me' : 'other')}>
+              {!me && <div className="chat-bubble-author">{author.fullName}</div>}
+              <div className={'chat-bubble ' + (me ? 'me' : 'other')}>
+                {m.body}
+                <div className="chat-bubble-time">{formatTime(m.createdAt)}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="chat-composer">
+        <textarea
+          ref={textareaRef}
+          value={replyText}
+          onChange={function(e){ setReplyText(e.target.value); }}
+          onKeyDown={handleKeyDown}
+          placeholder="Напишете съобщение... (Enter за изпращане)"
+          rows="1"
+        />
+        <button className="send-btn" onClick={send} disabled={sending || !replyText.trim()} title="Изпрати">
+          {sending ? '⏳' : '➤'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MessagesPanel({ onClose }) {
+  const { currentUser, users } = useAuth();
+  const [view, setView] = useState('inbox'); // inbox | sent | compose | thread
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const threads = useFirebaseList('messageThreads');
+  const allMessages = useFirebaseList('messages');
+
+  // Филтриране на нишките
+  // Входящи: аз съм получател (recipientIds) и НЕ съм създател
+  const inboxThreads = threads.filter(function(t) {
+    return (t.recipientIds || []).indexOf(currentUser.id) !== -1;
+  });
+  // Изпратени: аз съм създател
+  const sentThreads = threads.filter(function(t) {
+    return t.createdBy === currentUser.id;
+  });
+
+  // Брой непрочетени съобщения в дадена нишка (за текущия потребител)
+  const getUnreadCount = function(threadId) {
+    return allMessages.filter(function(m) {
+      return m.threadId === threadId && (m.readBy || []).indexOf(currentUser.id) === -1;
+    }).length;
+  };
+
+  const totalUnread = inboxThreads.reduce(function(sum, t) {
+    return sum + getUnreadCount(t.id);
+  }, 0);
+
+  // Активна нишка
+  const activeThread = selectedThreadId ? threads.find(function(t){ return t.id === selectedThreadId; }) : null;
+  const activeMessages = activeThread
+    ? allMessages.filter(function(m){ return m.threadId === activeThread.id; })
+    : [];
+
+  // Когато отворим нишка - маркираме съобщенията като прочетени
+  const openThread = async function(thread) {
+    setSelectedThreadId(thread.id);
+    setView('thread');
+    // Маркираме всички съобщения в нишката като прочетени
+    const toMark = allMessages.filter(function(m) {
+      return m.threadId === thread.id && (m.readBy || []).indexOf(currentUser.id) === -1;
+    });
+    for (const m of toMark) {
+      const readBy = (m.readBy || []).concat([currentUser.id]);
+      try {
+        await db.ref('messages/' + m.id).update({ readBy: readBy });
+      } catch (e) {}
+    }
+  };
+
+  let visibleThreads = view === 'sent' ? sentThreads : inboxThreads;
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    visibleThreads = visibleThreads.filter(function(t) {
+      return (t.subject || '').toLowerCase().indexOf(q) !== -1 ||
+             (t.lastMessage || '').toLowerCase().indexOf(q) !== -1 ||
+             (t.participantsNames || []).some(function(n){ return n.toLowerCase().indexOf(q) !== -1; });
+    });
+  }
+  visibleThreads = visibleThreads.slice().sort(function(a, b) {
+    return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
+  });
+
+  const headerTitle = view === 'compose' ? '✉️ Нов разговор' :
+                     view === 'thread' ? '💬 Разговор' :
                      view === 'sent' ? '📤 Изпратени' :
-                     '📥 Входящи' + (unreadCount > 0 ? ' (' + unreadCount + ')' : '');
+                     '💬 Съобщения' + (totalUnread > 0 ? ' (' + totalUnread + ')' : '');
+
+  const handleBack = function() {
+    if (view === 'thread') {
+      setView('inbox');
+      setSelectedThreadId(null);
+    } else if (view === 'compose') {
+      setView('inbox');
+    } else {
+      onClose();
+    }
+  };
 
   return (
     <React.Fragment>
       <div className="msg-panel-backdrop" onClick={onClose} />
       <div className="msg-panel">
-        <div className="msg-panel-header">
-          <h2>{headerText}</h2>
-          <button className="msg-panel-close" onClick={function() {
-            if (view === 'detail' || view === 'compose') { setView('inbox'); setSelectedMsg(null); }
-            else onClose();
-          }}>✕</button>
-        </div>
-        {(view === 'inbox' || view === 'sent') && (
+        {view === 'thread' && activeThread ? (
+          <ThreadView
+            thread={activeThread}
+            messages={activeMessages}
+            currentUser={currentUser}
+            users={users}
+            onBack={handleBack}
+          />
+        ) : (
           <React.Fragment>
-            <div className="msg-actions-bar">
-              <button className="btn btn-primary btn-sm" onClick={function(){ setView('compose'); }}>➕ Ново</button>
-              <button className={'btn btn-sm ' + (view === 'inbox' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('inbox'); }}>📥 Входящи</button>
-              <button className={'btn btn-sm ' + (view === 'sent' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('sent'); }}>📤 Изпратени</button>
+            <div className="msg-panel-header">
+              <h2>{headerTitle}</h2>
+              <button className="msg-panel-close" onClick={handleBack}>✕</button>
             </div>
-            <div style={{padding:'12px 20px', borderBottom:'1px solid #ede9fe'}}>
-              <input className="msg-search" placeholder="🔍 Търсене..." value={searchQuery} onChange={function(e){ setSearchQuery(e.target.value); }} />
-            </div>
-            <div className="msg-panel-body">
-              {visibleMessages.length === 0 ? (
-                <div className="msg-empty">
-                  <div style={{fontSize:'48px', marginBottom:'12px'}}>📭</div>
-                  <div>{searchQuery ? 'Няма намерени' : view === 'sent' ? 'Няма изпратени' : 'Няма съобщения'}</div>
+
+            {(view === 'inbox' || view === 'sent') && (
+              <React.Fragment>
+                <div className="msg-actions-bar">
+                  <button className="btn btn-primary btn-sm" onClick={function(){ setView('compose'); }}>➕ Нов</button>
+                  <button className={'btn btn-sm ' + (view === 'inbox' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('inbox'); }}>📥 Входящи</button>
+                  <button className={'btn btn-sm ' + (view === 'sent' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('sent'); }}>📤 Изпратени</button>
                 </div>
-              ) : visibleMessages.map(function(m) {
-                const unread = (m.readBy || []).indexOf(currentUser.id) === -1 && view === 'inbox';
-                const recCount = (m.recipients || []).length;
-                return (
-                  <div key={m.id} className={'msg-item ' + (unread ? 'unread' : '')} onClick={function(){ openMessage(m); }}>
-                    <div className="msg-item-header">
-                      <span className="msg-author">{view === 'sent' ? 'До: ' + recCount + ' получатели' : m.authorName}</span>
-                      <span className="msg-date">{formatRelative(m.createdAt)}</span>
+                <div style={{padding:'12px 20px', borderBottom:'1px solid #ede9fe'}}>
+                  <input className="msg-search" placeholder="🔍 Търсене..." value={searchQuery} onChange={function(e){ setSearchQuery(e.target.value); }} />
+                </div>
+                <div className="msg-panel-body">
+                  {visibleThreads.length === 0 ? (
+                    <div className="msg-empty">
+                      <div style={{fontSize:'48px', marginBottom:'12px'}}>💬</div>
+                      <div>{searchQuery ? 'Няма намерени' : view === 'sent' ? 'Няма изпратени' : 'Няма съобщения'}</div>
                     </div>
-                    <div className="msg-subject">{m.subject || '(без тема)'}</div>
-                    <div className="msg-preview">{(m.body || '').slice(0, 80)}{(m.body || '').length > 80 ? '...' : ''}</div>
-                    {recCount > 0 && <div className="msg-participants">👥 {recCount} получатели</div>}
-                  </div>
-                );
-              })}
-            </div>
-          </React.Fragment>
-        )}
-        {view === 'detail' && selectedMsg && (
-          <div className="msg-panel-body">
-            <div className="msg-detail">
-              <h2>{selectedMsg.subject || '(без тема)'}</h2>
-              <div className="msg-detail-meta">
-                <span>👤 <b>{selectedMsg.authorName}</b></span>
-                <span>📅 {formatDateTime(selectedMsg.createdAt)}</span>
-              </div>
-              {selectedMsg.recipientsNames && selectedMsg.recipientsNames.length > 0 && (
-                <div style={{marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid #ede9fe'}}>
-                  <div style={{fontSize:'12px', color:'#7c3aed', fontWeight:600, marginBottom:'6px'}}>ДО:</div>
-                  <div>
-                    {selectedMsg.recipientsNames.slice(0, 10).map(function(n, i) {
-                      return <span key={i} className="msg-recipient-tag">{n}</span>;
-                    })}
-                    {selectedMsg.recipientsNames.length > 10 && (
-                      <span className="msg-recipient-tag">+{selectedMsg.recipientsNames.length - 10} още</span>
-                    )}
-                  </div>
+                  ) : visibleThreads.map(function(t) {
+                    const unread = getUnreadCount(t.id);
+                    const otherNames = (t.participantsNames || []).filter(function(n) {
+                      return n !== currentUser.fullName;
+                    });
+                    return (
+                      <div key={t.id} className={'msg-item ' + (unread > 0 ? 'unread' : '')} onClick={function(){ openThread(t); }}>
+                        <div className="msg-item-header">
+                          <span className="msg-author">
+                            {view === 'sent' ? 'До: ' + (t.recipientIds ? t.recipientIds.length + ' души' : '?') : (otherNames[0] || t.createdByName)}
+                          </span>
+                          <span className="msg-date">{formatRelative(t.updatedAt || t.createdAt)}</span>
+                        </div>
+                        <div className="msg-subject">{t.subject}</div>
+                        <div className="msg-preview">
+                          {t.lastAuthorName === currentUser.fullName ? 'Вие: ' : (t.lastAuthorName ? t.lastAuthorName + ': ' : '')}
+                          {(t.lastMessage || '').slice(0, 60)}{(t.lastMessage || '').length > 60 ? '...' : ''}
+                        </div>
+                        <div className="msg-participants">
+                          👥 {(t.participants || []).length} участници
+                          {unread > 0 && <span style={{marginLeft:'8px', background:'#ef4444', color:'#fff', padding:'1px 6px', borderRadius:'8px', fontSize:'10px'}}>{unread} нови</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-              <div className="msg-detail-content">{selectedMsg.body}</div>
-            </div>
-            <div style={{display:'flex', gap:'8px', marginTop:'20px', flexWrap:'wrap'}}>
-              <button className="btn btn-secondary" onClick={function(){ setView('inbox'); setSelectedMsg(null); }}>← Назад</button>
-              {selectedMsg.authorId === currentUser.id && (
-                <button className="btn btn-danger" onClick={function(){ deleteMessage(selectedMsg); }}>🗑️ Изтрий</button>
-              )}
-            </div>
-          </div>
-        )}
-        {view === 'compose' && (
-          <ComposeMessage onClose={function(){ setView('inbox'); }} users={users} currentUser={currentUser} />
+              </React.Fragment>
+            )}
+
+            {view === 'compose' && (
+              <ComposeThread onClose={function(){ setView('inbox'); }} users={users} currentUser={currentUser} />
+            )}
+          </React.Fragment>
         )}
       </div>
     </React.Fragment>
@@ -3314,17 +3529,8 @@ function App() {
 
   const allMessages = useFirebaseList('messages');
   const unreadMessages = currentUser ? allMessages.filter(function(m) {
-    return (m.recipients || []).indexOf(currentUser.id) !== -1 &&
-           (m.readBy || []).indexOf(currentUser.id) === -1;
+    return (m.readBy || []).indexOf(currentUser.id) === -1;
   }).length : 0;
-
-  const allResignations = useFirebaseList('resignations');
-  const isApprover = currentUser ? isApproverUser(currentUser) : false;
-  const pendingResignations = currentUser && isApprover
-    ? allResignations.filter(function(r) {
-        return r.status === 'pending_approval' && !(r.approvals && r.approvals[currentUser.id]);
-      }).length
-    : 0;
 
   if (loading) {
     return (
@@ -3368,9 +3574,7 @@ function App() {
       <div className="main-wrapper">
         <TopHeader
           onOpenMessages={function(){ setShowMessages(true); }}
-          onOpenResignations={function(){ setPage('resignations-all'); }}
           unreadMessages={unreadMessages}
-          unreadResignations={pendingResignations}
         />
         <main className="main-content" key={page}>
           {renderPage()}
