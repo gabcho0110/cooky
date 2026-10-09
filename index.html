@@ -3098,15 +3098,15 @@ function ResignationForm({ onClose }) {
   );
 }
 
-function ResignationDetail({ resignation, onClose, onChanged }) {
+function ResignationDetail({ resignation, onClose }) {
   const { currentUser, users } = useAuth();
   const [processing, setProcessing] = useState(false);
   const canApprove = isApproverUser(currentUser);
   const approvers = users.filter(u => isApproverUser(u));
   const totalApprovers = approvers.length;
   const approvedCount = Object.keys(resignation.approvals || {}).length;
-  const userApproved = !!(resignation.approvals?.[currentUser.id]);
-  const userRejected = !!(resignation.rejections?.[currentUser.id]);
+  const userApproved = !!(resignation.approvals && resignation.approvals[currentUser.id]);
+  const userRejected = !!(resignation.rejections && resignation.rejections[currentUser.id]);
 
   const statusMeta = {
     pending_approval: { text: 'Чака одобрение', badge: 'pending' },
@@ -3118,9 +3118,10 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
   };
   const st = statusMeta[resignation.status] || statusMeta.pending_approval;
 
-  const daysLeft = resignation.status === 'active' && resignation.endDate
-    ? Math.ceil((new Date(resignation.endDate) - new Date()) / (1000*60*60*24))
-    : null;
+  let daysLeft = null;
+  if (resignation.status === 'active' && resignation.endDate) {
+    daysLeft = Math.ceil((new Date(resignation.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+  }
 
   const progress = totalApprovers > 0 ? Math.round((approvedCount / totalApprovers) * 100) : 0;
 
@@ -3128,21 +3129,23 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
     if (!confirm('Одобрявате ли това предизвестие?')) return;
     setProcessing(true);
     try {
-      const updates = {
-        [`approvals/${currentUser.id}`]: {
-          approved: true, at: new Date().toISOString(), name: currentUser.fullName
-        }
+      const updates = {};
+      updates['approvals/' + currentUser.id] = {
+        approved: true,
+        at: new Date().toISOString(),
+        name: currentUser.fullName
       };
       await db.ref('resignations/' + resignation.id).update(updates);
 
-      // Проверка дали всички са одобрили
-      const newApprovals = { ...(resignation.approvals || {}), [currentUser.id]: { approved: true } };
+      const newApprovals = Object.assign({}, resignation.approvals || {});
+      newApprovals[currentUser.id] = { approved: true };
       if (Object.keys(newApprovals).length >= totalApprovers) {
         await db.ref('resignations/' + resignation.id).update({ status: 'active' });
       }
-      onChanged && onChanged();
       onClose();
-    } catch (e) { alert('Грешка: ' + e.message); }
+    } catch (e) {
+      alert('Грешка: ' + e.message);
+    }
     setProcessing(false);
   };
 
@@ -3151,16 +3154,19 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
     if (comment === null) return;
     setProcessing(true);
     try {
-      await db.ref('resignations/' + resignation.id).update({
-        [`rejections/${currentUser.id}`]: {
-          rejected: true, at: new Date().toISOString(),
-          name: currentUser.fullName, comment: comment || ''
-        },
-        status: 'rejected'
-      });
-      onChanged && onChanged();
+      const updates = {};
+      updates['rejections/' + currentUser.id] = {
+        rejected: true,
+        at: new Date().toISOString(),
+        name: currentUser.fullName,
+        comment: comment || ''
+      };
+      updates.status = 'rejected';
+      await db.ref('resignations/' + resignation.id).update(updates);
       onClose();
-    } catch (e) { alert('Грешка: ' + e.message); }
+    } catch (e) {
+      alert('Грешка: ' + e.message);
+    }
     setProcessing(false);
   };
 
@@ -3172,7 +3178,7 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
             <h3 style={{marginBottom:'4px'}}>📄 Предизвестие за напускане</h3>
             <div className="text-muted" style={{fontSize:'13px'}}>{resignation.fullName}</div>
           </div>
-          <span className={`badge ${st.badge}`}>{st.text}</span>
+          <span className={'badge ' + st.badge}>{st.text}</span>
         </div>
 
         <div className="detail-row"><span className="detail-label">Длъжност</span><span className="detail-value">{resignation.position}</span></div>
@@ -3200,28 +3206,29 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
             <span style={{fontSize:'13px', color:'#7c3aed'}}>{approvedCount} / {totalApprovers}</span>
           </div>
           <div className="approval-progress">
-            <div className={`approval-progress-fill ${progress >= 100 ? 'full' : ''}`} style={{width:`${progress}%`}}></div>
+            <div className={'approval-progress-fill' + (progress >= 100 ? ' full' : '')} style={{width: progress + '%'}}></div>
           </div>
           {approvers.length === 0 ? (
             <div className="text-muted" style={{textAlign:'center', padding:'10px'}}>
               Няма назначени директори/зам.-директори
             </div>
           ) : approvers.map(a => {
-            const approved = !!resignation.approvals?.[a.id];
-            const rejected = !!resignation.rejections?.[a.id];
+            const appr = resignation.approvals && resignation.approvals[a.id];
+            const rej = resignation.rejections && resignation.rejections[a.id];
+            const approved = !!appr;
+            const rejected = !!rej;
             const cls = approved ? 'approved' : rejected ? 'rejected' : 'pending';
-            const meta = ROLE_META.director;
             return (
-              <div key={a.id} className={`approver-row ${cls}`}>
+              <div key={a.id} className={'approver-row ' + cls}>
                 <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
                   <span>{approved ? '✅' : rejected ? '❌' : '⏳'}</span>
                   <span style={{fontWeight:600}}>{a.fullName}</span>
                   <span style={{fontSize:'11px', color:'#7c3aed'}}>({getRoleLabels(a)})</span>
                 </div>
                 <div style={{fontSize:'11px', color:'#9ca3af'}}>
-                  {approved && resignation.approvals[a.id].at ? formatRelative(resignation.approvals[a.id].at) : ''}
-                  {rejected && resignation.rejections[a.id].at ? formatRelative(resignation.rejections[a.id].at) : ''}
-                  {!approved && !rejected && 'чака'}
+                  {approved && appr.at ? formatRelative(appr.at) : ''}
+                  {rejected && rej.at ? formatRelative(rej.at) : ''}
+                  {!approved && !rejected ? 'чака' : ''}
                 </div>
               </div>
             );
@@ -3246,6 +3253,99 @@ function ResignationDetail({ resignation, onClose, onChanged }) {
 }
 
 function ResignationsPage({ scope }) {
+  const { currentUser, users } = useAuth();
+  const resignations = useFirebaseList('resignations');
+  const [showModal, setShowModal] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const isApprover = isApproverUser(currentUser);
+
+  useEffect(() => {
+    if (!db) return;
+    const today = todayISO();
+    resignations.forEach(r => {
+      if (r.status === 'active' && r.endDate && r.endDate < today) {
+        db.ref('resignations/' + r.id).update({ status: 'expired', expiredAt: new Date().toISOString() }).catch(function() {});
+      }
+    });
+  }, [resignations]);
+
+  let visible = resignations;
+  if (scope === 'my') visible = visible.filter(r => r.userId === currentUser.id);
+  if (filter !== 'all') visible = visible.filter(r => r.status === filter);
+  visible = visible.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const statusLabels = {
+    pending_approval: { text: 'Чака одобрение', badge: 'pending' },
+    approved: { text: 'Одобрено', badge: 'approved' },
+    rejected: { text: 'Отхвърлено', badge: 'rejected' },
+    active: { text: 'В сила', badge: 'running' },
+    expired: { text: 'Изтекло', badge: 'expired' }
+  };
+
+  return (
+    <div className="animate-in">
+      <PageHeader
+        title={scope === 'my' ? 'Моите предизвестия' : 'Всички предизвестия'}
+        subtitle={scope === 'my' ? 'Подадени от вас' : (isApprover ? 'За одобрение от вас' : 'Преглед')}
+        onAdd={() => setShowModal(true)}
+        addLabel="Ново предизвестие" />
+
+      <div className="stats-grid">
+        <div className="stat-card warning"><div className="label">Чакащи</div><div className="value">{resignations.filter(r => r.status === 'pending_approval').length}</div></div>
+        <div className="stat-card primary"><div className="label">В сила</div><div className="value">{resignations.filter(r => r.status === 'active').length}</div></div>
+        <div className="stat-card success"><div className="label">Изтекли</div><div className="value">{resignations.filter(r => r.status === 'expired').length}</div></div>
+        <div className="stat-card danger"><div className="label">Отхвърлени</div><div className="value">{resignations.filter(r => r.status === 'rejected').length}</div></div>
+      </div>
+
+      <div className="flex gap-2" style={{marginBottom:'16px', flexWrap:'wrap'}}>
+        {['all','pending_approval','active','expired','rejected'].map(f => (
+          <button key={f} className={'btn btn-sm ' + (filter === f ? 'btn-primary' : 'btn-secondary')} onClick={() => setFilter(f)}>
+            {f === 'all' ? 'Всички' :
+             f === 'pending_approval' ? 'Чакащи' :
+             f === 'active' ? 'В сила' :
+             f === 'expired' ? 'Изтекли' : 'Отхвърлени'}
+          </button>
+        ))}
+      </div>
+
+      <div className="card">
+        {visible.length === 0 ? <div className="empty-state">Няма предизвестия</div> : (
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead>
+                <tr>
+                  {scope !== 'my' && <th>Служител</th>}
+                  <th>Длъжност</th><th>Предадено</th><th>Последен ден</th><th>Одобрения</th><th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map(r => {
+                  const st = statusLabels[r.status] || { text: r.status, badge: 'pending' };
+                  const approvedCount = Object.keys(r.approvals || {}).length;
+                  const totalApprovers = users.filter(u => isApproverUser(u)).length;
+                  return (
+                    <tr key={r.id} className="clickable" onClick={() => setSelected(r)}>
+                      {scope !== 'my' && <td>{r.fullName}</td>}
+                      <td>{r.position}</td>
+                      <td>{formatDate(r.handoverDate)}</td>
+                      <td><b>{formatDate(r.endDate)}</b></td>
+                      <td>{approvedCount} / {totalApprovers}</td>
+                      <td><span className={'badge ' + st.badge}>{st.text}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showModal && <ResignationForm onClose={() => setShowModal(false)} />}
+      {selected && <ResignationDetail resignation={selected} onClose={() => setSelected(null)} />}
+    </div>
+  );
+}
   const { currentUser, users } = useAuth();
   const resignations = useFirebaseList('resignations');
   const [showModal, setShowModal] = useState(false);
