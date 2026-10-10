@@ -40,12 +40,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .sidebar { width: 260px; background: #fff; border-right: 1px solid #ede9fe; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; overflow-y: auto; }
 .sidebar-logo { padding: 8px 12px 6px; font-size: 22px; font-weight: 700; color: #7c3aed; display: flex; align-items: center; gap: 8px; }
 .sidebar-tagline { padding: 0 12px 20px; font-size: 11px; color: #7c3aed; opacity: 0.65; font-weight: 500; letter-spacing: 0.3px; }
-.sidebar-user { display: flex; align-items: center; justify-content: center; padding: 14px 12px; background: #faf5ff; border-radius: 14px; margin-bottom: 20px; border: 1px solid #ede9fe; position: relative; }
-.sidebar-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 24px; flex-shrink: 0; overflow: hidden; position: relative; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(124,58,237,0.2); }
-.sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.sidebar-avatar .avatar-overlay { position: absolute; inset: 0; background: rgba(124,58,237,0.7); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; opacity: 0; transition: opacity 0.2s; }
-.sidebar-avatar:hover .avatar-overlay { opacity: 1; }
-.sidebar-avatar-edit { position: absolute; bottom: 0; right: 0; background: #7c3aed; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; border: 2px solid #fff; cursor: pointer; }
 
 .nav-group { margin-bottom: 4px; }
 .nav-group-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 10px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #4c1d95; transition: background 0.2s, color 0.2s; user-select: none; }
@@ -83,6 +77,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .top-header-user-info { display: flex; flex-direction: column; }
 .top-header-user-name { font-size: 13px; font-weight: 600; color: #1e1b4b; }
 .top-header-user-role { font-size: 11px; color: #7c3aed; opacity: 0.75; }
+.header-avatar-edit-btn { background: #f3e8ff; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; color: #7c3aed; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-left: 4px; }
+.header-avatar-edit-btn:hover { background: #e9d5ff; transform: scale(1.1); }
 
 .header-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: #faf5ff; border: 1px solid #ede9fe; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: all 0.2s; font-size: 18px; color: #7c3aed; }
 .header-icon-btn:hover { background: #f3e8ff; border-color: #c4b5fd; }
@@ -249,7 +245,6 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .error-screen-inner pre { background: #fef2f2; padding: 16px; border-radius: 10px; text-align: left; font-size: 12px; color: #991b1b; overflow: auto; margin-top: 16px; }
 #startup-error { display: none; padding: 40px; font-family: monospace; background: #fef2f2; color: #991b1b; min-height: 100vh; }
 
-/* ============== CHAT PANEL ============== */
 .msg-panel-backdrop { position: fixed; inset: 0; background: rgba(76,29,149,0.3); backdrop-filter: blur(4px); z-index: 1200; animation: fadeIn 0.2s; }
 .msg-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 560px; max-width: 100vw; background: #fff; box-shadow: -8px 0 40px rgba(124,58,237,0.2); z-index: 1201; display: flex; flex-direction: column; animation: slideInRight 0.3s; }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -259,7 +254,6 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .msg-actions-bar { padding: 12px 20px; border-bottom: 1px solid #ede9fe; display: flex; gap: 8px; align-items: center; background: #faf5ff; flex-wrap: wrap; flex-shrink: 0; }
 .msg-search { flex: 1; padding: 8px 12px; border: 1.5px solid #e9d5ff; border-radius: 8px; font-size: 13px; font-family: inherit; min-width: 120px; }
 .msg-panel-body { flex: 1; overflow-y: auto; padding: 16px; }
-
 .msg-item { padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; border: 1px solid #ede9fe; background: #fff; position: relative; }
 .msg-item:hover { background: #faf5ff; border-color: #c4b5fd; }
 .msg-item.unread { background: #fef3c7; border-color: #fcd34d; }
@@ -330,7 +324,6 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .approver-row.rejected { background: #fef2f2; border-color: #fecaca; }
 .approver-row.pending { background: #fffbeb; border-color: #fde68a; }
 
-/* Profile picture modal */
 .avatar-picker { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
 .avatar-preview { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px; font-weight: 700; overflow: hidden; border: 4px solid #ede9fe; }
 .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -346,6 +339,7 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
   .top-header-user { padding: 4px 8px; gap: 6px; }
   .top-header-user-avatar { width: 28px; height: 28px; font-size: 12px; }
   .top-header-user-info { display: none; }
+  .header-avatar-edit-btn { width: 24px; height: 24px; font-size: 12px; }
   .header-icon-btn { width: 36px; height: 36px; font-size: 16px; }
   .main-content { padding: 16px 14px; padding-bottom: 90px; }
   .page-title { font-size: 20px; }
@@ -974,7 +968,6 @@ function useHolidaysMap() {
   }, [list]);
 }
 
-// ============== AVATAR COMPONENT ==============
 function UserAvatar({ user, size, className }) {
   size = size || 40;
   const style = {
@@ -1068,7 +1061,6 @@ function Sidebar({ currentPage, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const isAdmin = isAdminUser(currentUser);
   const isApprover = isApproverUser(currentUser);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const menuConfig = useMemo(function() {
     const leavesItems = [
@@ -1133,60 +1125,47 @@ function Sidebar({ currentPage, onNavigate }) {
   };
 
   return (
-    <React.Fragment>
-      <aside className="sidebar">
-        <div className="sidebar-logo">⏰ Clocky</div>
-        <div className="sidebar-tagline">Система за отпуски и време</div>
+    <aside className="sidebar">
+      <div className="sidebar-logo">⏰ Clocky</div>
+      <div className="sidebar-tagline">Система за отпуски и време</div>
 
-        <div className="sidebar-user">
-          <div className="sidebar-avatar" onClick={function(){ setShowAvatarPicker(true); }} title="Смени снимка">
-            {currentUser.avatar ? (
-              <img src={currentUser.avatar} alt="" />
-            ) : (
-              <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
-            )}
-            <div className="avatar-overlay">📷</div>
-          </div>
-        </div>
-
-        <nav style={{flex: 1}}>
-          {menuConfig.map(function(group) {
-            const isOpen = !!openGroups[group.id];
-            const isActive = isGroupActive(group);
-            return (
-              <div key={group.id} className="nav-group">
-                <div className={'nav-group-header ' + (isActive ? 'active ' : '') + (isOpen ? 'open' : '')}
-                  onClick={function() { handleGroupClick(group); }}>
-                  <span className="nav-icon">{group.icon}</span>
-                  <span className="nav-label">{group.label}</span>
-                  {group.items && <span className="chev">▼</span>}
-                </div>
-                {group.items && (
-                  <div className={'nav-sub-wrap ' + (isOpen ? 'open' : '')}>
-                    <div className="nav-sub">
-                      {group.items.map(function(item) {
-                        return (
-                          <div key={item.id}
-                            className={'nav-sub-item ' + (currentPage === item.id ? 'active' : '')}
-                            onClick={function(e) { e.stopPropagation(); onNavigate(item.id); }}>
-                            {item.label}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+      <nav style={{flex: 1}}>
+        {menuConfig.map(function(group) {
+          const isOpen = !!openGroups[group.id];
+          const isActive = isGroupActive(group);
+          return (
+            <div key={group.id} className="nav-group">
+              <div className={'nav-group-header ' + (isActive ? 'active ' : '') + (isOpen ? 'open' : '')}
+                onClick={function() { handleGroupClick(group); }}>
+                <span className="nav-icon">{group.icon}</span>
+                <span className="nav-label">{group.label}</span>
+                {group.items && <span className="chev">▼</span>}
               </div>
-            );
-          })}
-        </nav>
-        <button id="sidebar-install-btn" className="sidebar-install-btn" onClick={function() { window.installPWA && window.installPWA(); }}>
-          📲 Инсталирай Clocky
-        </button>
-        <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
-      </aside>
-      {showAvatarPicker && <AvatarPickerModal onClose={function(){ setShowAvatarPicker(false); }} />}
-    </React.Fragment>
+              {group.items && (
+                <div className={'nav-sub-wrap ' + (isOpen ? 'open' : '')}>
+                  <div className="nav-sub">
+                    {group.items.map(function(item) {
+                      return (
+                        <div key={item.id}
+                          className={'nav-sub-item ' + (currentPage === item.id ? 'active' : '')}
+                          onClick={function(e) { e.stopPropagation(); onNavigate(item.id); }}>
+                          {item.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      <button id="sidebar-install-btn" className="sidebar-install-btn" onClick={function() { window.installPWA && window.installPWA(); }}>
+        📲 Инсталирай Clocky
+      </button>
+      <button className="sidebar-logout" onClick={logout}>🚪 Изход</button>
+    </aside>
   );
 }
 
@@ -1292,36 +1271,47 @@ function TopHeader({ onOpenMessages, unreadMessages }) {
   const { currentUser } = useAuth();
   const company = useFirebaseObject('company', DEFAULT_COMPANY);
   const companyName = (company && company.name) || DEFAULT_COMPANY.name;
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   return (
-    <header className="top-header">
-      <div className="top-header-side">
-        <div className="top-header-logo">🏛️</div>
-      </div>
-      <div className="top-header-center">
-        <div className="top-header-company" title={companyName}>{companyName}</div>
-        <div className="top-header-tagline">Система за отпуски и време</div>
-      </div>
-      <div className="top-header-side right">
-        <button className="header-icon-btn" onClick={onOpenMessages} title="Чат">
-          💬
-          {unreadMessages > 0 && <span className="badge-red">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}
-        </button>
-        <div className="top-header-user">
-          <div className="top-header-user-avatar">
-            {currentUser.avatar ? (
-              <img src={currentUser.avatar} alt="" />
-            ) : (
-              <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
-            )}
-          </div>
-          <div className="top-header-user-info">
-            <div className="top-header-user-name">{currentUser.fullName}</div>
-            <div className="top-header-user-role">{getRoleLabels(currentUser)}</div>
+    <React.Fragment>
+      <header className="top-header">
+        <div className="top-header-side">
+          <div className="top-header-logo">🏛️</div>
+        </div>
+        <div className="top-header-center">
+          <div className="top-header-company" title={companyName}>{companyName}</div>
+          <div className="top-header-tagline">Система за отпуски и време</div>
+        </div>
+        <div className="top-header-side right">
+          <button className="header-icon-btn" onClick={onOpenMessages} title="Чат">
+            💬
+            {unreadMessages > 0 && <span className="badge-red">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}
+          </button>
+          <div className="top-header-user">
+            <div className="top-header-user-avatar" onClick={function(){ setShowAvatarPicker(true); }} style={{cursor:'pointer'}} title="Смени снимка">
+              {currentUser.avatar ? (
+                <img src={currentUser.avatar} alt="" />
+              ) : (
+                <span>{currentUser.fullName.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            <div className="top-header-user-info">
+              <div className="top-header-user-name">{currentUser.fullName}</div>
+              <div className="top-header-user-role">{getRoleLabels(currentUser)}</div>
+            </div>
+            <button
+              className="header-avatar-edit-btn"
+              onClick={function(){ setShowAvatarPicker(true); }}
+              title="Смени профилна снимка"
+            >
+              📷
+            </button>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {showAvatarPicker && <AvatarPickerModal onClose={function(){ setShowAvatarPicker(false); }} />}
+    </React.Fragment>
   );
 }
 
@@ -1823,7 +1813,6 @@ function CalendarPage() {
   const getType = function(id) { return leaveTypes[id] || { name: 'Отпуск', color: '#7c3aed' }; };
   const isAdmin = isAdminUser(currentUser);
 
-  // ВАЖНО: Филтрираме rejected заявки - НЕ се показват в календара
   const calendarRequests = requests.filter(function(r) { return r.status !== 'rejected'; });
 
   const getEventsForDay = function(day) {
@@ -3134,9 +3123,6 @@ function ResignationsPage({ scope }) {
   );
 }
 
-// ================================================================
-// CHAT MODULE (продължаващ разговор)
-// ================================================================
 function ComposeThread({ onClose, users, currentUser }) {
   const [form, setForm] = useState({ subject: '', body: '', recipients: [] });
   const [error, setError] = useState('');
@@ -3157,7 +3143,7 @@ function ComposeThread({ onClose, users, currentUser }) {
     });
   };
   const addAll = function() {
-    setForm(function(f) { return Object.assign({}, f, { recipients: users.map(function(u){ return u.id; }) }); });
+    setForm(function(f) { return Object.assign({}, f, { recipients: users.map(function(u){ return u.id; }).filter(function(id){ return id !== currentUser.id; }) }); });
   };
   const clearRecipients = function() {
     setForm(function(f) { return Object.assign({}, f, { recipients: [] }); });
@@ -3172,8 +3158,6 @@ function ComposeThread({ onClose, users, currentUser }) {
     try {
       const threadId = 'thread_' + uid();
       const now = new Date().toISOString();
-
-      // Всички участници = подател + получатели
       const participants = Array.from(new Set([currentUser.id].concat(form.recipients)));
       const participantsNames = participants.map(function(id) {
         const u = users.find(function(x){ return x.id === id; });
@@ -3187,7 +3171,7 @@ function ComposeThread({ onClose, users, currentUser }) {
         createdByName: currentUser.fullName,
         participants: participants,
         participantsNames: participantsNames,
-        recipientIds: form.recipients, // за филтриране във "Входящи"
+        recipientIds: form.recipients,
         createdAt: now,
         updatedAt: now,
         lastMessage: form.body.trim(),
@@ -3205,7 +3189,6 @@ function ComposeThread({ onClose, users, currentUser }) {
         readBy: [currentUser.id]
       };
 
-      // Записваме thread и първото съобщение
       await db.ref('messageThreads/' + threadId).set(thread);
       await db.ref('messages/' + message.id).set(message);
       onClose();
@@ -3266,12 +3249,10 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Сортиране на съобщенията по дата
   const sorted = messages.slice().sort(function(a, b) {
     return new Date(a.createdAt) - new Date(b.createdAt);
   });
 
-  // Скрол до последното съобщение
   useEffect(function() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -3293,7 +3274,6 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
         readBy: [currentUser.id]
       };
       await db.ref('messages/' + message.id).set(message);
-      // Обновяваме thread metadata
       await db.ref('messageThreads/' + thread.id).update({
         updatedAt: now,
         lastMessage: replyText.trim(),
@@ -3366,24 +3346,20 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
 
 function MessagesPanel({ onClose }) {
   const { currentUser, users } = useAuth();
-  const [view, setView] = useState('inbox'); // inbox | sent | compose | thread
+  const [view, setView] = useState('inbox');
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const threads = useFirebaseList('messageThreads');
   const allMessages = useFirebaseList('messages');
 
-  // Филтриране на нишките
-  // Входящи: аз съм получател (recipientIds) и НЕ съм създател
   const inboxThreads = threads.filter(function(t) {
     return (t.recipientIds || []).indexOf(currentUser.id) !== -1;
   });
-  // Изпратени: аз съм създател
   const sentThreads = threads.filter(function(t) {
     return t.createdBy === currentUser.id;
   });
 
-  // Брой непрочетени съобщения в дадена нишка (за текущия потребител)
   const getUnreadCount = function(threadId) {
     return allMessages.filter(function(m) {
       return m.threadId === threadId && (m.readBy || []).indexOf(currentUser.id) === -1;
@@ -3394,17 +3370,14 @@ function MessagesPanel({ onClose }) {
     return sum + getUnreadCount(t.id);
   }, 0);
 
-  // Активна нишка
   const activeThread = selectedThreadId ? threads.find(function(t){ return t.id === selectedThreadId; }) : null;
   const activeMessages = activeThread
     ? allMessages.filter(function(m){ return m.threadId === activeThread.id; })
     : [];
 
-  // Когато отворим нишка - маркираме съобщенията като прочетени
   const openThread = async function(thread) {
     setSelectedThreadId(thread.id);
     setView('thread');
-    // Маркираме всички съобщения в нишката като прочетени
     const toMark = allMessages.filter(function(m) {
       return m.threadId === thread.id && (m.readBy || []).indexOf(currentUser.id) === -1;
     });
@@ -3519,9 +3492,6 @@ function MessagesPanel({ onClose }) {
   );
 }
 
-// ================================================================
-// APP
-// ================================================================
 function App() {
   const { currentUser, loading } = useAuth();
   const [page, setPage] = useState('home');
