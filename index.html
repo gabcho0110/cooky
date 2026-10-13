@@ -259,6 +259,11 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .msg-item.unread { background: #fef3c7; border-color: #fcd34d; }
 .msg-item.unread::before { content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
 .msg-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+.msg-item-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.msg-item-del { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 1px solid #fecaca; background: #fff; color: #ef4444; font-size: 11px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.35; transition: opacity 0.15s, background 0.15s, color 0.15s; }
+.msg-item:hover .msg-item-del { opacity: 1; }
+.msg-item-del:hover { background: #ef4444; color: #fff; }
+.msg-item-del:disabled { opacity: 0.4; cursor: not-allowed; }
 .msg-author { font-weight: 700; color: #1e1b4b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .msg-date { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
 .msg-subject { font-size: 14px; color: #1e1b4b; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -282,6 +287,16 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
 .chat-bubble.other { background: #fff; color: #1e1b4b; border: 1px solid #ede9fe; border-bottom-left-radius: 4px; }
 .chat-bubble-time { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 4px; text-align: right; }
 .chat-bubble.other .chat-bubble-time { color: #9ca3af; }
+.chat-bubble-row { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+.chat-bubble-wrap.me .chat-bubble-row { flex-direction: row-reverse; }
+.chat-bubble-row .chat-bubble { min-width: 0; }
+.chat-del-btn { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 1px solid #fecaca; background: #fff; color: #ef4444; font-size: 12px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.35; transition: opacity 0.15s, background 0.15s, color 0.15s; }
+.chat-bubble-wrap:hover .chat-del-btn { opacity: 1; }
+.chat-del-btn:hover { background: #ef4444; color: #fff; }
+.chat-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-header-del { background: #fff; border: 1px solid #fecaca; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #ef4444; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-header-del:hover { background: #ef4444; color: #fff; }
+.chat-header-del:disabled { opacity: 0.4; cursor: not-allowed; }
 .chat-composer { padding: 12px 16px; border-top: 1px solid #ede9fe; background: #fff; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
 .chat-composer textarea { flex: 1; padding: 10px 14px; border: 1.5px solid #e9d5ff; border-radius: 12px; font-size: 14px; font-family: inherit; resize: none; min-height: 42px; max-height: 120px; }
 .chat-composer textarea:focus { outline: none; border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168,85,247,0.12); }
@@ -358,6 +373,8 @@ code { background: #f3e8ff; padding: 2px 6px; border-radius: 4px; font-family: m
   th, td { padding: 8px 6px; }
   .msg-panel { width: 100vw; }
   .chat-bubble-wrap { max-width: 88%; }
+  .chat-del-btn { opacity: 1; }
+  .msg-item-del { opacity: 1; }
 }
 </style>
 </head>
@@ -497,6 +514,13 @@ try {
 } catch (e) { console.error("❌ Firebase:", e); }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+// Безопасен достъп до localStorage: в sandboxed iframe (без allow-same-origin)
+// самият достъп хвърля SecurityError и събаря цялото приложение.
+const storage = {
+  get: function(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+  set: function(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} },
+  remove: function(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+};
 const pad = (n) => String(n).padStart(2, '0');
 const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); };
 const formatDate = (iso) => { if (!iso) return ''; return new Date(iso).toLocaleDateString('bg-BG'); };
@@ -826,7 +850,7 @@ function AuthProvider({ children }) {
   const seededRef = useRef(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('clocky_user');
+    const stored = storage.get('clocky_user');
     if (stored) { try { setCurrentUser(JSON.parse(stored)); } catch (e) {} }
     if (!firebaseReady || !db) {
       setLoading(false);
@@ -852,17 +876,17 @@ function AuthProvider({ children }) {
         };
         db.ref('users/' + admin.id).set(admin).catch(function(e) { console.error(e); });
       }
-      const storedNow = localStorage.getItem('clocky_user');
+      const storedNow = storage.get('clocky_user');
       if (storedNow) {
         try {
           const u = JSON.parse(storedNow);
           const fresh = list.find(function(x) { return x.id === u.id; });
           if (fresh) {
             setCurrentUser(fresh);
-            localStorage.setItem('clocky_user', JSON.stringify(fresh));
+            storage.set('clocky_user', JSON.stringify(fresh));
           } else {
             setCurrentUser(null);
-            localStorage.removeItem('clocky_user');
+            storage.remove('clocky_user');
           }
         } catch (e) {}
       }
@@ -907,12 +931,12 @@ function AuthProvider({ children }) {
     const u = users.find(function(x) { return x.username === username.trim() && x.password === password; });
     if (!u) return { error: 'Грешно име или парола' };
     setCurrentUser(u);
-    localStorage.setItem('clocky_user', JSON.stringify(u));
+    storage.set('clocky_user', JSON.stringify(u));
     return { success: true, user: u };
   };
   const logout = function() {
     setCurrentUser(null);
-    localStorage.removeItem('clocky_user');
+    storage.remove('clocky_user');
   };
   const addUser = async function(data) {
     if (users.find(function(u) { return u.username === data.username; })) return { error: 'Съществува' };
@@ -3246,6 +3270,8 @@ function ComposeThread({ onClose, users, currentUser }) {
 function ThreadView({ thread, messages, currentUser, users, onBack }) {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deletingThread, setDeletingThread] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -3297,6 +3323,45 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
     return users.find(function(u){ return u.id === id; }) || { fullName: '?', id: id };
   };
 
+  const canDeleteMessage = function(m) {
+    return m.authorId === currentUser.id || isAdminUser(currentUser);
+  };
+  const canDeleteThread = thread.createdBy === currentUser.id || isAdminUser(currentUser);
+
+  const deleteMessage = async function(m) {
+    if (!confirm('Изтрий това съобщение?')) return;
+    setDeletingId(m.id);
+    try {
+      await db.ref('messages/' + m.id).remove();
+      const remaining = sorted.filter(function(x) { return x.id !== m.id; });
+      const last = remaining.length > 0 ? remaining[remaining.length - 1] : null;
+      const patch = {};
+      patch.lastMessage = last ? last.body : '';
+      patch.lastAuthorName = last ? last.authorName : '';
+      patch.lastAuthorId = last ? last.authorId : '';
+      patch.updatedAt = last ? (last.createdAt || new Date().toISOString()) : new Date().toISOString();
+      await db.ref('messageThreads/' + thread.id).update(patch);
+    } catch (e) {
+      alert('Грешка при изтриване: ' + ((e && e.message) ? e.message : e));
+    }
+    setDeletingId(null);
+  };
+
+  const deleteThread = async function() {
+    if (!confirm('Изтрий разговора „' + (thread.subject || '') + '“ заедно с ' + sorted.length + ' съобщение(я)?\n\nТова се вижда от всички участници и не може да се върне назад.')) return;
+    setDeletingThread(true);
+    try {
+      const updates = {};
+      updates['messageThreads/' + thread.id] = null;
+      sorted.forEach(function(m) { updates['messages/' + m.id] = null; });
+      await db.ref().update(updates);
+      onBack();
+    } catch (e) {
+      alert('Грешка при изтриване: ' + ((e && e.message) ? e.message : e));
+      setDeletingThread(false);
+    }
+  };
+
   return (
     <div className="chat-view">
       <div className="chat-header">
@@ -3308,6 +3373,11 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
             {thread.participantsNames && thread.participantsNames.length > 3 ? ' +' + (thread.participantsNames.length - 3) : ''}
           </div>
         </div>
+        {canDeleteThread && (
+          <button className="chat-header-del" onClick={deleteThread} disabled={deletingThread} title="Изтрий разговора">
+            {deletingThread ? '⏳' : '🗑️'}
+          </button>
+        )}
       </div>
 
       <div className="chat-messages">
@@ -3317,9 +3387,19 @@ function ThreadView({ thread, messages, currentUser, users, onBack }) {
           return (
             <div key={m.id} className={'chat-bubble-wrap ' + (me ? 'me' : 'other')}>
               {!me && <div className="chat-bubble-author">{author.fullName}</div>}
-              <div className={'chat-bubble ' + (me ? 'me' : 'other')}>
-                {m.body}
-                <div className="chat-bubble-time">{formatTime(m.createdAt)}</div>
+              <div className="chat-bubble-row">
+                <div className={'chat-bubble ' + (me ? 'me' : 'other')}>
+                  {m.body}
+                  <div className="chat-bubble-time">{formatTime(m.createdAt)}</div>
+                </div>
+                {canDeleteMessage(m) && (
+                  <button
+                    className="chat-del-btn"
+                    title="Изтрий съобщението"
+                    disabled={deletingId === m.id}
+                    onClick={function(){ deleteMessage(m); }}
+                  >{deletingId === m.id ? '⏳' : '🗑️'}</button>
+                )}
               </div>
             </div>
           );
@@ -3349,6 +3429,9 @@ function MessagesPanel({ onClose }) {
   const [view, setView] = useState('inbox');
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingThreadId, setDeletingThreadId] = useState(null);
+
+  const isAdmin = isAdminUser(currentUser);
 
   const threads = useFirebaseList('messageThreads');
   const allMessages = useFirebaseList('messages');
@@ -3389,7 +3472,7 @@ function MessagesPanel({ onClose }) {
     }
   };
 
-  let visibleThreads = view === 'sent' ? sentThreads : inboxThreads;
+  let visibleThreads = view === 'sent' ? sentThreads : view === 'all' ? threads : inboxThreads;
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
     visibleThreads = visibleThreads.filter(function(t) {
@@ -3402,9 +3485,31 @@ function MessagesPanel({ onClose }) {
     return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
   });
 
+  const canDeleteThread = function(t) {
+    return t.createdBy === currentUser.id || isAdmin;
+  };
+
+  const deleteThreadFromList = async function(t) {
+    const count = allMessages.filter(function(m){ return m.threadId === t.id; }).length;
+    if (!confirm('Изтрий разговора „' + (t.subject || '') + '“ заедно с ' + count + ' съобщение(я)?\n\nТова се вижда от всички участници и не може да се върне назад.')) return;
+    setDeletingThreadId(t.id);
+    try {
+      const updates = {};
+      updates['messageThreads/' + t.id] = null;
+      allMessages.filter(function(m){ return m.threadId === t.id; }).forEach(function(m) {
+        updates['messages/' + m.id] = null;
+      });
+      await db.ref().update(updates);
+    } catch (e) {
+      alert('Грешка при изтриване: ' + ((e && e.message) ? e.message : e));
+    }
+    setDeletingThreadId(null);
+  };
+
   const headerTitle = view === 'compose' ? '✉️ Нов разговор' :
                      view === 'thread' ? '💬 Разговор' :
                      view === 'sent' ? '📤 Изпратени' :
+                     view === 'all' ? '🗂️ Всички разговори' :
                      '💬 Съобщения' + (totalUnread > 0 ? ' (' + totalUnread + ')' : '');
 
   const handleBack = function() {
@@ -3437,12 +3542,15 @@ function MessagesPanel({ onClose }) {
               <button className="msg-panel-close" onClick={handleBack}>✕</button>
             </div>
 
-            {(view === 'inbox' || view === 'sent') && (
+            {(view === 'inbox' || view === 'sent' || view === 'all') && (
               <React.Fragment>
                 <div className="msg-actions-bar">
                   <button className="btn btn-primary btn-sm" onClick={function(){ setView('compose'); }}>➕ Нов</button>
                   <button className={'btn btn-sm ' + (view === 'inbox' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('inbox'); }}>📥 Входящи</button>
                   <button className={'btn btn-sm ' + (view === 'sent' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('sent'); }}>📤 Изпратени</button>
+                  {isAdmin && (
+                    <button className={'btn btn-sm ' + (view === 'all' ? 'btn-primary' : 'btn-secondary')} onClick={function(){ setView('all'); }}>🗂️ Всички</button>
+                  )}
                 </div>
                 <div style={{padding:'12px 20px', borderBottom:'1px solid #ede9fe'}}>
                   <input className="msg-search" placeholder="🔍 Търсене..." value={searchQuery} onChange={function(e){ setSearchQuery(e.target.value); }} />
@@ -3451,7 +3559,7 @@ function MessagesPanel({ onClose }) {
                   {visibleThreads.length === 0 ? (
                     <div className="msg-empty">
                       <div style={{fontSize:'48px', marginBottom:'12px'}}>💬</div>
-                      <div>{searchQuery ? 'Няма намерени' : view === 'sent' ? 'Няма изпратени' : 'Няма съобщения'}</div>
+                      <div>{searchQuery ? 'Няма намерени' : view === 'sent' ? 'Няма изпратени' : view === 'all' ? 'Няма разговори' : 'Няма съобщения'}</div>
                     </div>
                   ) : visibleThreads.map(function(t) {
                     const unread = getUnreadCount(t.id);
@@ -3462,14 +3570,32 @@ function MessagesPanel({ onClose }) {
                       <div key={t.id} className={'msg-item ' + (unread > 0 ? 'unread' : '')} onClick={function(){ openThread(t); }}>
                         <div className="msg-item-header">
                           <span className="msg-author">
-                            {view === 'sent' ? 'До: ' + (t.recipientIds ? t.recipientIds.length + ' души' : '?') : (otherNames[0] || t.createdByName)}
+                            {view === 'sent' ? 'До: ' + (t.recipientIds ? t.recipientIds.length + ' души' : '?') :
+                             view === 'all' ? 'От: ' + (t.createdByName || '?') :
+                             (otherNames[0] || t.createdByName)}
                           </span>
-                          <span className="msg-date">{formatRelative(t.updatedAt || t.createdAt)}</span>
+                          <span className="msg-item-right">
+                            <span className="msg-date">{formatRelative(t.updatedAt || t.createdAt)}</span>
+                            {canDeleteThread(t) && (
+                              <button
+                                className="msg-item-del"
+                                title="Изтрий целия разговор"
+                                disabled={deletingThreadId === t.id}
+                                onClick={function(e){ e.stopPropagation(); deleteThreadFromList(t); }}
+                              >{deletingThreadId === t.id ? '⏳' : '🗑️'}</button>
+                            )}
+                          </span>
                         </div>
                         <div className="msg-subject">{t.subject}</div>
                         <div className="msg-preview">
-                          {t.lastAuthorName === currentUser.fullName ? 'Вие: ' : (t.lastAuthorName ? t.lastAuthorName + ': ' : '')}
-                          {(t.lastMessage || '').slice(0, 60)}{(t.lastMessage || '').length > 60 ? '...' : ''}
+                          {t.lastMessage ? (
+                            <React.Fragment>
+                              {t.lastAuthorName === currentUser.fullName ? 'Вие: ' : (t.lastAuthorName ? t.lastAuthorName + ': ' : '')}
+                              {t.lastMessage.slice(0, 60)}{t.lastMessage.length > 60 ? '...' : ''}
+                            </React.Fragment>
+                          ) : (
+                            <span style={{fontStyle:'italic', color:'#9ca3af'}}>Няма съобщения</span>
+                          )}
                         </div>
                         <div className="msg-participants">
                           👥 {(t.participants || []).length} участници
