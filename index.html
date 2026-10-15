@@ -642,6 +642,21 @@ const hasRole = (user, role) => getUserRoles(user).indexOf(role) !== -1;
 const hasAnyRole = (user, roles) => getUserRoles(user).some(function(r) { return roles.indexOf(r) !== -1; });
 const isAdminUser = (user) => hasRole(user, 'admin');
 const isApproverUser = (user) => hasAnyRole(user, APPROVER_ROLES);
+// Предизвестие може да изтрие авторът му или администратор — независимо от статуса
+// (чакащо одобрение, в сила, изтекло или отхвърлено).
+const canDeleteResignation = (user, r) => {
+  if (!user || !r) return false;
+  if (isAdminUser(user)) return true;
+  return r.userId === user.id || r.createdBy === user.id;
+};
+const RESIGNATION_STATUS_TEXT = {
+  pending_approval: 'чака одобрение',
+  approved: 'одобрено',
+  active: 'в сила (одобрено)',
+  expired: 'изтекло',
+  rejected: 'отхвърлено'
+};
+const resignationStatusText = (r) => RESIGNATION_STATUS_TEXT[(r && r.status) || ''] || 'с неизвестен статус';
 const getRoleLabels = (user) => getUserRoles(user).map(function(r) { return (ROLE_META[r] && ROLE_META[r].bg) || r; }).join(' • ');
 const getRoleBadges = (user) => getUserRoles(user).map(function(r) { return ROLE_META[r] || ROLE_META.employee; });
 
@@ -2923,10 +2938,12 @@ function ResignationForm({ onClose }) {
   );
 }
 
-function ResignationDetail({ resignation, onClose }) {
+function ResignationDetail({ resignation, onClose, onDelete }) {
   const { currentUser, users } = useAuth();
   const [processing, setProcessing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const canApprove = isApproverUser(currentUser);
+  const canDelete = canDeleteResignation(currentUser, resignation);
   const approvers = users.filter(function(u){ return isApproverUser(u); });
   const totalApprovers = approvers.length;
   const approvedCount = Object.keys(resignation.approvals || {}).length;
@@ -2989,6 +3006,22 @@ function ResignationDetail({ resignation, onClose }) {
     setProcessing(false);
   };
 
+  const remove = async function() {
+    if (!canDelete) return;
+    const approved = resignation.status !== 'pending_approval';
+    const msg = (approved
+      ? 'Изтрий това предизвестие? То е ' + resignationStatusText(resignation) + ' и ще бъде премахнато завинаги.'
+      : 'Изтрий това предизвестие преди да е одобрено? Ще бъде премахнато завинаги.')
+      + '\n\n' + resignation.fullName + ' — последен работен ден ' + formatDate(resignation.endDate);
+    if (!confirm(msg)) return;
+    setDeleting(true);
+    try {
+      if (onDelete) { await onDelete(resignation); }
+      else { await db.ref('resignations/' + resignation.id).remove(); onClose(); }
+    } catch (e) { alert('Грешка: ' + e.message); }
+    setDeleting(false);
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal wide" onClick={function(e){ e.stopPropagation(); }}>
@@ -3049,6 +3082,12 @@ function ResignationDetail({ resignation, onClose }) {
           )}
           {userApproved && <span className="badge approved">✓ Вие одобрихте</span>}
           {userRejected && <span className="badge rejected">✕ Вие отхвърлихте</span>}
+          {canDelete && (
+            <button className="btn btn-danger" onClick={remove} disabled={deleting || processing}
+              title={resignation.status === 'pending_approval' ? 'Изтрий преди одобрение' : 'Изтрий след одобрение'}>
+              {deleting ? '⏳' : '🗑️ Изтрий'}
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={onClose}>Затвори</button>
           <button className="btn btn-primary" onClick={function(){ generateResignationPDF(resignation, currentUser, users); }}>🖨️ PDF</button>
         </div>
@@ -3063,7 +3102,25 @@ function ResignationsPage({ scope }) {
   const [showModal, setShowModal] = useState(false);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [deletingId, setDeletingId] = useState(null);
   const isApprover = isApproverUser(currentUser);
+
+  const deleteResignation = async function(r) {
+    if (!canDeleteResignation(currentUser, r)) return;
+    await db.ref('resignations/' + r.id).remove();
+    setSelected(function(s) { return s && s.id === r.id ? null : s; });
+  };
+
+  const confirmDeleteRow = async function(r) {
+    if (!canDeleteResignation(currentUser, r)) return;
+    const msg = 'Изтрий предизвестието на ' + r.fullName + ' (' + resignationStatusText(r) + ')?'
+      + '\n\nЩе бъде премахнато завинаги.';
+    if (!confirm(msg)) return;
+    setDeletingId(r.id);
+    try { await deleteResignation(r); }
+    catch (e) { alert('Грешка: ' + e.message); }
+    setDeletingId(null);
+  };
 
   useEffect(function() {
     if (!db) return;
@@ -3117,7 +3174,7 @@ function ResignationsPage({ scope }) {
               <thead>
                 <tr>
                   {scope !== 'my' && <th>Служител</th>}
-                  <th>Длъжност</th><th>Предадено</th><th>Последен ден</th><th>Одобрения</th><th>Статус</th>
+                  <th>Длъжност</th><th>Предадено</th><th>Последен ден</th><th>Одобрения</th><th>Статус</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -3133,6 +3190,15 @@ function ResignationsPage({ scope }) {
                       <td><b>{formatDate(r.endDate)}</b></td>
                       <td>{approvedCount} / {totalApprovers}</td>
                       <td><span className={'badge ' + st.badge}>{st.text}</span></td>
+                      <td style={{whiteSpace:'nowrap'}}>
+                        {canDeleteResignation(currentUser, r) ? (
+                          <button className="btn btn-danger btn-sm" disabled={deletingId === r.id}
+                            title={'Изтрий (' + resignationStatusText(r) + ')'}
+                            onClick={function(e){ e.stopPropagation(); confirmDeleteRow(r); }}>
+                            {deletingId === r.id ? '⏳' : '🗑️'}
+                          </button>
+                        ) : null}
+                      </td>
                     </tr>
                   );
                 })}
@@ -3142,7 +3208,7 @@ function ResignationsPage({ scope }) {
         )}
       </div>
       {showModal && <ResignationForm onClose={function(){ setShowModal(false); }} />}
-      {selected && <ResignationDetail resignation={selected} onClose={function(){ setSelected(null); }} />}
+      {selected && <ResignationDetail resignation={selected} onClose={function(){ setSelected(null); }} onDelete={deleteResignation} />}
     </div>
   );
 }
